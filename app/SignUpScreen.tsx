@@ -12,16 +12,23 @@ import styles from "./styles/SignUpStyles";
 
 export default function SignUpScreen() {
   const router = useRouter();
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSignUp = async () => {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
+  
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
       return;
     }
-
+  
     try {
       const response = await fetch("http://localhost:3000/register", {
         method: "POST",
@@ -29,17 +36,18 @@ export default function SignUpScreen() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          firstName,
+          lastName,
           email,
           password,
-          nickname: email.split("@")[0], // יוצרים כינוי ברירת מחדל אם לא מוגדר
         }),
       });
-
+  
       const data = await response.json();
-
+  
       if (response.ok) {
         Alert.alert("Success", "Account created successfully!");
-        router.push("/"); // נווט לדף ההתחברות או לדף אחר
+        router.push("/"); // נווט לדף ההתחברות
       } else {
         Alert.alert("Error", data.message || "Registration failed");
       }
@@ -55,7 +63,19 @@ export default function SignUpScreen() {
       <Text style={styles.subtitle}>
         Join us and start managing your cake business
       </Text>
-
+      <TextInput
+        style={styles.input}
+        placeholder="First Name"
+        keyboardType="default"
+        value={firstName}
+        onChangeText={setFirstName}
+      /><TextInput
+      style={styles.input}
+      placeholder="Last Name"
+      keyboardType="default"
+      value={lastName}
+      onChangeText={setLastName}
+    />
       <TextInput
         style={styles.input}
         placeholder="Email"
