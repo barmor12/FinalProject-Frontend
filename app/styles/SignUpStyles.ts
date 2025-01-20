@@ -73,6 +73,25 @@ const styles = StyleSheet.create({
     color: "#d49a6a", // צבע זהב כמו בכפתורים
     fontWeight: "bold",
   },
+  instructionsContainer: {
+    marginBottom: 20,
+    padding: 10,
+    backgroundColor: "#f8f8f8",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ccc",
+  },
+  instructionsTitle: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 5,
+    color: "#333",
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 3,
+  },
 });
 
 export default styles;

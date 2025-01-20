@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
@@ -63,11 +70,29 @@ export default function SignUpScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Create an Account</Text>
       <Text style={styles.subtitle}>
         Join us and start managing your cake business
       </Text>
+
+      <View style={styles.instructionsContainer}>
+        <Text style={styles.instructionsTitle}>Password Instructions:</Text>
+        <Text style={styles.instructionsText}>
+          1. Password must be at least 8 characters long.
+        </Text>
+        <Text style={styles.instructionsText}>2. Password must include:</Text>
+        <Text style={styles.instructionsText}>
+          - At least one uppercase letter.
+        </Text>
+        <Text style={styles.instructionsText}>
+          - At least one lowercase letter.
+        </Text>
+        <Text style={styles.instructionsText}>- At least one number.</Text>
+        <Text style={styles.instructionsText}>
+          - At least one special character (e.g., @, $, !, %, *, ?, &).
+        </Text>
+      </View>
 
       <TextInput
         style={styles.input}
@@ -106,6 +131,6 @@ export default function SignUpScreen() {
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
