@@ -24,6 +24,7 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
+        {/* מסך הבית */}
         <Stack.Screen
           name="index"
           options={{
@@ -32,8 +33,20 @@ export default function RootLayout() {
             gestureDirection: "horizontal",
           }}
         />
+
+        {/* מסך הרשמה */}
         <Stack.Screen
           name="SignUpScreen"
+          options={{
+            headerShown: false,
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+
+        {/* מסך אימות דוא"ל */}
+        <Stack.Screen
+          name="EmailVerificationScreen"
           options={{
             headerShown: false,
             gestureEnabled: true,

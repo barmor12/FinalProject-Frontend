@@ -5,13 +5,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f3ea", // צבע רקע אחיד
+    backgroundColor: "#f9f3ea", // Unified background color
     padding: 16,
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
-    color: "#6b4226", // צבע חום עדין
+    color: "#6b4226", // Soft brown color
     marginBottom: 10,
   },
   subtitle: {
@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   button: {
-    backgroundColor: "#d49a6a", // גוון זהב
+    backgroundColor: "#d49a6a", // Gold shade
     padding: 15,
     borderRadius: 8,
     width: "90%",
@@ -49,7 +49,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#ccc", // קו גבול אפור עדין
+    borderColor: "#ccc", // Soft gray border
     padding: 12,
     borderRadius: 8,
     width: "90%",
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
   },
   googleButtonText: {
     fontSize: 16,
-    color: "#555", // צבע טקסט שחור-אפור
+    color: "#555", // Black-gray text color
     fontWeight: "bold",
   },
   signupText: {

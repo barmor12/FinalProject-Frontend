@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
@@ -20,49 +13,52 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSignUp = async () => {
-    console.log("SignUp initiated"); // לוג להתחלה
-    console.log("User details:", { firstName, lastName, email }); // לוג פרטי משתמש
-
+    // Validate form inputs
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      console.log("Validation failed: Missing fields");
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      console.log("Validation failed: Passwords do not match");
       Alert.alert("Error", "Passwords do not match");
       return;
     }
 
+    // Check password strength
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(password)) {
+      Alert.alert(
+        "Error",
+        "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
+      );
+      return;
+    }
+
     try {
-      console.log("Sending request to server...");
+      // Send request to the backend
       const response = await fetch(`${config.BASE_URL}/auth/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          email,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Server response: Success", data); // לוג עבור תגובת הצלחה מהשרת
-        Alert.alert("Success", "Account created successfully!");
-        router.push("/"); // נווט לדף ההתחברות
+        // Show success message and inform the user about email verification
+        Alert.alert(
+          "Success",
+          "Account created successfully! Please check your email to verify your account."
+        );
+        router.push("/"); // Navigate to the login screen
       } else {
-        console.log("Server response: Error", data); // לוג עבור תגובת שגיאה מהשרת
+        // Show backend error message
         Alert.alert("Error", data.message || "Registration failed");
       }
     } catch (error) {
-      console.error("Error connecting to server:", error); // לוג לשגיאות
-      Alert.alert("Error", "Failed to connect to the server");
+      console.error("Error during registration:", error);
+      Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };
 
@@ -72,77 +68,44 @@ export default function SignUpScreen() {
       <Text style={styles.subtitle}>
         Join us and start managing your cake business
       </Text>
+
       <TextInput
         style={styles.input}
         placeholder="First Name"
-        keyboardType="default"
         value={firstName}
-        onChangeText={(text) => {
-          console.log("First name updated:", text); // לוג עבור שינוי שדה
-          setFirstName(text);
-        }}
+        onChangeText={setFirstName}
       />
       <TextInput
         style={styles.input}
         placeholder="Last Name"
-        keyboardType="default"
         value={lastName}
-        onChangeText={(text) => {
-          console.log("Last name updated:", text);
-          setLastName(text);
-        }}
+        onChangeText={setLastName}
       />
       <TextInput
         style={styles.input}
         placeholder="Email"
-        keyboardType="email-address"
         value={email}
-        onChangeText={(text) => {
-          console.log("Email updated:", text);
-          setEmail(text);
-        }}
+        keyboardType="email-address"
+        onChangeText={setEmail}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={password}
-        onChangeText={(text) => {
-          console.log("Password updated");
-          setPassword(text);
-        }}
+        onChangeText={setPassword}
       />
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
         secureTextEntry
         value={confirmPassword}
-        onChangeText={(text) => {
-          console.log("Confirm Password updated");
-          setConfirmPassword(text);
-        }}
+        onChangeText={setConfirmPassword}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
         <Text style={styles.buttonText}>Sign Up</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.googleButton}>
-        <Image
-          source={{
-            uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png",
-          }}
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleButtonText}>Sign up with Google</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.loginText}>
-        Already have an account?{" "}
-        <Text style={styles.loginLink} onPress={() => router.back()}>
-          Log In here
-        </Text>
-      </Text>
     </View>
   );
 }
