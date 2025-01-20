@@ -52,7 +52,7 @@ export default function LoginScreen() {
       if (response.ok) {
         console.log("Login successful, navigating to dashboard..."); // Log on successful login
         Alert.alert("Success", "Logged in successfully!");
-        router.push("/"); // Navigate to the dashboard or appropriate page
+        router.replace("/(tabs)/DashboardScreen"); // Navigate to the dashboard or appropriate page
       } else {
         console.warn(
           "Login failed:",
