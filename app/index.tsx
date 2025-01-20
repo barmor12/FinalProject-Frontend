@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/LoginStyles";
+import config from "../config";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -16,8 +17,12 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
+    console.log("Login process started"); // לוג לתחילת התהליך
+    console.log("User credentials:", { email, password }); // לוג פרטי התחברות (למטרות דיבאג בלבד)
+
     try {
-      const response = await fetch("http://localhost:3000/login", {
+      console.log("Sending request to server...");
+      const response = await fetch(`${config.BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -28,17 +33,23 @@ export default function LoginScreen() {
         }),
       });
 
+      console.log("Response received from server, parsing...");
       const data = await response.json();
+      console.log("Server response:", data); // לוג תגובת השרת
 
       if (response.ok) {
+        console.log("Login successful, navigating to dashboard...");
         Alert.alert("Success", "Logged in successfully!");
-        // אם ההתחברות הצליחה, נבצע ניווט או פעולה אחרת
         router.push("/"); // נווט לדשבורד או לדף המתאים
       } else {
+        console.warn(
+          "Login failed:",
+          data.message || "No specific error message"
+        );
         Alert.alert("Error", data.message || "Login failed");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error during login process:", error); // לוג שגיאה
       Alert.alert("Error", "Something went wrong");
     }
   };
@@ -53,14 +64,20 @@ export default function LoginScreen() {
         placeholder="Email"
         keyboardType="email-address"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          console.log("Email updated:", text); // לוג לעדכון אימייל
+          setEmail(text);
+        }}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          console.log("Password updated"); // לוג לעדכון סיסמה (לא נדפיס את הסיסמה עצמה)
+          setPassword(text);
+        }}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
@@ -81,7 +98,10 @@ export default function LoginScreen() {
         Don’t have an account?{" "}
         <Text
           style={styles.signupLink}
-          onPress={() => router.push("/SignUpScreen")}
+          onPress={() => {
+            console.log("Navigating to SignUpScreen"); // לוג למעקב אחרי ניווט
+            router.push("/SignUpScreen");
+          }}
         >
           Sign Up here
         </Text>

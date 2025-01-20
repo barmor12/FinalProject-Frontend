@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
+import config from "../config";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -19,18 +20,24 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSignUp = async () => {
+    console.log("SignUp initiated"); // לוג להתחלה
+    console.log("User details:", { firstName, lastName, email }); // לוג פרטי משתמש
+
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
+      console.log("Validation failed: Missing fields");
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-  
+
     if (password !== confirmPassword) {
+      console.log("Validation failed: Passwords do not match");
       Alert.alert("Error", "Passwords do not match");
       return;
     }
-  
+
     try {
-      const response = await fetch("http://localhost:3000/register", {
+      console.log("Sending request to server...");
+      const response = await fetch(`${config.BASE_URL}/auth/register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,17 +49,19 @@ export default function SignUpScreen() {
           password,
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (response.ok) {
+        console.log("Server response: Success", data); // לוג עבור תגובת הצלחה מהשרת
         Alert.alert("Success", "Account created successfully!");
         router.push("/"); // נווט לדף ההתחברות
       } else {
+        console.log("Server response: Error", data); // לוג עבור תגובת שגיאה מהשרת
         Alert.alert("Error", data.message || "Registration failed");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error connecting to server:", error); // לוג לשגיאות
       Alert.alert("Error", "Failed to connect to the server");
     }
   };
@@ -68,34 +77,50 @@ export default function SignUpScreen() {
         placeholder="First Name"
         keyboardType="default"
         value={firstName}
-        onChangeText={setFirstName}
-      /><TextInput
-      style={styles.input}
-      placeholder="Last Name"
-      keyboardType="default"
-      value={lastName}
-      onChangeText={setLastName}
-    />
+        onChangeText={(text) => {
+          console.log("First name updated:", text); // לוג עבור שינוי שדה
+          setFirstName(text);
+        }}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Last Name"
+        keyboardType="default"
+        value={lastName}
+        onChangeText={(text) => {
+          console.log("Last name updated:", text);
+          setLastName(text);
+        }}
+      />
       <TextInput
         style={styles.input}
         placeholder="Email"
         keyboardType="email-address"
         value={email}
-        onChangeText={setEmail}
+        onChangeText={(text) => {
+          console.log("Email updated:", text);
+          setEmail(text);
+        }}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry
         value={password}
-        onChangeText={setPassword}
+        onChangeText={(text) => {
+          console.log("Password updated");
+          setPassword(text);
+        }}
       />
       <TextInput
         style={styles.input}
         placeholder="Confirm Password"
         secureTextEntry
         value={confirmPassword}
-        onChangeText={setConfirmPassword}
+        onChangeText={(text) => {
+          console.log("Confirm Password updated");
+          setConfirmPassword(text);
+        }}
       />
 
       <TouchableOpacity style={styles.button} onPress={handleSignUp}>
