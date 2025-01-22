@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, Alert, ActivityIndicator } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/EmailVerificationStyles";
-import config from "./config";
+import config from "../config";
 
 export default function EmailVerificationScreen() {
   const router = useRouter();

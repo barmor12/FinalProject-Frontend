@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
-import config from "./config";
+import config from "../config";
 
 export default function SignUpScreen() {
   const router = useRouter();

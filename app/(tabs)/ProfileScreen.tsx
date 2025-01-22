@@ -1,15 +1,15 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import config from "../config";
-import { getRefreshToken, removeRefreshToken } from "../storage"; // ייבוא הפונקציות
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import config from "../../config";
 
 export default function ProfileScreen() {
   const router = useRouter();
 
   const handleLogout = async () => {
     try {
-      const refreshToken = await getRefreshToken(); // שלוף את ה-refreshToken
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
 
       if (!refreshToken) {
         Alert.alert("Error", "No refresh token found");
@@ -25,9 +25,12 @@ export default function ProfileScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        await removeRefreshToken(); // נקה את ה-refreshToken
+        // Remove tokens from AsyncStorage
+        await AsyncStorage.removeItem("accessToken");
+        await AsyncStorage.removeItem("refreshToken");
+
         Alert.alert("Success", "You have been logged out successfully");
-        router.push("/"); // חזור למסך ההתחברות
+        router.push("/"); // Navigate back to login screen
       } else {
         Alert.alert("Error", data.message || "Failed to logout");
       }

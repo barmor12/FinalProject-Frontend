@@ -63,6 +63,24 @@ export default function RootLayout() {
             headerShown: false, // Disable the header for the tabs layout
           }}
         />
+
+        {/* Save Draft Order Screen */}
+        <Stack.Screen
+          name="SaveDraftOrder"
+          options={{
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
+
+        {/* Duplicate Order Screen */}
+        <Stack.Screen
+          name="DuplicateOrder"
+          options={{
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
       </Stack>
       {/* Set the status bar style to match the system */}
       <StatusBar style="auto" />

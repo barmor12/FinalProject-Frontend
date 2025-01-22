@@ -8,8 +8,9 @@ import {
   Alert,
 } from "react-native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "./styles/LoginStyles";
-import config from "./config";
+import config from "../config";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
 
   const handleLogin = async () => {
-    console.log("Login process started"); // Log to indicate the login process has begun
+    console.log("Login process started");
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -33,35 +34,40 @@ export default function LoginScreen() {
     }
 
     try {
-      console.log("Sending request to server..."); // Log before sending the request
+      console.log("Sending request to server...");
       const response = await fetch(`${config.BASE_URL}/auth/login`, {
-        method: "POST", // HTTP method
+        method: "POST",
         headers: {
-          "Content-Type": "application/json", // Specify JSON content type
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          email, // User's email
-          password, // User's password
+          email,
+          password,
         }),
       });
 
-      console.log("Response received from server, parsing..."); // Log to indicate response is being processed
-      const data = await response.json(); // Parse the response as JSON
-      console.log("Server response:", data); // Log the server's response
+      console.log("Response received from server, parsing...");
+      const data = await response.json();
 
       if (response.ok) {
-        console.log("Login successful, navigating to dashboard..."); // Log on successful login
+        console.log("Login successful, storing tokens...");
+        const { accessToken, refreshToken } = data.tokens;
+
+        // Store tokens in AsyncStorage
+        await AsyncStorage.setItem("accessToken", accessToken);
+        await AsyncStorage.setItem("refreshToken", refreshToken);
+
         Alert.alert("Success", "Logged in successfully!");
-        router.replace("/(tabs)/DashboardScreen"); // Navigate to the dashboard or appropriate page
+        router.replace("/(tabs)/DashboardScreen");
       } else {
         console.warn(
           "Login failed:",
           data.message || "No specific error message"
-        ); // Log when login fails
+        );
         Alert.alert("Error", data.message || "Login failed");
       }
     } catch (error) {
-      console.error("Error during login process:", error); // Log errors during the login process
+      console.error("Error during login process:", error);
       Alert.alert("Error", "Something went wrong");
     }
   };
@@ -70,31 +76,23 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back!</Text>
       <Text style={styles.subtitle}>Manage your cake business with ease</Text>
-
-      {/* Email input field */}
       <TextInput
         style={styles.input}
-        placeholder="Email" // Placeholder text for the email field
-        keyboardType="email-address" // Keyboard type specific for email input
-        value={email} // Bind to email state
-        onChangeText={setEmail} // Update email state
+        placeholder="Email"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
       />
-
-      {/* Password input field */}
       <TextInput
         style={styles.input}
-        placeholder="Password" // Placeholder text for the password field
-        secureTextEntry // Hide the text for password security
-        value={password} // Bind to password state
-        onChangeText={setPassword} // Update password state
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
       />
-
-      {/* Login button */}
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Log In</Text>
       </TouchableOpacity>
-
-      {/* Google login button */}
       <TouchableOpacity style={styles.googleButton}>
         <Image
           source={{
@@ -104,8 +102,6 @@ export default function LoginScreen() {
         />
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
-
-      {/* Link to SignUpScreen */}
       <Text style={styles.signupText}>
         Don’t have an account?{" "}
         <Text
