@@ -31,7 +31,7 @@ export default function RootLayout() {
       >
         {/* Home Screen */}
         <Stack.Screen
-          name="index"
+          name="LogInScreen"
           options={{
             gestureEnabled: true, // Enable swipe gestures for navigation
             gestureDirection: "horizontal", // Set gesture direction to horizontal

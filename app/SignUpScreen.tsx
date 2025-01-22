@@ -6,6 +6,9 @@ import {
   TouchableOpacity,
   Alert,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
@@ -70,67 +73,82 @@ export default function SignUpScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Create an Account</Text>
-      <Text style={styles.subtitle}>
-        Join us and start managing your cake business
-      </Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Create an Account</Text>
+        <Text style={styles.subtitle}>
+          Join us and start managing your cake business
+        </Text>
 
-      <View style={styles.instructionsContainer}>
-        <Text style={styles.instructionsTitle}>Password Instructions:</Text>
-        <Text style={styles.instructionsText}>
-          1. Password must be at least 8 characters long.
-        </Text>
-        <Text style={styles.instructionsText}>2. Password must include:</Text>
-        <Text style={styles.instructionsText}>
-          - At least one uppercase letter.
-        </Text>
-        <Text style={styles.instructionsText}>
-          - At least one lowercase letter.
-        </Text>
-        <Text style={styles.instructionsText}>- At least one number.</Text>
-        <Text style={styles.instructionsText}>
-          - At least one special character (e.g., @, $, !, %, *, ?, &).
-        </Text>
-      </View>
+        <View style={styles.instructionsContainer}>
+          <Text style={styles.instructionsTitle}>Password Instructions:</Text>
+          <Text style={styles.instructionsText}>
+            1. Password must be at least 8 characters long.
+          </Text>
+          <Text style={styles.instructionsText}>2. Password must include:</Text>
+          <Text style={styles.instructionsText}>
+            - At least one uppercase letter.
+          </Text>
+          <Text style={styles.instructionsText}>
+            - At least one lowercase letter.
+          </Text>
+          <Text style={styles.instructionsText}>- At least one number.</Text>
+          <Text style={styles.instructionsText}>
+            - At least one special character (e.g., @, $, !, %, *, ?, &).
+          </Text>
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="First Name"
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Last Name"
-        value={lastName}
-        onChangeText={setLastName}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        value={email}
-        keyboardType="email-address"
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="First Name"
+          value={firstName}
+          onChangeText={setFirstName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Last Name"
+          value={lastName}
+          onChangeText={setLastName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          value={email}
+          keyboardType="email-address"
+          onChangeText={setEmail}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          secureTextEntry
+          value={password}
+          onChangeText={setPassword}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Confirm Password"
+          secureTextEntry
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-        <Text style={styles.buttonText}>Sign Up</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+          <Text style={styles.buttonText}>Sign Up</Text>
+        </TouchableOpacity>
+        {/* Link to SignUpScreen */}
+        <Text style={styles.loginText}>
+          Already has account?{" "}
+          <Text
+            style={styles.loginLink}
+            onPress={() => router.push("/LogInScreen")}
+          >
+            Log In
+          </Text>
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
