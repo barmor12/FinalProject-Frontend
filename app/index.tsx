@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/LoginStyles";
-import config from "../config";
+import config from "./config";
 
 export default function LoginScreen() {
   const router = useRouter();
