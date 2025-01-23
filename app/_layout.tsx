@@ -55,6 +55,13 @@ export default function RootLayout() {
             gestureDirection: "horizontal",
           }}
         />
+        <Stack.Screen
+          name="ProductDetailsScreen"
+          options={{
+            gestureEnabled: true,
+            gestureDirection: "horizontal",
+          }}
+        />
 
         {/* Tabs Navigation (Dashboard) */}
         <Stack.Screen

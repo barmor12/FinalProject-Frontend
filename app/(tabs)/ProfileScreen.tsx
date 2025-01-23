@@ -1,11 +1,57 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 
 export default function ProfileScreen() {
   const router = useRouter();
+  const [user, setUser] = useState({
+    name: "",
+    profilePic: "",
+  });
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("accessToken");
+        if (!token) {
+          Alert.alert("Error", "No access token found");
+          // router.push("/"); // Redirect to login if no token
+          return;
+        }
+
+        const response = await fetch(`${config.BASE_URL}/user/profile`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`, // Pass token in Authorization header
+          },
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          setUser({
+            name: data.name,
+            profilePic: data.profilePic, // Assuming this field contains the image URL
+          });
+        } else {
+          Alert.alert("Error", data.message || "Failed to fetch user profile");
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        Alert.alert("Error", "Something went wrong");
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -25,12 +71,11 @@ export default function ProfileScreen() {
       const data = await response.json();
 
       if (response.ok) {
-        // Remove tokens from AsyncStorage
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("refreshToken");
 
         Alert.alert("Success", "You have been logged out successfully");
-        router.push("/"); // Navigate back to login screen
+        router.push("/");
       } else {
         Alert.alert("Error", data.message || "Failed to logout");
       }
@@ -40,9 +85,27 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleEditProfile = () => {
+    router.push("/EditProfileScreen");
+  };
+
   return (
     <View style={styles.container}>
+      <Image
+        source={
+          user.profilePic
+            ? { uri: user.profilePic }
+            : require("../../assets/images/userIcon.png")
+        }
+        style={styles.profileImage}
+      />
+      <Text style={styles.userName}>{user.name || "Loading..."}</Text>
       <Text style={styles.title}>Profile</Text>
+
+      <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
+        <Text style={styles.buttonText}>Edit Profile</Text>
+      </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
         <Text style={styles.buttonText}>Log Out</Text>
       </TouchableOpacity>
@@ -51,8 +114,10 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f9f9f9" },
+  profileImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
+  userName: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
+  title: { fontSize: 18, color: "#888", marginBottom: 20 },
   button: {
     backgroundColor: "#d49a6a",
     padding: 15,

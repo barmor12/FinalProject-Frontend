@@ -31,39 +31,43 @@ export default function OrdersScreen() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
+        console.log(await AsyncStorage.getItem("accessToken"))
         const token = await AsyncStorage.getItem("accessToken");
-
+  
         if (!token) {
           console.error("No access token found");
           return;
         }
-
+  
         const response = await axios.get(`${config.BASE_URL}/order/orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-
+  
         console.log("Fetched orders:", response.data);
         setOrders(response.data);
       } catch (error) {
-        if ((error as any).response?.status === 403) {
-          console.error("Access denied. Admin role required.");
-        } else if (
-          axios.isAxiosError(error) &&
-          error.response?.status === 401
-        ) {
-          console.error("Unauthorized. Token may be missing or expired.");
+        if (axios.isAxiosError(error)) {
+          if (error.response?.status === 401) {
+            console.error("Unauthorized. Token may be missing or expired.");
+            // Add logic to refresh the token if applicable
+          } else if (error.response?.status === 403) {
+            console.error("Access denied. Admin role required.");
+          } else {
+            console.error("Failed to fetch orders:", error);
+          }
         } else {
-          console.error("Failed to fetch orders:", error);
+          console.error("Unexpected error:", error);
         }
       } finally {
         setLoading(false);
       }
     };
-
+  
     fetchOrders();
   }, []);
+  
 
   if (loading) {
     return (
