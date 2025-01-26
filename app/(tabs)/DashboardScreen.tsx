@@ -15,7 +15,6 @@ import config from "@/config";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons"; // ספרייה לאייקונים
 
-
 interface Product {
   _id: string;
   name: string;
@@ -62,7 +61,6 @@ export default function DashboardScreen() {
         setUser({
           name: name ? `Hi ${name},` : "Hi Guest",
           profilePic: profilePic || require("../../assets/images/userIcon.png"), // נתיב לתמונת ברירת מחדל
-
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
@@ -95,7 +93,10 @@ export default function DashboardScreen() {
         setFilteredProducts(data); // עדכון הרשימה המסוננת בעת טעינה ראשונית
       } catch (error) {
         console.error("Error fetching products:", error);
-        Alert.alert("Error", "Failed to fetch products. Please try again later.");
+        Alert.alert(
+          "Error",
+          "Failed to fetch products. Please try again later."
+        );
       }
     };
 
@@ -103,7 +104,6 @@ export default function DashboardScreen() {
     fetchUserData();
     fetchProducts();
   }, []);
-
 
   const renderProduct = ({ item }: { item: Product }) => (
     <TouchableOpacity
@@ -159,11 +159,7 @@ export default function DashboardScreen() {
                 style={styles.profileImage}
               />
             ) : (
-              <Ionicons
-                name="person-circle"
-                size={40}
-                color="black"
-              />
+              <Ionicons name="person-circle" size={40} color="black" />
             )}
             <Text style={styles.userName}>{user.name}</Text>
           </TouchableOpacity>
@@ -191,7 +187,10 @@ export default function DashboardScreen() {
             renderItem={horizontalRenderProduct}
             horizontal // גלילה אופקית
             showsHorizontalScrollIndicator={false} // הסרת מחוון גלילה אופקי
-            contentContainerStyle={{ alignItems: "center", paddingHorizontal: 8 }}
+            contentContainerStyle={{
+              alignItems: "center",
+              paddingHorizontal: 8,
+            }}
           />
         </View>
       )}
@@ -210,7 +209,6 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: {
@@ -331,4 +329,3 @@ const styles = StyleSheet.create({
     color: "#6b4226",
   },
 });
-

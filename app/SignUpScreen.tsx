@@ -23,14 +23,18 @@ export default function SignUpScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSignUp = async () => {
+    console.log("Starting sign-up process..."); // Log to indicate the start of the process
+
     // Validate form inputs
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
+      console.warn("Form validation failed: missing fields");
       return;
     }
 
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
+      console.warn("Password validation failed: passwords do not match");
       return;
     }
 
@@ -42,10 +46,13 @@ export default function SignUpScreen() {
         "Error",
         "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
       );
+      console.warn("Password validation failed: weak password");
       return;
     }
 
     try {
+      console.log("Sending registration request to backend..."); // Log before sending request
+
       // Send request to the backend
       const response = await fetch(`${config.BASE_URL}/auth/register`, {
         method: "POST",
@@ -53,7 +60,10 @@ export default function SignUpScreen() {
         body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
-      const data = await response.json();
+      console.log("Parsing backend response..."); // Log before parsing response
+      const data = await response.json().catch(() => null);
+
+      console.log("Backend response received:", data); // Log the server response
 
       if (response.ok) {
         // Show success message and inform the user about email verification
@@ -61,13 +71,17 @@ export default function SignUpScreen() {
           "Success",
           "Account created successfully! Please check your email to verify your account."
         );
+        console.log("Registration successful, navigating to login screen...");
         router.push("/"); // Navigate to the login screen
       } else {
         // Show backend error message
-        Alert.alert("Error", data.message || "Registration failed");
+        const errorMessage =
+          data?.message || "Registration failed. Please try again.";
+        Alert.alert("Error", errorMessage);
+        console.warn("Registration failed:", errorMessage);
       }
     } catch (error) {
-      console.error("Error during registration:", error);
+      console.error("Error during registration process:", error); // Log the error
       Alert.alert("Error", "Something went wrong. Please try again later.");
     }
   };
@@ -138,13 +152,9 @@ export default function SignUpScreen() {
         <TouchableOpacity style={styles.button} onPress={handleSignUp}>
           <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
-        {/* Link to SignUpScreen */}
         <Text style={styles.loginText}>
           Already has account?{" "}
-          <Text
-            style={styles.loginLink}
-            onPress={() => router.push("/LogInScreen")}
-          >
+          <Text style={styles.loginLink} onPress={() => router.push("/")}>
             Log In
           </Text>
         </Text>
