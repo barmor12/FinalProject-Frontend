@@ -27,47 +27,45 @@ export default function OrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<any>();
-
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        console.log(await AsyncStorage.getItem("accessToken"))
         const token = await AsyncStorage.getItem("accessToken");
-  
+        console.log("[INFO] Token retrieved from AsyncStorage:", token);
+
         if (!token) {
-          console.error("No access token found");
+          console.error("[ERROR] No access token found in AsyncStorage.");
           return;
         }
-  
+
         const response = await axios.get(`${config.BASE_URL}/order/orders`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-  
-        console.log("Fetched orders:", response.data);
+
+        console.log("[INFO] Fetched orders from server:", response.data);
         setOrders(response.data);
       } catch (error) {
-        if (axios.isAxiosError(error)) {
-          if (error.response?.status === 401) {
-            console.error("Unauthorized. Token may be missing or expired.");
-            // Add logic to refresh the token if applicable
-          } else if (error.response?.status === 403) {
-            console.error("Access denied. Admin role required.");
-          } else {
-            console.error("Failed to fetch orders:", error);
-          }
+        if ((error as any).response?.status === 403) {
+          console.error("[ERROR] Access denied. Admin role required.");
+        } else if (
+          axios.isAxiosError(error) &&
+          error.response?.status === 401
+        ) {
+          console.error(
+            "[ERROR] Unauthorized. Token may be missing or expired."
+          );
         } else {
-          console.error("Unexpected error:", error);
+          console.error("[ERROR] Failed to fetch orders:", error);
         }
       } finally {
         setLoading(false);
       }
     };
-  
+
     fetchOrders();
   }, []);
-  
 
   if (loading) {
     return (

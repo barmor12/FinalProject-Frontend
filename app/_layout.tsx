@@ -29,15 +29,6 @@ export default function RootLayout() {
           headerShown: false, // Disable the global header for all screens
         }}
       >
-        {/* Home Screen */}
-        <Stack.Screen
-          name="LogInScreen"
-          options={{
-            gestureEnabled: true, // Enable swipe gestures for navigation
-            gestureDirection: "horizontal", // Set gesture direction to horizontal
-          }}
-        />
-
         {/* Registration Screen */}
         <Stack.Screen
           name="SignUpScreen"

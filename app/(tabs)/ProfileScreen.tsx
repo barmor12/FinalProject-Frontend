@@ -52,10 +52,10 @@ export default function ProfileScreen() {
 
     fetchUserProfile();
   }, []);
-
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
+      console.log("[INFO] Refresh token from AsyncStorage:", refreshToken);
 
       if (!refreshToken) {
         Alert.alert("Error", "No refresh token found");
@@ -69,18 +69,18 @@ export default function ProfileScreen() {
       });
 
       const data = await response.json();
+      console.log("[INFO] Logout response from server:", data);
 
       if (response.ok) {
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("refreshToken");
-
         Alert.alert("Success", "You have been logged out successfully");
         router.push("/");
       } else {
         Alert.alert("Error", data.message || "Failed to logout");
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("[ERROR] Logout error:", error);
       Alert.alert("Error", "Something went wrong");
     }
   };
@@ -114,7 +114,12 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f9f9f9" },
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
+  },
   profileImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
   userName: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
   title: { fontSize: 18, color: "#888", marginBottom: 20 },
