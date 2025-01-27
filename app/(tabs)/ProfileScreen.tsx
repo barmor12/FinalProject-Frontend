@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -17,6 +18,7 @@ export default function ProfileScreen() {
     name: "",
     profilePic: "",
   });
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -24,14 +26,14 @@ export default function ProfileScreen() {
         const token = await AsyncStorage.getItem("accessToken");
         if (!token) {
           Alert.alert("Error", "No access token found");
-          // router.push("/"); // Redirect to login if no token
+          router.push("/"); // הפניה למסך התחברות
           return;
         }
 
         const response = await fetch(`${config.BASE_URL}/user/profile`, {
           method: "GET",
           headers: {
-            Authorization: `Bearer ${token}`, // Pass token in Authorization header
+            Authorization: `Bearer ${token}`, // העברת טוקן באותריזציה
           },
         });
 
@@ -39,7 +41,7 @@ export default function ProfileScreen() {
         if (response.ok) {
           setUser({
             name: data.name,
-            profilePic: data.profilePic, // Assuming this field contains the image URL
+            profilePic: data.profilePic || "",
           });
         } else {
           Alert.alert("Error", data.message || "Failed to fetch user profile");
@@ -47,15 +49,17 @@ export default function ProfileScreen() {
       } catch (error) {
         console.error("Error fetching user profile:", error);
         Alert.alert("Error", "Something went wrong");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserProfile();
   }, []);
+
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
-      console.log("[INFO] Refresh token from AsyncStorage:", refreshToken);
 
       if (!refreshToken) {
         Alert.alert("Error", "No refresh token found");
@@ -68,19 +72,19 @@ export default function ProfileScreen() {
         body: JSON.stringify({ refreshToken }),
       });
 
-      const data = await response.json();
-      console.log("[INFO] Logout response from server:", data);
-
       if (response.ok) {
+        // מחיקת הטוקנים
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("refreshToken");
+
         Alert.alert("Success", "You have been logged out successfully");
         router.push("/");
       } else {
+        const data = await response.json();
         Alert.alert("Error", data.message || "Failed to logout");
       }
     } catch (error) {
-      console.error("[ERROR] Logout error:", error);
+      console.error("Logout error:", error);
       Alert.alert("Error", "Something went wrong");
     }
   };
@@ -88,6 +92,15 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push("/EditProfileScreen");
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#d49a6a" />
+        <Text style={styles.loadingText}>Loading Profile...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -99,7 +112,7 @@ export default function ProfileScreen() {
         }
         style={styles.profileImage}
       />
-      <Text style={styles.userName}>{user.name || "Loading..."}</Text>
+      <Text style={styles.userName}>{user.name || "User"}</Text>
       <Text style={styles.title}>Profile</Text>
 
       <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
@@ -132,4 +145,15 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#888",
+  },
 });
