@@ -81,6 +81,9 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push("/EditProfileScreen");
   };
+  const handleSecACC = () => {
+    router.push("/AccountSecurityScreen");
+  };
 
   if (loading) {
     return (
@@ -104,8 +107,15 @@ export default function ProfileScreen() {
       <Text style={styles.userName}>{user.name || "User"}</Text>
       <Text style={styles.title}>Profile</Text>
 
+      <TouchableOpacity style={styles.button} onPress={() => ""}>
+        <Text style={styles.buttonText}>My Orders</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
         <Text style={styles.buttonText}>Edit Profile</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleSecACC}>
+        <Text style={styles.buttonText}>Account Security</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
@@ -120,7 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f9f3ea",
   },
   profileImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
   userName: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
