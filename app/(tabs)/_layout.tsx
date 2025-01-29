@@ -48,6 +48,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="CartScreen"
+        options={{
+          title: "Cart",
+          tabBarIcon: ({ color }) => (
+            <Icon name="shopping-cart" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="ProfileScreen"
         options={{
           title: "Profile",

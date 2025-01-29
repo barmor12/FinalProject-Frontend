@@ -89,8 +89,17 @@ export default function DashboardScreen() {
 
         console.log("Fetched products:", data);
 
-        setProducts(data);
-        setFilteredProducts(data); // עדכון הרשימה המסוננת בעת טעינה ראשונית
+        // ודא שכל פריט מכיל תמונה, אם אין - הוסף תמונת ברירת מחדל
+        const updatedProducts = data.map((product) => ({
+          ...product,
+          image:
+            product.image && product.image.startsWith("http")
+              ? product.image
+              : "https://via.placeholder.com/150", // תמונת ברירת מחדל
+        }));
+
+        setProducts(updatedProducts);
+        setFilteredProducts(updatedProducts); // עדכון הרשימה המסוננת בעת טעינה ראשונית
       } catch (error) {
         console.error("Error fetching products:", error);
         Alert.alert(
@@ -116,8 +125,14 @@ export default function DashboardScreen() {
       }
     >
       <Image
-        source={{ uri: item.image || "https://via.placeholder.com/100" }} // תמונת ברירת מחדל
+        source={{ uri: item.image }}
         style={styles.productImage}
+        defaultSource={{ uri: "https://via.placeholder.com/150" }}
+        onError={() => {
+          console.error(
+            `⚠️ Image failed to load for: ${item.name}, using default.`
+          );
+        }}
       />
       <Text style={styles.productName}>{item.name || "Unnamed Product"}</Text>
     </TouchableOpacity>
