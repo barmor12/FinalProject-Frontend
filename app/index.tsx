@@ -67,9 +67,29 @@ export default function LoginScreen() {
       } else {
         console.warn(
           "Login failed:",
-          data.message || "No specific error message"
+          data || "No specific error message"
         );
-        Alert.alert("Error", data.message || "Login failed");
+        try {
+          console.log("Data from server:", data);
+
+          let errorMessage;
+
+          if (typeof data === "string") {
+            // אם זה מחרוזת, תשתמש בה ישירות
+            errorMessage = data;
+          } else if (data?.error) {
+            // אם זה אובייקט ויש מפתח 'error', קח את הערך שלו
+            errorMessage = data.error;
+          } else {
+            // ברירת מחדל במקרה של שגיאה לא צפויה
+            errorMessage = "Login failed";
+          }
+
+          Alert.alert("Error", errorMessage);
+        } catch (error) {
+          console.error("An error occurred:", error);
+          Alert.alert("Error", "An unexpected error occurred");
+        }
       }
     } catch (error) {
       console.error("Error during login process:", error);

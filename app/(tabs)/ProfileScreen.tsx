@@ -11,6 +11,7 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
+import { fetchUserData } from "../utils/fetchUserData";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -21,40 +22,29 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserProfile = async () => {
+    const fetchUserDataAndSetState = async () => {
       try {
-        const token = await AsyncStorage.getItem("accessToken");
-        if (!token) {
-          Alert.alert("Error", "No access token found");
-          router.push("/"); // הפניה למסך התחברות
-          return;
-        }
+        // קריאה ל-Backend כדי להביא נתוני משתמש
+        const userData = await fetchUserData();
+        console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
 
-        const response = await fetch(`${config.BASE_URL}/user/profile`, {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`, // העברת טוקן באותריזציה
-          },
-        });
-
-        const data = await response.json();
-        if (response.ok) {
+        // עדכון המשתמש במידע מהשרת
+        if (userData) {
           setUser({
-            name: data.name,
-            profilePic: data.profilePic || "",
+            name: `Hi ${userData.firstName}` || "Guest",
+            profilePic:
+              userData.profilePic ||
+              require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
           });
-        } else {
-          Alert.alert("Error", data.message || "Failed to fetch user profile");
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
-        Alert.alert("Error", "Something went wrong");
+        console.error("Error fetching user data:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // עדכון מצב ה-loading כאשר הקריאה הושלמה
       }
     };
 
-    fetchUserProfile();
+    fetchUserDataAndSetState();
   }, []);
 
   const handleLogout = async () => {
@@ -92,6 +82,9 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push("/EditProfileScreen");
   };
+  const handleSecACC = () => {
+    router.push("/AccountSecurityScreen");
+  };
 
   if (loading) {
     return (
@@ -115,8 +108,15 @@ export default function ProfileScreen() {
       <Text style={styles.userName}>{user.name || "User"}</Text>
       <Text style={styles.title}>Profile</Text>
 
+      <TouchableOpacity style={styles.button} onPress={() => ""}>
+        <Text style={styles.buttonText}>My Orders</Text>
+      </TouchableOpacity>
       <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
         <Text style={styles.buttonText}>Edit Profile</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity style={styles.button} onPress={handleSecACC}>
+        <Text style={styles.buttonText}>Account Security</Text>
       </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogout}>
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#f9f3ea",
   },
   profileImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
   userName: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },

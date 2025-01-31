@@ -14,6 +14,7 @@ import { router, usePathname } from "expo-router";
 import config from "@/config";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons"; // ספרייה לאייקונים
+import { fetchUserData } from "../utils/fetchUserData";
 
 interface Product {
   _id: string;
@@ -54,18 +55,22 @@ export default function DashboardScreen() {
   };
 
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchUserDataAndSetState = async () => {
       try {
-        const name = await AsyncStorage.getItem("userName");
-        const profilePic = await AsyncStorage.getItem("profilePic");
+        // קריאה ל-Backend כדי להביא נתוני משתמש
+        const userData = await fetchUserData();
+        console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
+
+        // עדכון המשתמש במידע מהשרת
         setUser({
-          name: name ? `Hi ${name},` : "Hi Guest",
-          profilePic: profilePic || require("../../assets/images/userIcon.png"), // נתיב לתמונת ברירת מחדל
+          name: `Hi ${userData.firstName}` || "Guest",
+          profilePic: userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
+
 
     const fetchProducts = async () => {
       try {
@@ -110,7 +115,7 @@ export default function DashboardScreen() {
     };
 
     // קריאה לשתי הפונקציות
-    fetchUserData();
+    fetchUserDataAndSetState();
     fetchProducts();
   }, []);
 
