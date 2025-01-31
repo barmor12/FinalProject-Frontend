@@ -4,7 +4,7 @@ import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
-export default function TabLayout() {
+export default function AdminTabLayout() {
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -12,8 +12,8 @@ export default function TabLayout() {
     const fetchRole = async () => {
       try {
         const storedRole = await AsyncStorage.getItem("role");
-        setRole(storedRole || "user"); // ברירת מחדל למשתמש רגיל
-        console.log("🔹 User role loaded:", storedRole);
+        setRole(storedRole || "admin");
+        console.log("🔹 Admin User role loaded:", storedRole);
       } catch (error) {
         console.error("⚠️ Error fetching role:", error);
       } finally {
@@ -24,7 +24,8 @@ export default function TabLayout() {
     fetchRole();
   }, []);
 
-  if (loading) return null; // ממתין לטעינת ה-role
+  if (loading) return null;
+  if (role !== "admin") return null;
 
   return (
     <Tabs
@@ -38,38 +39,38 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="DashboardScreen"
+        name="AdminDashboardScreen"
         options={{
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
-            <Icon name="home" size={24} color={color} />
+            <Icon name="dashboard" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="OrdersScreen"
+        name="InventoryScreen"
         options={{
-          title: "Orders",
+          title: "Inventory",
           tabBarIcon: ({ color }) => (
-            <Icon name="list-alt" size={24} color={color} />
+            <Icon name="inventory" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="CartScreen"
+        name="StatisticsScreen"
         options={{
-          title: "Cart",
+          title: "Statistics",
           tabBarIcon: ({ color }) => (
-            <Icon name="shopping-cart" size={24} color={color} />
+            <Icon name="bar-chart" size={24} color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="ProfileScreen"
+        name="AdminPanelScreen"
         options={{
-          title: "Profile",
+          title: "Admin Panel",
           tabBarIcon: ({ color }) => (
-            <Icon name="person" size={24} color={color} />
+            <Icon name="admin-panel-settings" size={24} color={color} />
           ),
         }}
       />

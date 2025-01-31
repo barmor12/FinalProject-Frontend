@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,93 +17,55 @@ export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    console.log("Login process started");
-
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
-      return;
-    }
-
-    // Password validation
-    if (password.length < 8) {
-      Alert.alert("Error", "Password must be at least 8 characters long");
-      return;
-    }
+    console.log("🔄 Login process started");
 
     try {
-      console.log("Sending request to server...");
+      console.log("📡 Sending request to server...");
       const response = await fetch(`${config.BASE_URL}/auth/login`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      console.log("Response received from server, parsing...");
       const data = await response.json();
-      console.log("Server response:", data);
+      console.log("🔹 Server response:", data);
 
       if (response.ok) {
-        console.log("Login successful, saving tokens...");
+        console.log("✅ Login successful, saving tokens...");
 
-        // Save tokens in AsyncStorage
-        try {
-          await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
-          await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
-          console.log("Tokens saved successfully.");
-        } catch (error) {
-          console.error("Error saving tokens:", error);
-        }
+        await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
+        await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
+
+        // ✅ שמירת התפקיד של המשתמש
+        const role = data.role || "user";
+        await AsyncStorage.setItem("role", role);
+        console.log("🗂 Tokens & role saved successfully:", role);
 
         Alert.alert("Success", "Logged in successfully!");
-        router.replace("/(tabs)/DashboardScreen"); // Navigate to the dashboard
-      } else {
-        console.warn(
-          "Login failed:",
-          data || "No specific error message"
-        );
-        try {
-          console.log("Data from server:", data);
 
-          let errorMessage;
-
-          if (typeof data === "string") {
-            // אם זה מחרוזת, תשתמש בה ישירות
-            errorMessage = data;
-          } else if (data?.error) {
-            // אם זה אובייקט ויש מפתח 'error', קח את הערך שלו
-            errorMessage = data.error;
-          } else {
-            // ברירת מחדל במקרה של שגיאה לא צפויה
-            errorMessage = "Login failed";
-          }
-
-          Alert.alert("Error", errorMessage);
-        } catch (error) {
-          console.error("An error occurred:", error);
-          Alert.alert("Error", "An unexpected error occurred");
+        // ✅ ניווט בהתאם ל-role
+        if (role === "admin") {
+          router.replace("/(admintabs)/AdminDashboardScreen");
+        } else {
+          router.replace("/(tabs)/DashboardScreen");
         }
+      } else {
+        console.warn("⚠️ Login failed:", data?.error || "Unknown error");
+        Alert.alert("Error", data?.error || "Login failed");
       }
     } catch (error) {
-      console.error("Error during login process:", error);
-      Alert.alert("Error", "Something went wrong");
+      console.error("❌ Error during login process:", error);
+      Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back!</Text>
       <Text style={styles.subtitle}>Manage your cake business with ease</Text>
 
-      {/* Email input field */}
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -111,7 +74,6 @@ export default function LoginScreen() {
         onChangeText={setEmail}
       />
 
-      {/* Password input field */}
       <TextInput
         style={styles.input}
         placeholder="Password"
@@ -120,12 +82,18 @@ export default function LoginScreen() {
         onChangeText={setPassword}
       />
 
-      {/* Login button */}
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Log In</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Log In</Text>
+        )}
       </TouchableOpacity>
 
-      {/* Google login button */}
       <TouchableOpacity style={styles.googleButton}>
         <Image
           source={{
@@ -136,7 +104,6 @@ export default function LoginScreen() {
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
-      {/* Link to SignUpScreen */}
       <Text style={styles.signupText}>
         Don’t have an account?{" "}
         <Text

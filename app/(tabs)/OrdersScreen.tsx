@@ -1,133 +1,207 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   SafeAreaView,
+  ScrollView,
   View,
   Text,
   StyleSheet,
-  FlatList,
   ActivityIndicator,
   TouchableOpacity,
+  RefreshControl,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import config from "../../config";
 
-// Typing for an individual order
+// מבנה נתונים להזמנה
 interface Order {
   _id: string;
   cake: {
     name: string;
+    image?: string;
   };
   quantity: number;
   totalPrice: number;
+  status: "Pending" | "Completed" | "Cancelled";
 }
 
 export default function OrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const navigation = useNavigation<any>();
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const token = await AsyncStorage.getItem("accessToken");
-        console.log("[INFO] Token retrieved from AsyncStorage:", token);
 
-        if (!token) {
-          console.error("[ERROR] No access token found in AsyncStorage.");
-          return;
-        }
+  // **שליפת ההזמנות מהשרת**
+  const fetchOrders = async () => {
+    try {
+      setRefreshing(true);
+      const token = await AsyncStorage.getItem("accessToken");
 
-        const response = await axios.get(`${config.BASE_URL}/order/orders`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log("[INFO] Fetched orders from server:", response.data);
-        setOrders(response.data);
-      } catch (error) {
-        if ((error as any).response?.status === 403) {
-          console.error("[ERROR] Access denied. Admin role required.");
-        } else if (
-          axios.isAxiosError(error) &&
-          error.response?.status === 401
-        ) {
-          console.error(
-            "[ERROR] Unauthorized. Token may be missing or expired."
-          );
-        } else {
-          console.error("[ERROR] Failed to fetch orders:", error);
-        }
-      } finally {
-        setLoading(false);
+      if (!token) {
+        console.error("[ERROR] No access token found.");
+        return;
       }
-    };
 
+      const response = await axios.get(`${config.BASE_URL}/order/orders`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      console.log("[INFO] Fetched orders:", response.data);
+      setOrders(response.data);
+      setFilteredOrders(response.data);
+    } catch (error) {
+      console.error("[ERROR] Failed to fetch orders:", error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <ActivityIndicator size="large" color="#6b4226" />
-      </SafeAreaView>
-    );
-  }
+  // **משיכת מסך לרענון**
+  const onRefresh = useCallback(() => {
+    fetchOrders();
+  }, []);
 
-  if (orders.length === 0) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>
-          No orders found or insufficient permissions.
-        </Text>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => navigation.navigate("SaveDraftOrder")}
-        >
-          <Text style={styles.buttonText}>Create New Order</Text>
-        </TouchableOpacity>
-      </SafeAreaView>
-    );
-  }
+  // **סינון ההזמנות לפי סטטוס**
+  const filterOrders = (status: string | null) => {
+    setSelectedFilter(status);
+    if (!status) {
+      setFilteredOrders(orders);
+    } else {
+      setFilteredOrders(orders.filter((order) => order.status === status));
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Orders</Text>
-      <FlatList
-        data={orders}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <View style={styles.orderCard}>
-            <Text style={styles.orderText}>Order ID: {item._id}</Text>
-            <Text style={styles.orderText}>Cake: {item.cake.name}</Text>
-            <Text style={styles.orderText}>Quantity: {item.quantity}</Text>
-            <Text style={styles.orderText}>Total: ${item.totalPrice}</Text>
-          </View>
-        )}
-      />
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("SaveDraftOrder")}
-      >
-        <Text style={styles.buttonText}>Create New Order</Text>
-      </TouchableOpacity>
+      <Text style={styles.title}>Your Orders</Text>
+
+      {/* **כפתורי סינון סטטוס** */}
+      <View style={styles.filterContainer}>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedFilter === null && styles.activeFilter,
+          ]}
+          onPress={() => filterOrders(null)}
+        >
+          <Text style={styles.filterText}>All</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedFilter === "Pending" && styles.activeFilter,
+          ]}
+          onPress={() => filterOrders("Pending")}
+        >
+          <Text style={styles.filterText}>Pending</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedFilter === "Completed" && styles.activeFilter,
+          ]}
+          onPress={() => filterOrders("Completed")}
+        >
+          <Text style={styles.filterText}>Completed</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.filterButton,
+            selectedFilter === "Cancelled" && styles.activeFilter,
+          ]}
+          onPress={() => filterOrders("Cancelled")}
+        >
+          <Text style={styles.filterText}>Cancelled</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
+      {loading ? (
+        <ActivityIndicator size="large" color="#6b4226" />
+      ) : (
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={styles.scrollViewContent}
+        >
+          {filteredOrders.length === 0 ? (
+            <Text style={styles.emptyMessage}>No orders found</Text>
+          ) : (
+            filteredOrders.map((item) => (
+              <View key={item._id} style={styles.orderCard}>
+                <View style={styles.orderHeader}>
+                  <Text style={styles.orderText}>Order ID: {item._id}</Text>
+                  <Text style={[styles.statusText, styles[item.status]]}>
+                    {item.status}
+                  </Text>
+                </View>
+                <View style={styles.orderDetails}>
+                  <Text style={styles.orderText}>Cake: {item.cake.name}</Text>
+                  <Text style={styles.orderText}>
+                    Quantity: {item.quantity}
+                  </Text>
+                  <Text style={styles.orderText}>
+                    Total: ${item.totalPrice}
+                  </Text>
+                </View>
+              </View>
+            ))
+          )}
+        </ScrollView>
+      )}
+
+      {/* **כפתור יצירת הזמנה חדשה - מוצג נכון ולא מוסתר** */}
+      <View style={styles.fixedButtonContainer}>
+        <TouchableOpacity
+          style={styles.addOrderButton}
+          onPress={() => navigation.navigate("CreateOrderScreen")}
+        >
+          <Text style={styles.addOrderButtonText}>Create New Order</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f3ea",
-  },
+  container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#6b4226",
-    marginBottom: 20,
     textAlign: "center",
+    marginBottom: 15,
+  },
+  filterContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 10,
+  },
+  filterButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 20,
+    backgroundColor: "#ddd",
+  },
+  activeFilter: {
+    backgroundColor: "#6b4226",
+  },
+  filterText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  scrollViewContent: {
+    paddingBottom: 120, // מוסיף ריווח לכפתור התחתון
   },
   orderCard: {
     backgroundColor: "#fff",
@@ -140,19 +214,38 @@ const styles = StyleSheet.create({
     shadowRadius: 1.41,
     elevation: 2,
   },
-  orderText: {
+  orderText: { fontSize: 16, color: "#6b4226" },
+  statusText: {
     fontSize: 16,
-    color: "#6b4226",
+    fontWeight: "bold",
+    textTransform: "capitalize",
   },
-  button: {
-    backgroundColor: "#6b4226",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
+  Pending: { color: "#FFA500" },
+  Completed: { color: "#28a745" },
+  Cancelled: { color: "#d9534f" },
+  emptyMessage: {
+    fontSize: 18,
+    color: "#6b4226",
+    textAlign: "center",
     marginTop: 20,
   },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
+
+  // **כפתור יצירת הזמנה חדשה**
+  fixedButtonContainer: {
+    position: "absolute",
+    bottom: 90,
+    left: 0,
+    right: 0,
+    alignItems: "center",
   },
+  addOrderButton: {
+    flexDirection: "row",
+    backgroundColor: "#28a745",
+    padding: 15,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "90%",
+  },
+  addOrderButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 5 },
 });
