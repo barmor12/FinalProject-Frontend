@@ -1,12 +1,8 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import styles from "./styles/CakeDecorationsStyles"; // Importing styles
 
+// List of available cake decorations
 const decorations = [
   { id: "1", name: "Sprinkles" },
   { id: "2", name: "Choco Chips" },
@@ -17,12 +13,15 @@ const decorations = [
 export default function CakeDecorationsScreen() {
   const [selectedDecorations, setSelectedDecorations] = useState<string[]>([]);
 
+  // Toggle selection of decoration
   const toggleDecoration = (id: string) => {
+    console.log(`🔄 Toggling decoration: ${id}`);
     setSelectedDecorations((prev) =>
       prev.includes(id) ? prev.filter((d) => d !== id) : [...prev, id]
     );
   };
 
+  // Render decoration item
   const renderItem = ({ item }: { item: { id: string; name: string } }) => (
     <TouchableOpacity
       style={[
@@ -46,33 +45,3 @@ export default function CakeDecorationsScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f3ea",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginBottom: 20,
-  },
-  item: {
-    padding: 15,
-    marginBottom: 10,
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-  },
-  selectedItem: {
-    borderColor: "#6b4226",
-    backgroundColor: "#fdebd3",
-  },
-  itemText: {
-    fontSize: 16,
-    color: "#6b4226",
-  },
-});

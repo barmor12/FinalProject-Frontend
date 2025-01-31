@@ -1,19 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Button, Alert } from "react-native";
+import { View, Text, TextInput, Button, Alert } from "react-native";
 import axios from "axios";
+import styles from "./styles/DuplicateOrderStyles"; // Importing styles
 
 export default function DuplicateOrderScreen() {
   const [orderId, setOrderId] = useState("");
 
+  // Function to duplicate an order
   const duplicateOrder = async () => {
+    console.log(`🔄 Duplicating order: ${orderId}`);
     try {
       const response = await axios.post(
         "http://your-backend-url/api/orders/duplicate",
         { orderId }
       );
-      Alert.alert("Success", "Order duplicated successfully");
+      Alert.alert("✅ Success", "Order duplicated successfully");
     } catch (error) {
-      console.error("Failed to duplicate order:", error);
+      console.error("❌ Failed to duplicate order:", error);
       Alert.alert("Error", "Failed to duplicate order");
     }
   };
@@ -31,26 +34,3 @@ export default function DuplicateOrderScreen() {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f3ea",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginBottom: 20,
-  },
-  input: {
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    marginBottom: 10,
-    paddingHorizontal: 10,
-    borderRadius: 5,
-    backgroundColor: "#fff",
-  },
-});

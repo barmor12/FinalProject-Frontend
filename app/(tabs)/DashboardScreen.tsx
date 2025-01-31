@@ -64,13 +64,13 @@ export default function DashboardScreen() {
         // עדכון המשתמש במידע מהשרת
         setUser({
           name: `Hi ${userData.firstName}` || "Guest",
-          profilePic: userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
+          profilePic:
+            userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
         });
       } catch (error) {
         console.error("Error fetching user data:", error);
       }
     };
-
 
     const fetchProducts = async () => {
       try {
