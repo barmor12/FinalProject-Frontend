@@ -8,10 +8,11 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -22,31 +23,31 @@ export default function ProfileScreen() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUserDataAndSetState = async () => {
-      try {
-        // קריאה ל-Backend כדי להביא נתוני משתמש
-        const userData = await fetchUserData();
-        console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
-
-        // עדכון המשתמש במידע מהשרת
-        if (userData) {
-          setUser({
-            name: `Hi ${userData.firstName}` || "Guest",
-            profilePic:
-              userData.profilePic ||
-              require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setLoading(false); // עדכון מצב ה-loading כאשר הקריאה הושלמה
-      }
-    };
-
     fetchUserDataAndSetState();
   }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchUserDataAndSetState();
+    }, [])
+  );
+  const fetchUserDataAndSetState = async () => {
+    try {
+      // קריאה ל-Backend כדי להביא נתוני משתמש
+      const userData = await fetchUserData();
+      console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
 
+      // עדכון המשתמש במידע מהשרת
+      setUser({
+        name: `Hi ${userData.firstName}` || "Guest",
+        profilePic:
+          userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
+      });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    } finally {
+      setLoading(false); // עדכון מצב ה-loading כאשר הקריאה הושלמה
+    }
+  };
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
@@ -97,14 +98,18 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={
-          user.profilePic
-            ? { uri: user.profilePic }
-            : require("../../assets/images/userIcon.png")
-        }
-        style={styles.profileImage}
-      />
+      {user.profilePic ? (
+        <Image
+          source={
+            typeof user.profilePic === "string"
+              ? { uri: user.profilePic }
+              : user.profilePic
+          }
+          style={styles.profileImage}
+        />
+      ) : (
+        <Ionicons name="person-circle" size={40} color="black" />
+      )}
       <Text style={styles.userName}>{user.name || "User"}</Text>
       <Text style={styles.title}>Profile</Text>
 

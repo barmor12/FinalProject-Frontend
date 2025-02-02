@@ -1,251 +1,199 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  SafeAreaView,
-  ScrollView,
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
+  FlatList,
+  Image,
   TouchableOpacity,
-  RefreshControl,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
-import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import config from "../../config";
+import { useRouter } from "expo-router";
 
-// מבנה נתונים להזמנה
-interface Order {
-  _id: string;
-  cake: {
-    name: string;
-    image?: string;
-  };
-  quantity: number;
-  totalPrice: number;
-  status: "Pending" | "Completed" | "Cancelled";
-}
-
-export default function OrdersScreen() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
+export default function MyOrdersScreen() {
+  const router = useRouter();
+  const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const navigation = useNavigation<any>();
-
-  // **שליפת ההזמנות מהשרת**
-  const fetchOrders = async () => {
-    try {
-      setRefreshing(true);
-      const token = await AsyncStorage.getItem("accessToken");
-
-      if (!token) {
-        console.error("[ERROR] No access token found.");
-        return;
-      }
-
-      const response = await axios.get(`${config.BASE_URL}/order/orders`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      console.log("[INFO] Fetched orders:", response.data);
-      setOrders(response.data);
-      setFilteredOrders(response.data);
-    } catch (error) {
-      console.error("[ERROR] Failed to fetch orders:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
+  interface OrderItem {
+    _id: string;
+    product: {
+      name: string;
+      image: string;
+      price: number;
+    };
+    quantity: number;
+    status: string;
+  }
   useEffect(() => {
     fetchOrders();
   }, []);
 
-  // **משיכת מסך לרענון**
-  const onRefresh = useCallback(() => {
-    fetchOrders();
-  }, []);
+  const fetchOrders = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Alert.alert("Error", "You need to be logged in to view your orders.");
+        return;
+      }
 
-  // **סינון ההזמנות לפי סטטוס**
-  const filterOrders = (status: string | null) => {
-    setSelectedFilter(status);
-    if (!status) {
-      setFilteredOrders(orders);
-    } else {
-      setFilteredOrders(orders.filter((order) => order.status === status));
+      const response = await fetch(`${config.BASE_URL}/orders`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch orders.");
+      }
+
+      const data = await response.json();
+      setOrders(data.orders); // Assuming the response has a property 'orders'
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      Alert.alert("Error", "Failed to fetch orders. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
+  const renderOrderItem = ({ item }: { item: OrderItem }) => (
+    <View style={styles.orderItem}>
+      <Image
+        source={{ uri: item.product.image || "https://via.placeholder.com/150" }}
+        style={styles.productImage}
+      />
+      <View style={styles.orderDetails}>
+        <Text style={styles.productName}>{item.product.name}</Text>
+        <Text style={styles.productQuantity}>Quantity: {item.quantity}</Text>
+        <Text style={styles.productPrice}>Price: ${item.product.price.toFixed(2)}</Text>
+        <Text style={styles.orderStatus}>Status: {item.status}</Text>
+        <TouchableOpacity
+          style={styles.viewDetailsButton}
+          onPress={() => ("")}
+        >
+          <Text style={styles.viewDetailsButtonText}>View Details</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#d49a6a" />
+        <Text style={styles.loadingText}>Loading Orders...</Text>
+      </View>
+    );
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Orders</Text>
-
-      {/* **כפתורי סינון סטטוס** */}
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === null && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders(null)}
-        >
-          <Text style={styles.filterText}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Pending" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Pending")}
-        >
-          <Text style={styles.filterText}>Pending</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Completed" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Completed")}
-        >
-          <Text style={styles.filterText}>Completed</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Cancelled" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Cancelled")}
-        >
-          <Text style={styles.filterText}>Cancelled</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
-      {loading ? (
-        <ActivityIndicator size="large" color="#6b4226" />
+    <View style={styles.container}>
+      <Text style={styles.title}>My Orders</Text>
+      {orders.length === 0 ? (
+        <Text style={styles.emptyMessage}>No orders found.</Text>
       ) : (
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.scrollViewContent}
-        >
-          {filteredOrders.length === 0 ? (
-            <Text style={styles.emptyMessage}>No orders found</Text>
-          ) : (
-            filteredOrders.map((item) => (
-              <View key={item._id} style={styles.orderCard}>
-                <View style={styles.orderHeader}>
-                  <Text style={styles.orderText}>Order ID: {item._id}</Text>
-                  <Text style={[styles.statusText, styles[item.status]]}>
-                    {item.status}
-                  </Text>
-                </View>
-                <View style={styles.orderDetails}>
-                  <Text style={styles.orderText}>Cake: {item.cake.name}</Text>
-                  <Text style={styles.orderText}>
-                    Quantity: {item.quantity}
-                  </Text>
-                  <Text style={styles.orderText}>
-                    Total: ${item.totalPrice}
-                  </Text>
-                </View>
-              </View>
-            ))
-          )}
-        </ScrollView>
+        <FlatList
+          data={orders}
+          keyExtractor={(item) => item._id}
+          renderItem={renderOrderItem}
+          contentContainerStyle={styles.orderList}
+        />
       )}
-
-      {/* **כפתור יצירת הזמנה חדשה - מוצג נכון ולא מוסתר** */}
-      <View style={styles.fixedButtonContainer}>
-        <TouchableOpacity
-          style={styles.addOrderButton}
-          onPress={() => navigation.navigate("CreateOrderScreen")}
-        >
-          <Text style={styles.addOrderButtonText}>Create New Order</Text>
-        </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
+  container: {
+    flex: 1,
+    backgroundColor: "#f9f3ea",
+    padding: 16,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#6b4226",
     textAlign: "center",
-    marginBottom: 15,
+    marginBottom: 20,
   },
-  filterContainer: {
+  orderList: {
+    paddingBottom: 16,
+  },
+  orderItem: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginBottom: 10,
-  },
-  filterButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-    borderRadius: 20,
-    backgroundColor: "#ddd",
-  },
-  activeFilter: {
-    backgroundColor: "#6b4226",
-  },
-  filterText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  scrollViewContent: {
-    paddingBottom: 120, // מוסיף ריווח לכפתור התחתון
-  },
-  orderCard: {
     backgroundColor: "#fff",
-    padding: 15,
     borderRadius: 8,
-    marginBottom: 10,
+    marginBottom: 16,
+    padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
     elevation: 2,
   },
-  orderText: { fontSize: 16, color: "#6b4226" },
-  statusText: {
+  productImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  orderDetails: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  productName: {
     fontSize: 16,
     fontWeight: "bold",
-    textTransform: "capitalize",
+    color: "#6b4226",
+    marginBottom: 5,
   },
-  Pending: { color: "#FFA500" },
-  Completed: { color: "#28a745" },
-  Cancelled: { color: "#d9534f" },
+  productQuantity: {
+    fontSize: 14,
+    color: "#6b4226",
+    marginBottom: 5,
+  },
+  productPrice: {
+    fontSize: 14,
+    color: "#6b4226",
+    marginBottom: 5,
+  },
+  orderStatus: {
+    fontSize: 14,
+    color: "#6b4226",
+    marginBottom: 5,
+  },
+  viewDetailsButton: {
+    backgroundColor: "#d49a6a",
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 10,
+  },
+  viewDetailsButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f9f9",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#888",
+  },
   emptyMessage: {
     fontSize: 18,
     color: "#6b4226",
     textAlign: "center",
     marginTop: 20,
   },
-
-  // **כפתור יצירת הזמנה חדשה**
-  fixedButtonContainer: {
-    position: "absolute",
-    bottom: 90,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  addOrderButton: {
-    flexDirection: "row",
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
-  },
-  addOrderButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 5 },
 });

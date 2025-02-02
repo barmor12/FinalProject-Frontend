@@ -10,7 +10,7 @@ import {
   TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { router, usePathname } from "expo-router";
+import { router, useFocusEffect, usePathname } from "expo-router";
 import config from "@/config";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons"; // ספרייה לאייקונים
@@ -53,72 +53,74 @@ export default function DashboardScreen() {
     setSearchVisible((prev) => !prev);
     setShowHorizontalScroll((prev) => !prev); // הפיכת מצב הגלילה האופקית
   };
+  const fetchUserDataAndSetState = async () => {
+    try {
+      // קריאה ל-Backend כדי להביא נתוני משתמש
+      const userData = await fetchUserData();
+      console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
 
+      // עדכון המשתמש במידע מהשרת
+      setUser({
+        name: `Hi ${userData.firstName}` || "Guest",
+        profilePic:
+          userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
+      });
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
   useEffect(() => {
-    const fetchUserDataAndSetState = async () => {
-      try {
-        // קריאה ל-Backend כדי להביא נתוני משתמש
-        const userData = await fetchUserData();
-        console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
-
-        // עדכון המשתמש במידע מהשרת
-        setUser({
-          name: `Hi ${userData.firstName}` || "Guest",
-          profilePic:
-            userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
-        });
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      }
-    };
-
-    const fetchProducts = async () => {
-      try {
-        console.log(`Fetching products from ${config.BASE_URL}/cakes`);
-
-        const response = await fetch(`${config.BASE_URL}/cakes`, {
-          method: "GET",
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error("API Error:", errorText);
-          throw new Error(`Failed to fetch products: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-          throw new Error("Unexpected response format from server");
-        }
-
-        console.log("Fetched products:", data);
-
-        // ודא שכל פריט מכיל תמונה, אם אין - הוסף תמונת ברירת מחדל
-        const updatedProducts = data.map((product) => ({
-          ...product,
-          image:
-            product.image && product.image.startsWith("http")
-              ? product.image
-              : "https://via.placeholder.com/150", // תמונת ברירת מחדל
-        }));
-
-        setProducts(updatedProducts);
-        setFilteredProducts(updatedProducts); // עדכון הרשימה המסוננת בעת טעינה ראשונית
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        Alert.alert(
-          "Error",
-          "Failed to fetch products. Please try again later."
-        );
-      }
-    };
-
     // קריאה לשתי הפונקציות
     fetchUserDataAndSetState();
     fetchProducts();
   }, []);
+  const fetchProducts = async () => {
+    try {
+      console.log(`Fetching products from ${config.BASE_URL}/cakes`);
 
+      const response = await fetch(`${config.BASE_URL}/cakes`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", errorText);
+        throw new Error(`Failed to fetch products: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!Array.isArray(data)) {
+        throw new Error("Unexpected response format from server");
+      }
+
+      console.log("Fetched products:", data);
+
+      // ודא שכל פריט מכיל תמונה, אם אין - הוסף תמונת ברירת מחדל
+      const updatedProducts = data.map((product) => ({
+        ...product,
+        image:
+          product.image && product.image.startsWith("http")
+            ? product.image
+            : "https://via.placeholder.com/150", // תמונת ברירת מחדל
+      }));
+
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts); // עדכון הרשימה המסוננת בעת טעינה ראשונית
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      Alert.alert(
+        "Error",
+        "Failed to fetch products. Please try again later."
+      );
+    }
+  };
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchProducts(); // קריאה לפונקציה בכניסה למסך
+      fetchUserDataAndSetState();
+    }, [])
+  );
   const renderProduct = ({ item }: { item: Product }) => (
     <TouchableOpacity
       style={styles.productCard}

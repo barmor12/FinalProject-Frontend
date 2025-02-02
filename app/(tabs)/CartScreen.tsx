@@ -11,11 +11,12 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 
 interface CartItem {
   _id: string;
   cake: {
+    _id: string;
     name: string;
     image: string;
     price: number;
@@ -68,8 +69,22 @@ export default function InventoryScreen() {
     fetchCartItems();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchCartItems();
+    }, [])
+  );
+
+  const handleProductPress = (id) => {
+    // השתמש בנתיב דינמי מתאים
+    router.push(`/product/${id}`);
+  };
+
   const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
+    <TouchableOpacity
+      style={styles.cartItem}
+      onPress={() => handleProductPress(item.cake._id)} // ניווט לעמוד המוצר
+    >
       <Image
         source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
         style={styles.itemImage}
@@ -79,7 +94,7 @@ export default function InventoryScreen() {
         <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
         <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -96,21 +111,19 @@ export default function InventoryScreen() {
       {cartItems.length === 0 ? (
         <Text style={styles.emptyMessage}>Your cart is empty.</Text>
       ) : (
-        <>
-          <FlatList
-            data={cartItems}
-            keyExtractor={(item) => item._id}
-            renderItem={renderCartItem}
-            contentContainerStyle={styles.cartList}
-          />
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={handleCheckout}
-          >
-            <Text style={styles.checkoutButtonText}>Checkout</Text>
-          </TouchableOpacity>
-        </>
+        <FlatList
+          data={cartItems}
+          keyExtractor={(item) => item._id}
+          renderItem={renderCartItem}
+          contentContainerStyle={styles.cartList}
+        />
       )}
+      <TouchableOpacity
+        style={styles.checkoutButton}
+        onPress={handleCheckout}
+      >
+        <Text style={styles.checkoutButtonText}>Checkout</Text>
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }

@@ -35,7 +35,7 @@ export default function EditProfileScreen() {
 
         let profilePicUri:
           | string
-          | number = require("../assets/images/Welcome.jpg");
+          | number = require("../assets/images/userIcon.png");
 
         if (userData.profilePic) {
           profilePicUri = userData.profilePic.startsWith("http")
@@ -86,7 +86,8 @@ export default function EditProfileScreen() {
     }
   };
 
-  const handleUpdateProfile = async () => {
+
+  const handleUpdateName = async () => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) {
@@ -99,45 +100,32 @@ export default function EditProfileScreen() {
         return;
       }
 
-      let formData = new FormData();
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-
-      if (
-        typeof user.profilePic === "string" &&
-        user.profilePic.startsWith("http")
-      ) {
-        formData.append("profilePic", {
-          uri: user.profilePic,
-          name: "profile.jpg",
-          type: "image/jpeg",
-        } as any);
-      }
-
-      const response = await fetch(`${config.BASE_URL}/user/update-profile`, {
+      const response = await fetch(`${config.BASE_URL}/user/profile`, {
         method: "PUT",
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: formData,
+        body: JSON.stringify({
+          firstName,
+          lastName,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert("Error", data.message || "Failed to update profile.");
+        Alert.alert("Error", data.message || "Failed to update name.");
         return;
       }
 
-      Alert.alert("Success", "Profile updated successfully!", [
-        { text: "OK", onPress: () => setRefreshKey((prev) => prev + 1) },
-      ]);
+      Alert.alert("Success", "Name updated successfully!");
     } catch (error) {
-      console.error("❌ Error updating profile:", error);
+      console.error("❌ Error updating name:", error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
+
 
   return (
     <View style={styles.container}>
@@ -169,9 +157,10 @@ export default function EditProfileScreen() {
         onChangeText={setLastName}
       />
 
-      <TouchableOpacity onPress={handleUpdateProfile} style={styles.button}>
+      <TouchableOpacity onPress={handleUpdateName} style={styles.button}>
         <Text style={styles.buttonText}>Update Profile</Text>
       </TouchableOpacity>
     </View>
   );
 }
+
