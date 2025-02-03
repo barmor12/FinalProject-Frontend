@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   SafeAreaView,
   Text,
@@ -9,29 +9,65 @@ import {
   Alert,
   View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router"; // שימוש ב-router
+import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 
+// 🎯 הגדרת טיפוס עבור המוצר
+interface Product {
+  _id: string;
+  name: string;
+  image: string;
+  description: string;
+  ingredients: string[];
+  price: number;
+}
+
 export default function ProductDetailsScreen() {
   const params = useLocalSearchParams();
-  const product = params.product ? JSON.parse(params.product as string) : null;
+  const router = useRouter();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [quantity, setQuantity] = useState(1);
 
-  // מצב לאחסון כמות
-  const [quantity, setQuantity] = useState(1); // ברירת מחדל = 1
+  console.log("Product params received:", params);
 
-  // פונקציות להוספה ולהפחתה של כמות
-  const incrementQuantity = () => {
-    setQuantity((prevQuantity) => prevQuantity + 1);
-  };
-
-  const decrementQuantity = () => {
-    if (quantity > 1) {
-      setQuantity((prevQuantity) => prevQuantity - 1);
-    } else {
-      Alert.alert("Error", "Quantity cannot be less than 1.");
+  useEffect(() => {
+    if (params.product) {
+      try {
+        setProduct(JSON.parse(params.product as string));
+      } catch (error) {
+        console.error("Error parsing product:", error);
+      }
     }
-  };
+  }, [params.product]);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!product && params.id) {
+        try {
+          console.log(`Fetching product details for ID: ${params.id}`);
+          const response = await fetch(`${config.BASE_URL}/cakes/${params.id}`);
+          if (!response.ok) throw new Error("Failed to fetch product details");
+
+          const data: Product = await response.json();
+          setProduct(data);
+        } catch (error) {
+          console.error("Error fetching product:", error);
+          Alert.alert("Error", "Failed to load product details.");
+        }
+      }
+    };
+
+    fetchProduct();
+  }, [params.id, product]);
+
+  if (!product) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <Text style={styles.error}>Loading product details...</Text>
+      </SafeAreaView>
+    );
+  }
 
   const addToCart = async (cakeId: string, quantity: number) => {
     try {
@@ -41,17 +77,16 @@ export default function ProductDetailsScreen() {
         return;
       }
 
-      console.log("Cake ID being sent to the API:", cakeId);
-      console.log("Quantity being sent to the API:", quantity);
-
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) {
         console.error("User is not logged in. Token is missing.");
-        Alert.alert("Error", "You need to be logged in to add items to the cart.");
+        Alert.alert(
+          "Error",
+          "You need to be logged in to add items to the cart."
+        );
         return;
       }
 
-      // קריאה ל-API עם גם `cakeId` וגם `quantity`
       const response = await fetch(`${config.BASE_URL}/cart/add`, {
         method: "POST",
         headers: {
@@ -68,7 +103,6 @@ export default function ProductDetailsScreen() {
         return;
       }
 
-      console.log("Cake successfully added to cart.");
       Alert.alert("Success", "Cake added to cart successfully!", [
         { text: "OK", onPress: () => router.back() },
       ]);
@@ -78,16 +112,6 @@ export default function ProductDetailsScreen() {
     }
   };
 
-  // בדיקת המוצר
-  if (!product || !product.image || !product.description || !product.name) {
-    console.error("Product data is missing or incomplete.");
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>Error: Product data not found or incomplete</Text>
-      </SafeAreaView>
-    );
-  }
-
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -95,17 +119,22 @@ export default function ProductDetailsScreen() {
         <Image source={{ uri: product.image }} style={styles.image} />
         <Text style={styles.description}>{product.description}</Text>
         <Text style={styles.ingredients}>
-          Ingredients: {product.ingredients.join(", ")}
+          Ingredients: {product.ingredients?.join(", ")}
         </Text>
         <Text style={styles.price}>Price: ${product.price.toFixed(2)}</Text>
 
-        {/* כפתורי הוספה והפחתה של כמות */}
         <View style={styles.quantityContainer}>
-          <TouchableOpacity style={styles.button} onPress={decrementQuantity}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setQuantity((prev) => Math.max(1, prev - 1))}
+          >
             <Text style={styles.buttonText}>-</Text>
           </TouchableOpacity>
           <Text style={styles.quantityText}>{quantity}</Text>
-          <TouchableOpacity style={styles.button} onPress={incrementQuantity}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setQuantity((prev) => prev + 1)}
+          >
             <Text style={styles.buttonText}>+</Text>
           </TouchableOpacity>
         </View>
@@ -117,7 +146,7 @@ export default function ProductDetailsScreen() {
               Alert.alert("Error", "Cake ID is missing.");
               return;
             }
-            addToCart(product._id, quantity); // קריאה לפונקציה עם כמות
+            addToCart(product._id, quantity);
           }}
         >
           <Text style={styles.addButtonText}>Add to Cart</Text>
@@ -128,30 +157,19 @@ export default function ProductDetailsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9f3ea",
-  },
-  scrollContent: {
-    padding: 16,
-  },
+  container: { flex: 1, backgroundColor: "#f9f3ea" },
+  scrollContent: { padding: 16 },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#6b4226",
-    marginBottom: 16,
     textAlign: "center",
   },
-  image: {
-    width: "100%",
-    height: 200,
-    borderRadius: 10,
-    marginBottom: 16,
-  },
+  image: { width: "100%", height: 200, borderRadius: 10 },
   description: {
     fontSize: 16,
     color: "#6b4226",
-    marginBottom: 16,
+    marginTop: 16,
     textAlign: "justify",
   },
   ingredients: {
@@ -165,50 +183,26 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#6b4226",
     textAlign: "center",
-    marginTop: 16,
-    marginBottom: 16,
   },
   quantityContainer: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
-    marginBottom: 16,
+    marginVertical: 10,
   },
   button: {
     backgroundColor: "#6b4226",
     padding: 10,
     borderRadius: 8,
     marginHorizontal: 10,
-    width: 40,
-    alignItems: "center",
-    justifyContent: "center",
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  quantityText: {
-    fontSize: 18,
-    color: "#6b4226",
-    fontWeight: "bold",
-  },
+  buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  quantityText: { fontSize: 18, color: "#6b4226" },
   addButton: {
     backgroundColor: "#6b4226",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    padding: 10,
     borderRadius: 8,
     alignItems: "center",
   },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  error: {
-    fontSize: 18,
-    color: "red",
-    textAlign: "center",
-    marginTop: 20,
-  },
+  addButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  error: { fontSize: 18, color: "red", textAlign: "center", marginTop: 20 },
 });
