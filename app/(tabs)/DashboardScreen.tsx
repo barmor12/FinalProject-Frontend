@@ -51,7 +51,10 @@ export default function DashboardScreen() {
   };
 
   const toggleSearch = () => {
-    setSearchVisible((prev) => !prev);
+    setSearchVisible((prev) => {
+      if (!prev) setSearchText(""); // איפוס החיפוש כשהוא נסגר
+      return !prev;
+    });
     setShowHorizontalScroll((prev) => !prev);
   };
 
@@ -110,6 +113,10 @@ export default function DashboardScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    setFilteredProducts(products);
+  }, [products]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchProducts();
@@ -137,9 +144,25 @@ export default function DashboardScreen() {
           />
           <Text style={styles.userName}>{user.name}</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-          <Ionicons name="search" size={24} color="#fff" />
-        </TouchableOpacity>
+
+        <View style={styles.rightHeader}>
+          {searchVisible && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search..."
+              value={searchText}
+              onChangeText={handleSearch}
+              autoFocus
+            />
+          )}
+          <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
+            <Ionicons
+              name={searchVisible ? "close" : "search"}
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {showHorizontalScroll && (
@@ -200,6 +223,7 @@ const styles = StyleSheet.create({
   profileContainer: { flexDirection: "row", alignItems: "center" },
   profileImage: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   userName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
+  rightHeader: { flexDirection: "row", alignItems: "center" },
   searchInput: {
     height: 40,
     borderWidth: 1,
@@ -216,20 +240,6 @@ const styles = StyleSheet.create({
   },
   hotCakeList: { paddingHorizontal: 8 },
   horizontalScrollContainer: { marginBottom: 8 },
-  horizontalProductCard: {
-    backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    marginHorizontal: 8,
-    alignItems: "center",
-    width: 140,
-    height: 180,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-    elevation: 2,
-  },
   productCard: {
     backgroundColor: "#fff",
     padding: 10,
@@ -237,10 +247,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     alignItems: "center",
     width: "48%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    elevation: 2,
+  },
+  horizontalProductCard: {
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: "center",
+    width: 150,
     elevation: 2,
   },
   productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
