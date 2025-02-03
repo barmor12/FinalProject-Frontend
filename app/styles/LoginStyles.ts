@@ -29,6 +29,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     backgroundColor: "#fff",
     fontSize: 16,
+    color: "black",
   },
   button: {
     backgroundColor: "#d49a6a", // Gold shade
@@ -72,6 +73,15 @@ const styles = StyleSheet.create({
   signupLink: {
     color: "#d49a6a",
     fontWeight: "bold",
+  },
+  backButton: {
+    marginTop: 20,
+
+    padding: 10,
+
+    borderRadius: 5,
+
+    alignItems: "center",
   },
 });
 

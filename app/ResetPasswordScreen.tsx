@@ -58,6 +58,7 @@ export default function ResetPasswordScreen() {
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor="#000"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -66,6 +67,7 @@ export default function ResetPasswordScreen() {
       <TextInput
         style={styles.input}
         placeholder="Reset Code"
+        placeholderTextColor="#000"
         value={code}
         onChangeText={setCode}
       />
@@ -73,6 +75,7 @@ export default function ResetPasswordScreen() {
       <TextInput
         style={styles.input}
         placeholder="New Password"
+        placeholderTextColor="#000"
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
