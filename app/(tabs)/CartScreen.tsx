@@ -75,7 +75,7 @@ export default function InventoryScreen() {
     }, [])
   );
 
-  const handleProductPress = (id) => {
+  const handleProductPress = (id: string) => {
     // השתמש בנתיב דינמי מתאים
     router.push(`/product/${id}`);
   };
@@ -118,10 +118,7 @@ export default function InventoryScreen() {
           contentContainerStyle={styles.cartList}
         />
       )}
-      <TouchableOpacity
-        style={styles.checkoutButton}
-        onPress={handleCheckout}
-      >
+      <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
         <Text style={styles.checkoutButtonText}>Checkout</Text>
       </TouchableOpacity>
     </SafeAreaView>
