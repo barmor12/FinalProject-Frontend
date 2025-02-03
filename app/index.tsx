@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,10 +19,68 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 📌 פונקציה לרענון ה-Access Token
+  const refreshAccessToken = async () => {
+    try {
+      console.log("🔄 Refreshing access token...");
+      const refreshToken = await AsyncStorage.getItem("refreshToken");
+
+      if (!refreshToken) {
+        console.warn("⚠️ No refresh token found, redirecting to login...");
+        return false;
+      }
+
+      const response = await fetch(`${config.BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("✅ Token refreshed successfully!");
+        await AsyncStorage.setItem("accessToken", data.accessToken);
+        return true;
+      } else {
+        console.warn("⚠️ Refresh token expired, user must log in again.");
+        return false;
+      }
+    } catch (error) {
+      console.error("❌ Error refreshing token:", error);
+      return false;
+    }
+  };
+
+  // 📌 פונקציה לבדיקה אוטומטית של התחברות
+  const checkLoginStatus = async () => {
+    const accessToken = await AsyncStorage.getItem("accessToken");
+    const role = await AsyncStorage.getItem("role");
+
+    if (!accessToken) {
+      const refreshed = await refreshAccessToken();
+      if (!refreshed) return;
+    }
+
+    console.log("🔄 User is logged in, navigating...");
+    if (role === "admin") {
+      router.replace("/(admintabs)/AdminDashboardScreen");
+    } else {
+      router.replace("/(tabs)/DashboardScreen");
+    }
+  };
+
+  // 📌 נריץ את הבדיקה פעם אחת כשהמסך נטען
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  // 📌 פונקציה להתחברות
   const handleLogin = async () => {
     console.log("🔄 Login process started");
 
     try {
+      setLoading(true);
       console.log("📡 Sending request to server...");
       const response = await fetch(`${config.BASE_URL}/auth/login`, {
         method: "POST",
@@ -39,14 +97,12 @@ export default function LoginScreen() {
         await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
         await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
 
-        // ✅ שמירת התפקיד של המשתמש
         const role = data.role || "user";
         await AsyncStorage.setItem("role", role);
         console.log("🗂 Tokens & role saved successfully:", role);
 
         Alert.alert("Success", "Logged in successfully!");
 
-        // ✅ ניווט בהתאם ל-role
         if (role === "admin") {
           router.replace("/(admintabs)/AdminDashboardScreen");
         } else {
@@ -59,8 +115,11 @@ export default function LoginScreen() {
     } catch (error) {
       console.error("❌ Error during login process:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back!</Text>
