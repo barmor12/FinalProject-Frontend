@@ -79,6 +79,11 @@ export default function LoginScreen() {
   const handleLogin = async () => {
     console.log("🔄 Login process started");
 
+    if (!email || !password) {
+      Alert.alert("Error", "Please enter email and password.");
+      return;
+    }
+
     try {
       setLoading(true);
       console.log("📡 Sending request to server...");
@@ -153,6 +158,7 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
+      {/* 📌 כפתור התחברות עם גוגל (אם תרצה להוסיף Firebase, יש לחבר אותו כאן) */}
       <TouchableOpacity style={styles.googleButton}>
         <Image
           source={{
@@ -161,6 +167,14 @@ export default function LoginScreen() {
           style={styles.googleIcon}
         />
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
+      </TouchableOpacity>
+
+      {/* 📌 שחזור סיסמה */}
+      <TouchableOpacity
+        style={styles.forgotPasswordButton}
+        onPress={() => router.push("/ForgotPasswordScreen")}
+      >
+        <Text style={styles.signupLink}>Forgot Password?</Text>
       </TouchableOpacity>
 
       <Text style={styles.signupText}>
