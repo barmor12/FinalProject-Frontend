@@ -25,18 +25,23 @@ interface Product {
 
 export default function ProductDetailsScreen() {
   const params = useLocalSearchParams();
-  const router = useRouter();
   const [product, setProduct] = useState<Product | null>(null);
+  const router = useRouter();
   const [quantity, setQuantity] = useState(1);
 
-  console.log("Product params received:", params);
+  console.log("🔹 Received params:", params);
 
   useEffect(() => {
     if (params.product) {
       try {
-        setProduct(JSON.parse(params.product as string));
+        const parsedProduct = JSON.parse(params.product as string);
+        if (parsedProduct && parsedProduct._id) {
+          setProduct(parsedProduct);
+        } else {
+          console.error("❌ Invalid product data received:", params.product);
+        }
       } catch (error) {
-        console.error("Error parsing product:", error);
+        console.error("❌ Error parsing product:", error);
       }
     }
   }, [params.product]);
@@ -45,21 +50,25 @@ export default function ProductDetailsScreen() {
     const fetchProduct = async () => {
       if (!product && params.id) {
         try {
-          console.log(`Fetching product details for ID: ${params.id}`);
+          console.log("🔹 Fetching product from API:", params.id);
           const response = await fetch(`${config.BASE_URL}/cakes/${params.id}`);
-          if (!response.ok) throw new Error("Failed to fetch product details");
+          if (!response.ok)
+            throw new Error("❌ Failed to fetch product details");
 
-          const data: Product = await response.json();
-          setProduct(data);
+          const data = await response.json();
+          if (data && data._id) {
+            setProduct(data);
+          } else {
+            console.error("❌ API returned invalid product data:", data);
+          }
         } catch (error) {
-          console.error("Error fetching product:", error);
-          Alert.alert("Error", "Failed to load product details.");
+          console.error("❌ Error fetching product:", error);
         }
       }
     };
 
     fetchProduct();
-  }, [params.id, product]);
+  }, [params.id]);
 
   if (!product) {
     return (
@@ -116,7 +125,10 @@ export default function ProductDetailsScreen() {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>{product.name}</Text>
-        <Image source={{ uri: product.image }} style={styles.image} />
+        <Image
+          source={{ uri: product.image || "https://via.placeholder.com/200" }}
+          style={styles.image}
+        />
         <Text style={styles.description}>{product.description}</Text>
         <Text style={styles.ingredients}>
           Ingredients: {product.ingredients?.join(", ")}

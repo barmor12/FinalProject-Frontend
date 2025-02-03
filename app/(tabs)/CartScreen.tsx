@@ -14,6 +14,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import CartProductModal from "@/components/CartProductModal";
 
 interface CartItem {
   _id: string;
@@ -22,6 +23,9 @@ interface CartItem {
     name: string;
     image: string;
     price: number;
+    description: string;
+    ingredients: string[];
+    allergens: string[];
   };
   quantity: number;
 }
@@ -29,6 +33,8 @@ interface CartItem {
 export default function CartScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
+  const [isModalVisible, setModalVisible] = useState(false);
   const router = useRouter();
 
   const fetchCartItems = async () => {
@@ -61,9 +67,17 @@ export default function CartScreen() {
       setLoading(false);
     }
   };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchCartItems();
+    }, [])
+  );
+
   const updateQuantity = async (itemId: string, newQuantity: number) => {
+    if (newQuantity < 1) return;
     try {
-      console.log("🔹 Sending update request:", { itemId, newQuantity }); // ✅ Debug log
+      console.log("🔹 Sending update request:", { itemId, newQuantity });
 
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
@@ -74,7 +88,7 @@ export default function CartScreen() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ itemId, quantity: newQuantity }), // ✅ Ensure itemId is from cart.items._id
+        body: JSON.stringify({ itemId, quantity: newQuantity }),
       });
 
       const result = await response.json();
@@ -104,11 +118,11 @@ export default function CartScreen() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ cakeId }), // 📌 שינוי מ- itemId ל- cakeId
+        body: JSON.stringify({ cakeId }),
       });
 
       const data = await response.json();
-      console.log("Remove response:", data); // 🚀 הדפסת תגובת השרת
+      console.log("Remove response:", data);
 
       if (!response.ok) throw new Error(data.error || "Failed to remove item");
 
@@ -117,11 +131,7 @@ export default function CartScreen() {
       );
     } catch (error) {
       console.error("Error removing item:", error);
-      if (error instanceof Error) {
-        Alert.alert("Error", error.message || "Failed to remove item");
-      } else {
-        Alert.alert("Error", "Failed to remove item");
-      }
+      Alert.alert("Error", "Failed to remove item");
     }
   };
 
@@ -130,37 +140,22 @@ export default function CartScreen() {
       Alert.alert("Cart is empty", "Please add items before checking out.");
       return;
     }
-    Alert.alert("Checkout", "Proceeding to checkout...", [
-      { text: "OK", onPress: () => router.push("/CheckoutScreen") },
-    ]);
+    router.push("/CheckoutScreen");
   };
 
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchCartItems();
-    }, [])
-  );
-
-  const handleProductPress = (id: string) => {
-    router.push({
-      pathname: "/product/[id]",
-      params: { id },
-    });
+  const openProductModal = (product: CartItem) => {
+    setSelectedProduct(product);
+    setModalVisible(true);
   };
 
-  const calculateTotal = () => {
-    return cartItems
-      .reduce((sum, item) => sum + item.cake.price * item.quantity, 0)
-      .toFixed(2);
+  const closeProductModal = () => {
+    setSelectedProduct(null);
+    setModalVisible(false);
   };
 
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
-      <TouchableOpacity onPress={() => handleProductPress(item.cake._id)}>
+      <TouchableOpacity onPress={() => openProductModal(item)}>
         <Image
           source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
           style={styles.itemImage}
@@ -185,7 +180,7 @@ export default function CartScreen() {
       </View>
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => removeItem(item.cake._id)} // 📌 שליחת cake._id במקום item._id
+        onPress={() => removeItem(item.cake._id)}
       >
         <MaterialIcons name="delete" size={22} color="white" />
       </TouchableOpacity>
@@ -212,7 +207,12 @@ export default function CartScreen() {
             contentContainerStyle={styles.cartList}
           />
           <View style={styles.checkoutContainer}>
-            <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
+            <Text style={styles.totalText}>
+              Total: $
+              {cartItems
+                .reduce((sum, item) => sum + item.cake.price * item.quantity, 0)
+                .toFixed(2)}
+            </Text>
             <TouchableOpacity
               style={styles.checkoutButton}
               onPress={handleCheckout}
@@ -222,6 +222,11 @@ export default function CartScreen() {
           </View>
         </>
       )}
+      <CartProductModal
+        visible={isModalVisible}
+        onClose={closeProductModal}
+        product={selectedProduct?.cake || null} // ✅ הוספת בדיקה למניעת קריסה
+      />
     </SafeAreaView>
   );
 }

@@ -109,7 +109,7 @@ export default function CheckoutScreen() {
       }
 
       Alert.alert("Success", "Your order has been placed successfully!", [
-        { text: "OK", onPress: () => router.replace("/orders") },
+        { text: "OK", onPress: () => router.replace("/OrdersScreen") },
       ]);
     } catch (error: any) {
       console.error("Error placing order:", error.message || error);
