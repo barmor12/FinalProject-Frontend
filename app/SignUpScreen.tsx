@@ -119,30 +119,35 @@ export default function SignUpScreen() {
           style={styles.input}
           placeholder="First Name"
           value={firstName}
+          placeholderTextColor="#000"
           onChangeText={setFirstName}
         />
         <TextInput
           style={styles.input}
           placeholder="Last Name"
           value={lastName}
+          placeholderTextColor="#000"
           onChangeText={setLastName}
         />
         <TextInput
           style={styles.input}
           placeholder="Email"
           value={email}
+          placeholderTextColor="#000"
           keyboardType="email-address"
           onChangeText={setEmail}
         />
         <TextInput
           style={styles.input}
           placeholder="Password"
+          placeholderTextColor="#000"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
         <TextInput
           style={styles.input}
+          placeholderTextColor="#000"
           placeholder="Confirm Password"
           secureTextEntry
           value={confirmPassword}

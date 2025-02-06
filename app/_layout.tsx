@@ -29,13 +29,16 @@ export default function RootLayout() {
       >
         {/* מסכי הרשמה ואימות */}
         <Stack.Screen name="SignUpScreen" />
-        <Stack.Screen name="EmailVerificationScreen" />
+        <Stack.Screen
+          name="EmailVerificationScreen"
+          options={{ title: "Verify Email" }}
+        />
         <Stack.Screen name="ProductDetailsScreen" />
 
         {/* הטאבים נטענים תמיד */}
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(admintabs)" />
-        <Stack.Screen name="product/[id]" options={{ title: 'Product' }} />
+        <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
 
         <Stack.Screen name="SaveDraftOrder" />
         <Stack.Screen name="DuplicateOrder" />
