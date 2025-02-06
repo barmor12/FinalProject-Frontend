@@ -9,12 +9,12 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import CartProductModal from "@/components/CartProductModal";
 
 interface CartItem {
   _id: string;
@@ -38,7 +38,6 @@ export default function CartScreen() {
   const [cartItemCount, setCartItemCount] = useState<number>(0);
   const router = useRouter();
 
-  // ✅ טוען את כמות הפריטים מה-AsyncStorage כשהאפליקציה נטענת
   useEffect(() => {
     const loadCartCount = async () => {
       const count = await AsyncStorage.getItem("cartItemCount");
@@ -68,8 +67,6 @@ export default function CartScreen() {
 
       const data = await response.json();
       setCartItems(data.items);
-
-      // ✅ עדכון מספר הפריטים הכולל בעגלה בזמן אמת
       updateCartBadge(data.items);
     } catch (error: any) {
       console.error("Error fetching cart items:", error.message || error);
@@ -88,17 +85,13 @@ export default function CartScreen() {
   const updateCartBadge = async (items: CartItem[]) => {
     const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
     setCartItemCount(totalItems);
-
-    // ✅ שמירה ב-AsyncStorage כדי שהאייקון יתעדכן גם בטאב הראשי
     await AsyncStorage.setItem("cartItemCount", totalItems.toString());
   };
 
-  // 📌 הפעלת updateCartBadge אחרי כל שינוי בעגלה:
   useEffect(() => {
     updateCartBadge(cartItems);
   }, [cartItems]);
 
-  // עדכון כמות מוצר בעגלה
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
@@ -123,13 +116,12 @@ export default function CartScreen() {
       );
 
       setCartItems(updatedCart);
-      updateCartBadge(updatedCart); // ✅ עדכון החיווי לאחר שינוי בכמות
+      updateCartBadge(updatedCart);
     } catch (error) {
       console.error("❌ Error updating quantity:", error);
     }
   };
 
-  // מחיקת מוצר מהעגלה
   const removeItem = async (cakeId: string) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -149,24 +141,11 @@ export default function CartScreen() {
 
       const updatedCart = cartItems.filter((item) => item.cake._id !== cakeId);
       setCartItems(updatedCart);
-      updateCartBadge(updatedCart); // ✅ עדכון החיווי לאחר מחיקת מוצר
+      updateCartBadge(updatedCart);
     } catch (error) {
       console.error("Error removing item:", error);
       Alert.alert("Error", "Failed to remove item");
     }
-  };
-
-  // עדכון מספר המוצרים כאשר משתנה הסטייט
-  useEffect(() => {
-    updateCartBadge(cartItems);
-  }, [cartItems]); // ✅ יוודא שכל שינוי בעגלה יעדכן את מספר הפריטים
-
-  const handleCheckout = () => {
-    if (cartItems.length === 0) {
-      Alert.alert("Cart is empty", "Please add items before checking out.");
-      return;
-    }
-    router.push("/CheckoutScreen");
   };
 
   const openProductModal = (product: CartItem) => {
@@ -182,10 +161,7 @@ export default function CartScreen() {
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <TouchableOpacity onPress={() => openProductModal(item)}>
-        <Image
-          source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
-          style={styles.itemImage}
-        />
+        <Image source={{ uri: item.cake.image }} style={styles.itemImage} />
       </TouchableOpacity>
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.cake.name}</Text>
@@ -225,32 +201,46 @@ export default function CartScreen() {
       ) : cartItems.length === 0 ? (
         <Text style={styles.emptyMessage}>Your cart is empty.</Text>
       ) : (
-        <>
-          <FlatList
-            data={cartItems}
-            keyExtractor={(item) => item._id}
-            renderItem={renderCartItem}
-          />
-          <View style={styles.checkoutContainer}>
-            <Text style={styles.totalText}>
-              Total: $
-              {cartItems
-                .reduce((sum, item) => sum + item.cake.price * item.quantity, 0)
-                .toFixed(2)}
-            </Text>
-            <TouchableOpacity
-              style={styles.checkoutButton}
-              onPress={handleCheckout}
-            >
-              <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
-            </TouchableOpacity>
-          </View>
-        </>
+        <FlatList
+          data={cartItems}
+          keyExtractor={(item) => item._id}
+          renderItem={renderCartItem}
+        />
       )}
+
+      {/* ✅ מודל להצגת פרטי מוצר */}
+      <Modal visible={isModalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {selectedProduct && (
+              <>
+                <Image
+                  source={{ uri: selectedProduct.cake.image }}
+                  style={styles.modalImage}
+                />
+                <Text style={styles.modalTitle}>
+                  {selectedProduct.cake.name}
+                </Text>
+                <Text style={styles.modalDescription}>
+                  {selectedProduct.cake.description}
+                </Text>
+                <Text style={styles.modalPrice}>
+                  ${selectedProduct.cake.price.toFixed(2)}
+                </Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={closeProductModal}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9f3ea", padding: 16 },
   title: {
@@ -280,6 +270,59 @@ const styles = StyleSheet.create({
   },
   quantityText: { fontSize: 16, marginHorizontal: 10 },
   removeButton: { backgroundColor: "#ff4444", padding: 8, borderRadius: 30 },
+
+  // עיצוב למודל
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // רקע כהה למחוץ למודל
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    width: "85%",
+    padding: 20,
+    borderRadius: 15,
+    alignItems: "center",
+    elevation: 5,
+  },
+  modalImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#6b4226",
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  modalPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#d49a6a",
+    marginBottom: 15,
+  },
+  closeButton: {
+    backgroundColor: "#6b4226",
+    padding: 12,
+    borderRadius: 8,
+    width: "80%",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
   checkoutContainer: { position: "absolute", bottom: 80, left: 20, right: 20 },
   totalText: {
     fontSize: 18,
