@@ -2,39 +2,55 @@ import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
+    flexGrow: 1,
+    alignItems: "center",
+    backgroundColor: "#f9f3ea",
+    paddingVertical: 100,
+    paddingHorizontal: 20,
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-    backgroundColor: "#f9f3ea",
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#888",
+  },
+  backButton: {
+    alignSelf: "flex-start",
+    marginBottom: 10,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
+    color: "#6b4226",
     marginBottom: 20,
-    textAlign: "center",
+  },
+  imageContainer: {
+    alignItems: "center",
+    marginBottom: 20,
   },
   profileImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
+    width: 150,
+    height: 150,
+    borderRadius: 80,
     marginBottom: 10,
-    backgroundColor: "gray",
   },
   changePhotoText: {
-    fontSize: 14,
-    color: "#007BFF",
-    textAlign: "center",
-    marginBottom: 15,
+    color: "#6b4226",
+    fontWeight: "bold",
   },
   input: {
     width: "100%",
     padding: 12,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 15,
     backgroundColor: "#fff",
+    fontSize: 16,
   },
   button: {
     backgroundColor: "#d49a6a",
@@ -42,10 +58,11 @@ export default StyleSheet.create({
     borderRadius: 10,
     width: "100%",
     alignItems: "center",
+    marginBottom: 15,
   },
   buttonText: {
     color: "#fff",
-    fontSize: 16,
     fontWeight: "bold",
+    fontSize: 16,
   },
 });

@@ -53,4 +53,7 @@ export default StyleSheet.create({
     zIndex: 10,
   },
   backButtonText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
+  deleteButton: {
+    backgroundColor: "red",
+  },
 });
