@@ -88,8 +88,6 @@ const styles = StyleSheet.create({
 
     padding: 10,
 
-    backgroundColor: "#f5f5f5",
-
     borderRadius: 5,
   },
 });

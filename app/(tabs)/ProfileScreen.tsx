@@ -25,29 +25,30 @@ export default function ProfileScreen() {
   useEffect(() => {
     fetchUserDataAndSetState();
   }, []);
+
   useFocusEffect(
     React.useCallback(() => {
       fetchUserDataAndSetState();
     }, [])
   );
+
   const fetchUserDataAndSetState = async () => {
     try {
-      // קריאה ל-Backend כדי להביא נתוני משתמש
       const userData = await fetchUserData();
-      console.log("Fetched user data:", userData); // הדפס את הנתונים המתקבלים
+      console.log("Fetched user data:", userData);
 
-      // עדכון המשתמש במידע מהשרת
       setUser({
         name: `Hi ${userData.firstName}` || "Guest",
         profilePic:
-          userData.profilePic || require("../../assets/images/userIcon.png"), // תמונת ברירת מחדל אם אין תמונת פרופיל
+          userData.profilePic || require("../../assets/images/userIcon.png"),
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
-      setLoading(false); // עדכון מצב ה-loading כאשר הקריאה הושלמה
+      setLoading(false);
     }
   };
+
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
@@ -64,7 +65,6 @@ export default function ProfileScreen() {
       });
 
       if (response.ok) {
-        // מחיקת הטוקנים
         await AsyncStorage.removeItem("accessToken");
         await AsyncStorage.removeItem("refreshToken");
 
@@ -83,8 +83,13 @@ export default function ProfileScreen() {
   const handleEditProfile = () => {
     router.push("/EditProfileScreen");
   };
+
   const handleSecACC = () => {
     router.push("/AccountSecurityScreen");
+  };
+
+  const handleOrders = () => {
+    router.push("/OrdersScreen"); // ניתוב למסך ההזמנות
   };
 
   if (loading) {
@@ -113,9 +118,10 @@ export default function ProfileScreen() {
       <Text style={styles.userName}>{user.name || "User"}</Text>
       <Text style={styles.title}>Profile</Text>
 
-      <TouchableOpacity style={styles.button} onPress={() => ""}>
+      <TouchableOpacity style={styles.button} onPress={handleOrders}>
         <Text style={styles.buttonText}>My Orders</Text>
       </TouchableOpacity>
+
       <TouchableOpacity style={styles.button} onPress={handleEditProfile}>
         <Text style={styles.buttonText}>Edit Profile</Text>
       </TouchableOpacity>
@@ -138,9 +144,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#f9f3ea",
   },
-  profileImage: { width: 100, height: 100, borderRadius: 50, marginBottom: 10 },
-  userName: { fontSize: 20, fontWeight: "bold", marginBottom: 5 },
-  title: { fontSize: 18, color: "#888", marginBottom: 20 },
+  profileImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    marginBottom: 10,
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    marginBottom: 5,
+  },
+  title: {
+    fontSize: 18,
+    color: "#888",
+    marginBottom: 20,
+  },
   button: {
     backgroundColor: "#d49a6a",
     padding: 15,
@@ -149,7 +168,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 10,
   },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

@@ -91,7 +91,7 @@ export default function ForgotPasswordScreen() {
         style={styles.backButton}
         onPress={() => router.push("/")}
       >
-        <Text style={styles.buttonText}>Back to Login</Text>
+        <Text style={styles.signupLink}>Back to Login</Text>
       </TouchableOpacity>
     </View>
   );
