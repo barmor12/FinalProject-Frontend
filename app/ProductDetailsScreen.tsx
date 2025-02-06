@@ -81,14 +81,20 @@ export default function ProductDetailsScreen() {
   const addToCart = async (cakeId: string, quantity: number) => {
     try {
       if (!cakeId) {
-        console.error("Cake ID is missing or undefined.");
+        console.error("❌ Cake ID is missing or undefined.");
         Alert.alert("Error", "Cake ID is missing.");
+        return;
+      }
+
+      if (quantity < 1) {
+        console.error("❌ Invalid quantity:", quantity);
+        Alert.alert("Error", "Quantity must be at least 1.");
         return;
       }
 
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) {
-        console.error("User is not logged in. Token is missing.");
+        console.error("❌ User is not logged in. Token is missing.");
         Alert.alert(
           "Error",
           "You need to be logged in to add items to the cart."
@@ -107,16 +113,16 @@ export default function ProductDetailsScreen() {
 
       if (!response.ok) {
         const error = await response.json();
-        console.error("API Response Error:", error.message);
+        console.error("❌ API Response Error:", error.message);
         Alert.alert("Error", error.message || "Failed to add cake to cart");
         return;
       }
 
-      Alert.alert("Success", "Cake added to cart successfully!", [
+      Alert.alert("Success", "🎉 Cake added to cart successfully!", [
         { text: "OK", onPress: () => router.back() },
       ]);
     } catch (error: any) {
-      console.error("Error in addToCart:", error.message || error);
+      console.error("❌ Error in addToCart:", error.message || error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };

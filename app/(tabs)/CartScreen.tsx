@@ -35,7 +35,17 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState<number>(0);
   const router = useRouter();
+
+  // ✅ טוען את כמות הפריטים מה-AsyncStorage כשהאפליקציה נטענת
+  useEffect(() => {
+    const loadCartCount = async () => {
+      const count = await AsyncStorage.getItem("cartItemCount");
+      setCartItemCount(count ? parseInt(count, 10) : 0);
+    };
+    loadCartCount();
+  }, []);
 
   const fetchCartItems = async () => {
     try {
@@ -48,9 +58,7 @@ export default function CartScreen() {
 
       const response = await fetch(`${config.BASE_URL}/cart`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) {
@@ -60,6 +68,9 @@ export default function CartScreen() {
 
       const data = await response.json();
       setCartItems(data.items);
+
+      // ✅ עדכון מספר הפריטים הכולל בעגלה בזמן אמת
+      updateCartBadge(data.items);
     } catch (error: any) {
       console.error("Error fetching cart items:", error.message || error);
       Alert.alert("Error", "Failed to fetch cart items. Please try again.");
@@ -74,11 +85,23 @@ export default function CartScreen() {
     }, [])
   );
 
+  const updateCartBadge = async (items: CartItem[]) => {
+    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+    setCartItemCount(totalItems);
+
+    // ✅ שמירה ב-AsyncStorage כדי שהאייקון יתעדכן גם בטאב הראשי
+    await AsyncStorage.setItem("cartItemCount", totalItems.toString());
+  };
+
+  // 📌 הפעלת updateCartBadge אחרי כל שינוי בעגלה:
+  useEffect(() => {
+    updateCartBadge(cartItems);
+  }, [cartItems]);
+
+  // עדכון כמות מוצר בעגלה
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
-      console.log("🔹 Sending update request:", { itemId, newQuantity });
-
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
@@ -92,21 +115,21 @@ export default function CartScreen() {
       });
 
       const result = await response.json();
-      console.log("🔹 Raw Server Response:", result);
-
       if (!response.ok)
         throw new Error(result.error || "Failed to update quantity");
 
-      setCartItems((prevItems) =>
-        prevItems.map((item) =>
-          item._id === itemId ? { ...item, quantity: newQuantity } : item
-        )
+      const updatedCart = cartItems.map((item) =>
+        item._id === itemId ? { ...item, quantity: newQuantity } : item
       );
+
+      setCartItems(updatedCart);
+      updateCartBadge(updatedCart); // ✅ עדכון החיווי לאחר שינוי בכמות
     } catch (error) {
       console.error("❌ Error updating quantity:", error);
     }
   };
 
+  // מחיקת מוצר מהעגלה
   const removeItem = async (cakeId: string) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -122,18 +145,21 @@ export default function CartScreen() {
       });
 
       const data = await response.json();
-      console.log("Remove response:", data);
-
       if (!response.ok) throw new Error(data.error || "Failed to remove item");
 
-      setCartItems((prevItems) =>
-        prevItems.filter((item) => item.cake._id !== cakeId)
-      );
+      const updatedCart = cartItems.filter((item) => item.cake._id !== cakeId);
+      setCartItems(updatedCart);
+      updateCartBadge(updatedCart); // ✅ עדכון החיווי לאחר מחיקת מוצר
     } catch (error) {
       console.error("Error removing item:", error);
       Alert.alert("Error", "Failed to remove item");
     }
   };
+
+  // עדכון מספר המוצרים כאשר משתנה הסטייט
+  useEffect(() => {
+    updateCartBadge(cartItems);
+  }, [cartItems]); // ✅ יוודא שכל שינוי בעגלה יעדכן את מספר הפריטים
 
   const handleCheckout = () => {
     if (cartItems.length === 0) {
@@ -189,7 +215,7 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Cart</Text>
+      <Text style={styles.title}>Your Cart ({cartItemCount})</Text>
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -204,7 +230,6 @@ export default function CartScreen() {
             data={cartItems}
             keyExtractor={(item) => item._id}
             renderItem={renderCartItem}
-            contentContainerStyle={styles.cartList}
           />
           <View style={styles.checkoutContainer}>
             <Text style={styles.totalText}>
@@ -222,11 +247,6 @@ export default function CartScreen() {
           </View>
         </>
       )}
-      <CartProductModal
-        visible={isModalVisible}
-        onClose={closeProductModal}
-        product={selectedProduct?.cake || null} // ✅ הוספת בדיקה למניעת קריסה
-      />
     </SafeAreaView>
   );
 }
