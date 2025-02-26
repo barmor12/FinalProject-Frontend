@@ -10,6 +10,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// שימוש בייבוא require אם אין esModuleInterop
+const { default: jwtDecode } = require("jwt-decode");
 import styles from "./styles/LoginStyles";
 import config from "../config";
 
@@ -19,7 +21,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 📌 פונקציה לרענון ה-Access Token
+  // פונקציה לרענון ה-Access Token
   const refreshAccessToken = async () => {
     try {
       console.log("🔄 Refreshing access token...");
@@ -44,6 +46,8 @@ export default function LoginScreen() {
         return true;
       } else {
         console.warn("⚠️ Refresh token expired, user must log in again.");
+        await AsyncStorage.removeItem("accessToken");
+        await AsyncStorage.removeItem("refreshToken");
         return false;
       }
     } catch (error) {
@@ -52,12 +56,28 @@ export default function LoginScreen() {
     }
   };
 
-  // 📌 פונקציה לבדיקה אוטומטית של התחברות
+  // פונקציה לבדיקה אוטומטית של התחברות
   const checkLoginStatus = async () => {
-    const accessToken = await AsyncStorage.getItem("accessToken");
+    let accessToken = await AsyncStorage.getItem("accessToken");
     const role = await AsyncStorage.getItem("role");
 
-    if (!accessToken) {
+    if (accessToken) {
+      try {
+        const decoded = jwtDecode(accessToken);
+        // בדיקה אם הטוקן פג תוקף
+        if (decoded.exp * 1000 < Date.now()) {
+          console.log("🔄 Token expired, refreshing...");
+          const refreshed = await refreshAccessToken();
+          if (!refreshed) return;
+          accessToken = await AsyncStorage.getItem("accessToken");
+        }
+      } catch (error) {
+        console.error("❌ Error decoding token:", error);
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) return;
+        accessToken = await AsyncStorage.getItem("accessToken");
+      }
+    } else {
       const refreshed = await refreshAccessToken();
       if (!refreshed) return;
     }
@@ -70,12 +90,12 @@ export default function LoginScreen() {
     }
   };
 
-  // 📌 נריץ את הבדיקה פעם אחת כשהמסך נטען
+  // נריץ את הבדיקה פעם אחת כשהמסך נטען
   useEffect(() => {
     checkLoginStatus();
   }, []);
 
-  // 📌 פונקציה להתחברות
+  // פונקציה להתחברות
   const handleLogin = async () => {
     console.log("🔄 Login process started");
 
@@ -160,7 +180,6 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
-      {/* 📌 כפתור התחברות עם גוגל (אם תרצה להוסיף Firebase, יש לחבר אותו כאן) */}
       <TouchableOpacity style={styles.googleButton}>
         <Image
           source={{
@@ -171,7 +190,6 @@ export default function LoginScreen() {
         <Text style={styles.googleButtonText}>Sign in with Google</Text>
       </TouchableOpacity>
 
-      {/* 📌 שחזור סיסמה */}
       <TouchableOpacity
         style={styles.forgotPasswordButton}
         onPress={() => router.push("/ForgotPasswordScreen")}
