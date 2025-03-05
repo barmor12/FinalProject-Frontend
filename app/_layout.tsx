@@ -34,6 +34,9 @@ export default function RootLayout() {
           options={{ title: "Verify Email" }}
         />
         <Stack.Screen name="ProductDetailsScreen" />
+        <Stack.Screen name="ProductDetailsScreenAdmin" />
+        <Stack.Screen name="AddProductScreen" />
+
 
         {/* הטאבים נטענים תמיד */}
         <Stack.Screen name="(tabs)" />

@@ -1,192 +1,222 @@
 import React, { useState, useEffect } from "react";
 import {
-  SafeAreaView,
   View,
   Text,
   StyleSheet,
-  FlatList,
   Image,
+  FlatList,
   TouchableOpacity,
   Alert,
+  TextInput,
+  RefreshControl,
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
 import config from "@/config";
-import { router } from "expo-router";
 
-interface CartItem {
+interface Product {
   _id: string;
-  cake: {
-    name: string;
-    image: string;
-    price: number;
-  };
-  quantity: number;
+  name: string;
+  image: string;
+  description: string;
+  ingredients: string[];
+  price: number;
 }
 
 export default function InventoryScreen() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchVisible, setSearchVisible] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
+  const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
 
-  const fetchCartItems = async () => {
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem("accessToken");
-      if (!token) {
-        Alert.alert("Error", "You need to be logged in to view the cart.");
-        return;
-      }
-
-      const response = await fetch(`${config.BASE_URL}/cart`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to fetch cart items");
-      }
-
-      const data = await response.json();
-      setCartItems(data.items); // עדכון רשימת הפריטים בעגלה
-    } catch (error: any) {
-      console.error("Error fetching cart items:", error.message || error);
-      Alert.alert("Error", "Failed to fetch cart items. Please try again.");
-    } finally {
-      setLoading(false);
+  const handleSearch = (text: string) => {
+    setSearchText(text);
+    if (text.trim() === "") {
+      setFilteredProducts(products);
+    } else {
+      setFilteredProducts(
+        products.filter((product) =>
+          product.name.toLowerCase().includes(text.toLowerCase())
+        )
+      );
     }
   };
 
-  const handleCheckout = () => {
-    Alert.alert("Checkout", "Proceeding to checkout...", [
-      // { text: "OK", onPress: () => router.push("/CheckoutScreen") }, // מעבר לעמוד Checkout
-    ]);
+  const toggleSearch = () => {
+    setSearchVisible((prev) => {
+      if (!prev) setSearchText(""); // איפוס החיפוש כשהוא נסגר
+      return !prev;
+    });
+    setShowHorizontalScroll((prev) => !prev);
   };
 
-  useEffect(() => {
-    fetchCartItems();
-  }, []);
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${config.BASE_URL}/cakes`, {
+        method: "GET",
+      });
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
-      <Image
-        source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
-        style={styles.itemImage}
-      />
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.cake.name}</Text>
-        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-        <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-      </View>
-    </View>
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (!Array.isArray(data)) {
+        throw new Error("Unexpected response format from server");
+      }
+
+      const updatedProducts = data.map((product) => ({
+        ...product,
+        image: product.image?.startsWith("http")
+          ? product.image
+          : "https://via.placeholder.com/150",
+      }));
+
+      setProducts(updatedProducts);
+      setFilteredProducts(updatedProducts);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      Alert.alert("Error", "Failed to fetch products. Please try again later.");
+    }
+  };
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchProducts();
+    }, [])
   );
 
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.loading}>Loading...</Text>
-      </SafeAreaView>
-    );
-  }
+  useEffect(() => {
+    setFilteredProducts(products);
+  }, [products]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchProducts();
+    setRefreshing(false);
+  };
+
+  const navigateToProduct = (product: Product) => {
+    router.push({
+      pathname: "/ProductDetailsScreenAdmin",
+      params: { product: JSON.stringify(product) },
+    });
+  };
+
+  const navigateToAddProduct = () => {
+    router.push("/AddProductScreenAdmin");
+  };
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Cart</Text>
-      {cartItems.length === 0 ? (
-        <Text style={styles.emptyMessage}>Your cart is empty.</Text>
-      ) : (
-        <>
-          <FlatList
-            data={cartItems}
-            keyExtractor={(item) => item._id}
-            renderItem={renderCartItem}
-            contentContainerStyle={styles.cartList}
-          />
-          <TouchableOpacity style={styles.checkoutButton} onPress={handleCheckout}>
-            <Text style={styles.checkoutButtonText}>Checkout</Text>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={navigateToAddProduct} style={styles.addButton}>
+          <Ionicons name="add-circle" size={28} color="#fff" />
+        </TouchableOpacity>
+        <View style={styles.rightHeader}>
+          {searchVisible && (
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search..."
+              value={searchText}
+              onChangeText={handleSearch}
+              autoFocus
+            />
+          )}
+          <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
+            <Ionicons
+              name={searchVisible ? "close" : "search"}
+              size={24}
+              color="#fff"
+            />
           </TouchableOpacity>
-        </>
+        </View>
+      </View>
+
+      {showHorizontalScroll && (
+        <View style={styles.horizontalScrollContainer}>
+          <Text style={styles.title}>🔥 Hot Cakes</Text>
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={(item) => item._id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.horizontalProductCard}
+                onPress={() => navigateToProduct(item)}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  style={styles.productImage}
+                />
+                <Text style={styles.productName}>{item.name}</Text>
+              </TouchableOpacity>
+            )}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.hotCakeList}
+          />
+        </View>
       )}
+
+      <Text style={styles.title}>🍰 Our Cakes</Text>
+      <FlatList
+        data={filteredProducts}
+        keyExtractor={(item) => item._id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.productCard}
+            onPress={() => navigateToProduct(item)}
+          >
+            <Image source={{ uri: item.image }} style={styles.productImage} />
+            <Text style={styles.productName}>{item.name}</Text>
+          </TouchableOpacity>
+        )}
+        numColumns={2}
+        columnWrapperStyle={styles.row}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#f9f3ea",
-    padding: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
-    marginBottom: 16,
-  },
-  cartList: {
-    paddingBottom: 16,
-  },
-  cartItem: {
+  container: { flex: 1, padding: 15, backgroundColor: "#f9f3ea" },
+  header: {
     flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  addButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8 },
+  rightHeader: { flexDirection: "row", alignItems: "center" },
+  searchInput: {
+    height: 40,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
     backgroundColor: "#fff",
+  },
+  SearchBtn: { backgroundColor: "#d49a6a", padding: 10, borderRadius: 8 },
+  title: { fontSize: 22, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
+  productCard: { backgroundColor: "#fff", padding: 10, borderRadius: 8, marginBottom: 16, alignItems: "center", width: "48%", elevation: 2 },
+  productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
+  productName: { fontSize: 14, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
+  row: { justifyContent: "space-between" },
+  horizontalScrollContainer: { marginBottom: 8 },
+  horizontalProductCard: {
+    backgroundColor: "#fff",
+    padding: 10,
     borderRadius: 8,
     marginBottom: 16,
-    padding: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
+    alignItems: "center",
+    width: 150,
     elevation: 2,
   },
-  itemImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    marginRight: 10,
-  },
-  itemDetails: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginBottom: 5,
-  },
-  itemPrice: {
-    fontSize: 14,
-    color: "#6b4226",
-    marginBottom: 5,
-  },
-  itemQuantity: {
-    fontSize: 14,
-    color: "#6b4226",
-  },
-  checkoutButton: {
-    backgroundColor: "#6b4226",
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 16,
-  },
-  checkoutButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  loading: {
-    fontSize: 18,
-    textAlign: "center",
-    color: "#6b4226",
-    marginTop: 20,
-  },
-  emptyMessage: {
-    fontSize: 18,
-    color: "#6b4226",
-    textAlign: "center",
-    marginTop: 20,
+  hotCakeList: {
+    paddingHorizontal: 8,
   },
 });
