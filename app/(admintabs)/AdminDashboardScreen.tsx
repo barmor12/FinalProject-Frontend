@@ -13,9 +13,14 @@ import config from "../../config";
 
 export default function AdminDashboardScreen() {
   const navigation = useNavigation<any>();
-  const [stats, setStats] = useState<{ orders: number; users: number }>({
+  const [stats, setStats] = useState<{
+    orders: number;
+    users: number;
+    revenue: number;
+  }>({
     orders: 0,
     users: 0,
+    revenue: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -29,11 +34,21 @@ export default function AdminDashboardScreen() {
           return;
         }
 
-        const response = await axios.get(`${config.BASE_URL}/admin/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await axios.get(
+          `${config.BASE_URL}/admin/stats`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-        setStats(response.data);
+        // נניח שהשרת מחזיר את הנתונים בצורה:
+        // { ordersCount, usersCount, totalRevenue }
+        const { ordersCount, usersCount, totalRevenue } = response.data;
+        setStats({
+          orders: ordersCount,
+          users: usersCount,
+          revenue: totalRevenue,
+        });
       } catch (error) {
         console.error("Failed to fetch admin stats:", error);
       } finally {
@@ -57,6 +72,9 @@ export default function AdminDashboardScreen() {
       <Text style={styles.title}>Admin Dashboard</Text>
       <Text style={styles.statText}>Total Orders: {stats.orders}</Text>
       <Text style={styles.statText}>Total Users: {stats.users}</Text>
+      <Text style={styles.statText}>
+        Total Revenue: ${stats.revenue.toFixed(2)}
+      </Text>
 
       {/* ניווט למסכים נוספים */}
       <TouchableOpacity
