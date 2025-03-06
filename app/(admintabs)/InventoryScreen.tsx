@@ -2,18 +2,11 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  StyleSheet,
-  Image,
   FlatList,
-  TouchableOpacity,
-  Alert,
-  TextInput,
-  RefreshControl,
+  Image,
+  ActivityIndicator,
+  StyleSheet,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
-import config from "@/config";
 
 interface Product {
   _id: string;
@@ -23,39 +16,15 @@ interface Product {
   ingredients: string[];
   price: number;
 }
+import config from "../../config";
 
-export default function InventoryScreen() {
+export default function ProductsScreen() {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchVisible, setSearchVisible] = useState(false);
-  const [searchText, setSearchText] = useState("");
-  const [refreshing, setRefreshing] = useState(false);
-  const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
-
-  const handleSearch = (text: string) => {
-    setSearchText(text);
-    if (text.trim() === "") {
-      setFilteredProducts(products);
-    } else {
-      setFilteredProducts(
-        products.filter((product) =>
-          product.name.toLowerCase().includes(text.toLowerCase())
-        )
-      );
-    }
-  };
-
-  const toggleSearch = () => {
-    setSearchVisible((prev) => {
-      if (!prev) setSearchText(""); // איפוס החיפוש כשהוא נסגר
-      return !prev;
-    });
-    setShowHorizontalScroll((prev) => !prev);
-  };
+  const [loading, setLoading] = useState<boolean>(true);
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${config.BASE_URL}/cakes`, {
+      const response = await fetch(`${config.BASE_URL}.BASE_URL/cakes`, {
         method: "GET",
       });
 
@@ -64,11 +33,14 @@ export default function InventoryScreen() {
       }
 
       const data = await response.json();
+
+      // וודא שהנתונים הם מערך, ואם לא - הפוך למערך ריק
       if (!Array.isArray(data)) {
         throw new Error("Unexpected response format from server");
       }
 
-      const updatedProducts = data.map((product) => ({
+      // עדכון תמונה אם לא מתחילה עם http
+      const updatedProducts = data.map((product: Product) => ({
         ...product,
         image: product.image?.startsWith("http")
           ? product.image
@@ -76,147 +48,76 @@ export default function InventoryScreen() {
       }));
 
       setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
     } catch (error) {
       console.error("Error fetching products:", error);
-      Alert.alert("Error", "Failed to fetch products. Please try again later.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchProducts();
-    }, [])
-  );
-
   useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
+    fetchProducts();
+  }, []);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchProducts();
-    setRefreshing(false);
-  };
-
-  const navigateToProduct = (product: Product) => {
-    router.push({
-      pathname: "/ProductDetailsScreenAdmin",
-      params: { product: JSON.stringify(product) },
-    });
-  };
-
-  const navigateToAddProduct = () => {
-    router.push("/AddProductScreenAdmin");
-  };
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#6b4226" />
+      </View>
+    );
+  }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={navigateToAddProduct} style={styles.addButton}>
-          <Ionicons name="add-circle" size={28} color="#fff" />
-        </TouchableOpacity>
-        <View style={styles.rightHeader}>
-          {searchVisible && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search..."
-              value={searchText}
-              onChangeText={handleSearch}
-              autoFocus
-            />
-          )}
-          <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-            <Ionicons
-              name={searchVisible ? "close" : "search"}
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {showHorizontalScroll && (
-        <View style={styles.horizontalScrollContainer}>
-          <Text style={styles.title}>🔥 Hot Cakes</Text>
-          <FlatList
-            data={filteredProducts}
-            keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.horizontalProductCard}
-                onPress={() => navigateToProduct(item)}
-              >
-                <Image
-                  source={{ uri: item.image }}
-                  style={styles.productImage}
-                />
-                <Text style={styles.productName}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.hotCakeList}
-          />
-        </View>
-      )}
-
-      <Text style={styles.title}>🍰 Our Cakes</Text>
+    <View style={styles.container}>
       <FlatList
-        data={filteredProducts}
+        data={products}
         keyExtractor={(item) => item._id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.productCard}
-            onPress={() => navigateToProduct(item)}
-          >
+          <View style={styles.productCard}>
             <Image source={{ uri: item.image }} style={styles.productImage} />
             <Text style={styles.productName}>{item.name}</Text>
-          </TouchableOpacity>
+          </View>
         )}
         numColumns={2}
         columnWrapperStyle={styles.row}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#f9f3ea" },
-  header: {
-    flexDirection: "row",
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: "#f9f3ea",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
+  },
+  row: {
     justifyContent: "space-between",
+    marginBottom: 16,
   },
-  addButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8 },
-  rightHeader: { flexDirection: "row", alignItems: "center" },
-  searchInput: {
-    height: 40,
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: "#fff",
-  },
-  SearchBtn: { backgroundColor: "#d49a6a", padding: 10, borderRadius: 8 },
-  title: { fontSize: 22, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
-  productCard: { backgroundColor: "#fff", padding: 10, borderRadius: 8, marginBottom: 16, alignItems: "center", width: "48%", elevation: 2 },
-  productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
-  productName: { fontSize: 14, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
-  row: { justifyContent: "space-between" },
-  horizontalScrollContainer: { marginBottom: 8 },
-  horizontalProductCard: {
+  productCard: {
     backgroundColor: "#fff",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 16,
     alignItems: "center",
-    width: 150,
+    width: "48%",
     elevation: 2,
   },
-  hotCakeList: {
-    paddingHorizontal: 8,
+  productImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#6b4226",
+    textAlign: "center",
   },
 });
