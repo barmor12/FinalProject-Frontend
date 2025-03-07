@@ -35,7 +35,7 @@ export default function RootLayout() {
         />
         <Stack.Screen name="ProductDetailsScreen" />
         <Stack.Screen name="ProductDetailsScreenAdmin" />
-        <Stack.Screen name="AddProductScreen" />
+        <Stack.Screen name="AddProductScreenAdmin" />
 
 
         {/* הטאבים נטענים תמיד */}
