@@ -37,8 +37,12 @@ export default function ProductDetailsScreen() {
             try {
                 const parsedProduct = JSON.parse(params.product as string);
                 if (parsedProduct && parsedProduct._id) {
+                    // ✅ המרת ה-`/` **רק** שאחרי "cakes" ל-`%2F`
+                    parsedProduct.image = parsedProduct.image.replace(/(cakes)\//, "$1%2F");
+
                     setProduct(parsedProduct);
                     setEditedProduct(parsedProduct);
+                    console.log("🔗 Fixed image URL:", parsedProduct.image);
                 } else {
                     console.error("❌ Invalid product data received:", params.product);
                 }
@@ -47,6 +51,8 @@ export default function ProductDetailsScreen() {
             }
         }
     }, [params.product]);
+
+
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({

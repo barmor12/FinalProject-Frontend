@@ -51,3 +51,5 @@ export const fetchUserData = async () => {
     return null;
   }
 };
+
+export default fetchUserData;
