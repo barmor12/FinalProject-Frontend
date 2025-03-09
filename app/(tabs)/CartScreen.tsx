@@ -24,8 +24,6 @@ interface CartItem {
     image: string;
     price: number;
     description: string;
-    ingredients: string[];
-    allergens: string[];
   };
   quantity: number;
 }
@@ -35,16 +33,17 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [cartItemCount, setCartItemCount] = useState<number>(0);
   const router = useRouter();
 
   useEffect(() => {
-    const loadCartCount = async () => {
-      const count = await AsyncStorage.getItem("cartItemCount");
-      setCartItemCount(count ? parseInt(count, 10) : 0);
-    };
-    loadCartCount();
+    fetchCartItems();
   }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      fetchCartItems();
+    }, [])
+  );
 
   const fetchCartItems = async () => {
     try {
@@ -67,7 +66,6 @@ export default function CartScreen() {
 
       const data = await response.json();
       setCartItems(data.items);
-      updateCartBadge(data.items);
     } catch (error: any) {
       console.error("Error fetching cart items:", error.message || error);
       Alert.alert("Error", "Failed to fetch cart items. Please try again.");
@@ -76,21 +74,11 @@ export default function CartScreen() {
     }
   };
 
-  useFocusEffect(
-    React.useCallback(() => {
-      fetchCartItems();
-    }, [])
-  );
-
-  const updateCartBadge = async (items: CartItem[]) => {
-    const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-    setCartItemCount(totalItems);
-    await AsyncStorage.setItem("cartItemCount", totalItems.toString());
+  const calculateTotalPrice = () => {
+    return cartItems
+      .reduce((sum, item) => sum + item.cake.price * item.quantity, 0)
+      .toFixed(2);
   };
-
-  useEffect(() => {
-    updateCartBadge(cartItems);
-  }, [cartItems]);
 
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
@@ -116,7 +104,6 @@ export default function CartScreen() {
       );
 
       setCartItems(updatedCart);
-      updateCartBadge(updatedCart);
     } catch (error) {
       console.error("❌ Error updating quantity:", error);
     }
@@ -141,7 +128,6 @@ export default function CartScreen() {
 
       const updatedCart = cartItems.filter((item) => item.cake._id !== cakeId);
       setCartItems(updatedCart);
-      updateCartBadge(updatedCart);
     } catch (error) {
       console.error("Error removing item:", error);
       Alert.alert("Error", "Failed to remove item");
@@ -191,7 +177,8 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Cart ({cartItemCount})</Text>
+      <Text style={styles.title}>Your Cart</Text>
+
       {loading ? (
         <ActivityIndicator
           size="large"
@@ -238,6 +225,18 @@ export default function CartScreen() {
           </View>
         </View>
       </Modal>
+
+      {!isModalVisible && cartItems.length > 0 && (
+        <View style={styles.checkoutContainer}>
+          <Text style={styles.totalText}>Total: ${calculateTotalPrice()}</Text>
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={() => router.push("/CheckoutScreen")}
+          >
+            <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
