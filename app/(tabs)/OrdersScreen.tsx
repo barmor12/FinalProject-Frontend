@@ -11,12 +11,10 @@ import {
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useNavigation } from "@react-navigation/native";
-import { Ionicons } from "@expo/vector-icons";
 import config from "../../config";
 
-// מבנה נתונים להזמנה
 interface Order {
+  [x: string]: any;
   _id: string;
   user: {
     _id: string;
@@ -31,7 +29,7 @@ interface Order {
     quantity: number;
   }>;
   totalPrice: number;
-  status: "Pending" | "Completed" | "Cancelled";
+  status: "pending" | "confirmed" | "completed" | "cancelled";
 }
 
 export default function OrdersScreen() {
@@ -39,8 +37,7 @@ export default function OrdersScreen() {
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
-  const navigation = useNavigation<any>();
+  const [selectedFilter, setSelectedFilter] = useState<null | string>(null);
 
   // **שליפת ההזמנות מהשרת**
   const fetchOrders = async () => {
@@ -49,7 +46,7 @@ export default function OrdersScreen() {
       const token = await AsyncStorage.getItem("accessToken");
 
       if (!token) {
-        console.error("❌ [ERROR] No access token found.");
+        console.error("[ERROR] No access token found.");
         return;
       }
 
@@ -57,12 +54,11 @@ export default function OrdersScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("📥 Orders Fetched:", response.data); // ✅ בדוק שהנתונים מתקבלים
-
+      console.log("[INFO] Fetched orders:", response.data);
       setOrders(response.data);
       setFilteredOrders(response.data);
     } catch (error) {
-      console.error("❌ [ERROR] Failed to fetch orders:", error);
+      console.error("[ERROR] Failed to fetch orders:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,7 +80,10 @@ export default function OrdersScreen() {
     if (!status) {
       setFilteredOrders(orders);
     } else {
-      setFilteredOrders(orders.filter((order) => order.status === status));
+      const filtered = orders.filter(
+        (order) => order.status.toLowerCase() === status.toLowerCase()
+      );
+      setFilteredOrders(filtered);
     }
   };
 
@@ -94,42 +93,25 @@ export default function OrdersScreen() {
 
       {/* **כפתורי סינון סטטוס** */}
       <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === null && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders(null)}
-        >
-          <Text style={styles.filterText}>All</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Pending" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Pending")}
-        >
-          <Text style={styles.filterText}>Pending</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Completed" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Completed")}
-        >
-          <Text style={styles.filterText}>Completed</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.filterButton,
-            selectedFilter === "Cancelled" && styles.activeFilter,
-          ]}
-          onPress={() => filterOrders("Cancelled")}
-        >
-          <Text style={styles.filterText}>Cancelled</Text>
-        </TouchableOpacity>
+        {["all", "pending", "confirmed", "completed", "cancelled"].map(
+          (status) => (
+            <TouchableOpacity
+              key={status}
+              style={[
+                styles.filterButton,
+                selectedFilter === status ||
+                (status === "all" && !selectedFilter)
+                  ? styles.activeFilter
+                  : null,
+              ]}
+              onPress={() => filterOrders(status === "all" ? null : status)}
+            >
+              <Text style={styles.filterText}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          )
+        )}
       </View>
 
       {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
@@ -149,23 +131,29 @@ export default function OrdersScreen() {
               <View key={order._id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
                   <Text style={styles.orderText}>Order ID: {order._id}</Text>
-                  <Text style={[styles.statusText, styles[order.status]]}>
-                    {order.status}
+                  <Text
+                    style={[
+                      styles.statusText,
+                      styles[order.status.toLowerCase()],
+                    ]}
+                  >
+                    {order.status.charAt(0).toUpperCase() +
+                      order.status.slice(1)}
                   </Text>
                 </View>
                 <View style={styles.orderDetails}>
                   {order.items.map((item, index) => (
-                    <View key={index}>
+                    <View key={index} style={styles.itemContainer}>
                       <Text style={styles.orderText}>
-                        Cake: {item.cake?.name || "Unknown"}
+                        🍰 {item.cake?.name || "Unknown"}
                       </Text>
                       <Text style={styles.orderText}>
-                        Quantity: {item.quantity}
+                        🛒 Quantity: {item.quantity}
                       </Text>
                     </View>
                   ))}
-                  <Text style={styles.orderText}>
-                    Total: ${order.totalPrice}
+                  <Text style={styles.totalPrice}>
+                    💰 Total: ${order.totalPrice.toFixed(2)}
                   </Text>
                 </View>
               </View>
@@ -177,7 +165,7 @@ export default function OrdersScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const styles: { [key: string]: any } = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
   title: {
     fontSize: 24,
@@ -205,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   scrollViewContent: {
-    paddingBottom: 120, // מוסיף ריווח לכפתור התחתון
+    paddingBottom: 120,
   },
   orderCard: {
     backgroundColor: "#fff",
@@ -233,13 +221,23 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textTransform: "capitalize",
   },
-  Pending: { color: "#FFA500" },
-  Completed: { color: "#28a745" },
-  Cancelled: { color: "#d9534f" },
+  pending: { color: "#FFA500" },
+  confirmed: { color: "#0066cc" },
+  completed: { color: "#28a745" },
+  cancelled: { color: "#d9534f" },
   emptyMessage: {
     fontSize: 18,
     color: "#6b4226",
     textAlign: "center",
     marginTop: 20,
+  },
+  totalPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#6b4226",
+    marginTop: 10,
+  },
+  itemContainer: {
+    marginBottom: 5,
   },
 });
