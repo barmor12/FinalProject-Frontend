@@ -28,7 +28,7 @@ export default function AdminOrdersScreen() {
     interface Order {
         _id: string;
         status: "pending" | "confirmed" | "delivered" | "cancelled";
-        user: { _id: string; email: string };
+        user: { _id: string; firstName: string; lastName: string; phone: string; address: string; email: string };
         items: { cake: string; quantity: number }[];
         totalPrice: number;
         createdAt: string;
@@ -81,8 +81,8 @@ export default function AdminOrdersScreen() {
             <View style={styles.tableHeader}>
                 <Text style={styles.headerCell}>מס הזמנה</Text>
                 <Text style={styles.headerCell}>תאריך הזמנה</Text>
-                <Text style={styles.headerCell}>סטטוס</Text>
-                <Text style={styles.headerCell}>שם לקוח</Text>
+                <Text style={styles.statusHeaderCell}>סטטוס</Text>
+                <Text style={styles.nameHeaderCell}>שם לקוח</Text>
                 <Text style={styles.headerCell}></Text>
             </View>
 
@@ -100,8 +100,7 @@ export default function AdminOrdersScreen() {
                             <Text style={styles.cell}>{order._id.slice(-6)}</Text>
                             <Text style={styles.cell}>{new Date(order.createdAt).toLocaleDateString()}</Text>
                             <Text style={[styles.cell, styles[order.status]]}>{order.status}</Text>
-                            <Text style={styles.cell}>{order.user.email}</Text>
-
+                            <Text style={styles.cell}>    {order.user.firstName} {order.user.lastName}</Text>
                             {/* כפתור תפריט 3 נקודות */}
                             <TouchableOpacity onPress={() => openOrderMenu(order)} style={styles.menuButton}>
                                 <Text style={styles.menuText}>⋮</Text>
@@ -155,7 +154,11 @@ export default function AdminOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
+    container: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#f9f3ea",
+    },
     title: {
         fontSize: 24,
         fontWeight: "bold",
@@ -164,24 +167,43 @@ const styles = StyleSheet.create({
     },
     tableHeader: {
         flexDirection: "row",
-        justifyContent: "space-between",
         backgroundColor: "#6b4226",
-        padding: 10,
+        paddingVertical: 12,
+        paddingHorizontal: 8,
         borderRadius: 5,
+        alignItems: "center",
     },
     headerCell: {
+        flex: 1,
         color: "#fff",
         fontWeight: "bold",
+        textAlign: "right", // יישור ברירת מחדל למרכז
+        minWidth: 70,
+    },
+    nameHeaderCell: {
         flex: 1,
-        textAlign: "center",
+        color: "#fff",
+        fontWeight: "bold",
+        textAlign: "center", // עדיין מיישר לימין
+        paddingRight: 30, // מרווח נוסף
+        minWidth: 120,
+    },
+    statusHeaderCell: {
+        flex: 1,
+        color: "#fff",
+        fontWeight: "bold",
+        textAlign: "right", // עדיין מיישר לימין
+        paddingRight: 25, // מרווח נוסף
+        minWidth: 120,
     },
     scrollViewContent: {
         paddingBottom: 120,
     },
     row: {
         flexDirection: "row",
-        justifyContent: "space-between",
-        padding: 15,
+        alignItems: "center",
+        paddingVertical: 15,
+        paddingHorizontal: 8,
         backgroundColor: "#fff",
         marginVertical: 5,
         borderRadius: 5,
@@ -194,17 +216,33 @@ const styles = StyleSheet.create({
         flex: 1,
         textAlign: "center",
         color: "#6b4226",
+        minWidth: 70, // להבטיח גודל אחיד של התאים
     },
-    pending: { color: "#FFA500" },
-    confirmed: { color: "#007bff" },
-    delivered: { color: "#28a745" },
-    cancelled: { color: "#d9534f" },
+    pending: {
+        color: "#FFA500",
+        fontWeight: "bold",
+    },
+    confirmed: {
+        color: "#007bff",
+        fontWeight: "bold",
+    },
+    delivered: {
+        color: "#28a745",
+        fontWeight: "bold",
+    },
+    cancelled: {
+        color: "#d9534f",
+        fontWeight: "bold",
+    },
     menuButton: {
         paddingHorizontal: 10,
+        alignItems: "center",
+        justifyContent: "center",
     },
     menuText: {
         fontSize: 24,
         fontWeight: "bold",
+        textAlign: "center",
     },
     modalOverlay: {
         flex: 1,
@@ -241,3 +279,4 @@ const styles = StyleSheet.create({
         borderRadius: 5,
     },
 });
+

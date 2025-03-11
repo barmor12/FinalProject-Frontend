@@ -62,7 +62,7 @@ export default function AddProductScreenAdmin() {
             return downloadURL;
         } catch (error) {
             console.error("Error uploading image:", error);
-            Alert.alert("שגיאה", "התרחשה שגיאה במהלך ההעלאה.");
+            Alert.alert("error", "error while uploading image.");
             return null;
         } finally {
             setUploading(false);
