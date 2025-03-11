@@ -49,7 +49,7 @@ export default function OrdersScreen() {
       const token = await AsyncStorage.getItem("accessToken");
 
       if (!token) {
-        console.error("[ERROR] No access token found.");
+        console.error("❌ [ERROR] No access token found.");
         return;
       }
 
@@ -57,11 +57,12 @@ export default function OrdersScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("[INFO] Fetched orders:", response.data);
+      console.log("📥 Orders Fetched:", response.data); // ✅ בדוק שהנתונים מתקבלים
+
       setOrders(response.data);
       setFilteredOrders(response.data);
     } catch (error) {
-      console.error("[ERROR] Failed to fetch orders:", error);
+      console.error("❌ [ERROR] Failed to fetch orders:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
