@@ -102,6 +102,38 @@ export default function ProductDetailsScreen() {
             </SafeAreaView>
         );
     }
+    const handleDelete = async () => {
+        if (!product) return;
+        try {
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "You need to be logged in to delete products.");
+                return;
+            }
+
+            // מחיקת המוצר מהמסד נתונים
+            const response = await fetch(`${config.BASE_URL}/inventory/${product._id}`, {
+                method: "DELETE",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("Response:", data);
+
+            Alert.alert("Success", "Product and image deleted successfully!");
+            router.back(); // חזרה לדף הקודם אחרי מחיקה
+        } catch (error) {
+            console.error("❌ Error deleting product:", error);
+            Alert.alert("Error", "Failed to delete product or image");
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -173,6 +205,14 @@ export default function ProductDetailsScreen() {
                         >
                             <Text style={styles.editButtonText}>Edit Product</Text>
                         </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.deleteButton}
+                            onPress={handleDelete}
+                        >
+                            <Text style={styles.deleteButtonText}>Delete Product</Text>
+                        </TouchableOpacity>
+
                     </>
                 )}
             </ScrollView>
@@ -182,12 +222,23 @@ export default function ProductDetailsScreen() {
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#f9f3ea" },
-    scrollContent: { padding: 16 },
+    scrollContent: { padding: 16, },
     description: { fontSize: 16, color: "#6b4226", marginTop: 16, textAlign: "justify" },
     price: { fontSize: 18, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
-
-    title: { fontSize: 24, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
-    image: { width: "100%", height: 200, borderRadius: 10 },
+    deleteButton: {
+        backgroundColor: "#d9534f",
+        padding: 10,
+        borderRadius: 8,
+        alignItems: "center",
+        marginTop: 10,
+    },
+    deleteButtonText: {
+        color: "#fff",
+        fontSize: 16,
+        fontWeight: "bold",
+    },
+    title: { fontSize: 24, fontWeight: "bold", color: "#6b4226", textAlign: "center", padding: 10, marginBottom: 5 },
+    image: { width: "100%", height: 200, borderRadius: 10, },
     input: { borderWidth: 1, borderColor: "#6b4226", padding: 8, borderRadius: 5, marginVertical: 8 },
     uploadButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8, alignItems: "center", marginVertical: 10 },
     uploadButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },

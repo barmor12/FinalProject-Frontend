@@ -12,7 +12,10 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
-
+export type RootStackParamList = {
+  AdminOrdersScreen: undefined;
+  OrderDetailsScreen: { orderId: string };
+};
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -37,6 +40,8 @@ export default function RootLayout() {
         <Stack.Screen name="ProductDetailsScreenAdmin" />
         <Stack.Screen name="AddProductScreenAdmin" />
 
+        <Stack.Screen name="adminOrdersScreen" />
+        <Stack.Screen name="OrderDetailsScreen" />
 
         {/* הטאבים נטענים תמיד */}
         <Stack.Screen name="(tabs)" />
