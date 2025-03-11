@@ -142,7 +142,7 @@ export default function InventoryScreen() {
           style: "destructive",
           onPress: async () => {
             try {
-              const response = await fetch(`${config.BASE_URL}/cakes/deletecake`, {
+              const response = await fetch(`${config.BASE_URL}/inventory/bulk-delete`, {
                 method: "DELETE",
                 headers: {
                   "Content-Type": "application/json",
@@ -241,6 +241,7 @@ export default function InventoryScreen() {
         )}
         numColumns={2}
         columnWrapperStyle={styles.row}
+        contentContainerStyle={{ paddingBottom: 22 }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       />
     </SafeAreaView>
@@ -282,7 +283,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 16,
+    marginBottom: 15,
     alignItems: "center",
     width: "48%",
     elevation: 2,

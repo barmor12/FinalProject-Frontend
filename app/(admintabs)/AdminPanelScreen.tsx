@@ -104,7 +104,7 @@ export default function AdminPanelScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push("/OrdersScreen")}
+        onPress={() => router.push("/adminOrdersScreen")}
       >
         <Text style={styles.buttonText}>Manage Orders</Text>
       </TouchableOpacity>
