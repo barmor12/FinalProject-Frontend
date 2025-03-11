@@ -18,11 +18,18 @@ import config from "../../config";
 // מבנה נתונים להזמנה
 interface Order {
   _id: string;
-  cake: {
-    name: string;
-    image?: string;
+  user: {
+    _id: string;
+    email: string;
   };
-  quantity: number;
+  items: Array<{
+    cake: {
+      _id: string;
+      name: string;
+      image?: string;
+    };
+    quantity: number;
+  }>;
   totalPrice: number;
   status: "Pending" | "Completed" | "Cancelled";
 }
@@ -137,21 +144,27 @@ export default function OrdersScreen() {
           {filteredOrders.length === 0 ? (
             <Text style={styles.emptyMessage}>No orders found</Text>
           ) : (
-            filteredOrders.map((item) => (
-              <View key={item._id} style={styles.orderCard}>
+            filteredOrders.map((order) => (
+              <View key={order._id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
-                  <Text style={styles.orderText}>Order ID: {item._id}</Text>
-                  <Text style={[styles.statusText, styles[item.status]]}>
-                    {item.status}
+                  <Text style={styles.orderText}>Order ID: {order._id}</Text>
+                  <Text style={[styles.statusText, styles[order.status]]}>
+                    {order.status}
                   </Text>
                 </View>
                 <View style={styles.orderDetails}>
-                  <Text style={styles.orderText}>Cake: {item.cake.name}</Text>
+                  {order.items.map((item, index) => (
+                    <View key={index}>
+                      <Text style={styles.orderText}>
+                        Cake: {item.cake?.name || "Unknown"}
+                      </Text>
+                      <Text style={styles.orderText}>
+                        Quantity: {item.quantity}
+                      </Text>
+                    </View>
+                  ))}
                   <Text style={styles.orderText}>
-                    Quantity: {item.quantity}
-                  </Text>
-                  <Text style={styles.orderText}>
-                    Total: ${item.totalPrice}
+                    Total: ${order.totalPrice}
                   </Text>
                 </View>
               </View>
@@ -228,23 +241,4 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
-
-  // **כפתור יצירת הזמנה חדשה**
-  fixedButtonContainer: {
-    position: "absolute",
-    bottom: 90,
-    left: 0,
-    right: 0,
-    alignItems: "center",
-  },
-  addOrderButton: {
-    flexDirection: "row",
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 6,
-    alignItems: "center",
-    justifyContent: "center",
-    width: "90%",
-  },
-  addOrderButtonText: { color: "#fff", fontWeight: "bold", marginLeft: 5 },
 });
