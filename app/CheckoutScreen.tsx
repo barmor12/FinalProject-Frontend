@@ -13,7 +13,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useFocusEffect, useRouter } from "expo-router";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 interface CartItem {
   _id: string;
@@ -29,7 +29,6 @@ interface CartItem {
 export default function CheckoutScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchCartItems = async () => {
@@ -78,11 +77,6 @@ export default function CheckoutScreen() {
   };
 
   const handlePlaceOrder = async () => {
-    if (!paymentMethod) {
-      Alert.alert("Error", "Please select a payment method.");
-      return;
-    }
-
     try {
       setLoading(true);
       const token = await AsyncStorage.getItem("accessToken");
@@ -99,15 +93,23 @@ export default function CheckoutScreen() {
             cakeId: item.cake._id,
             quantity: item.quantity,
           })),
-          paymentMethod,
+          paymentMethod: "cash",
         }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Failed to place order");
-      }
+      // 👇 הדפס את תגובת השרת
+      const textResponse = await response.text();
+      console.log("🔍 Server Response:", textResponse);
 
+      try {
+        const jsonResponse = JSON.parse(textResponse);
+        if (!response.ok) {
+          throw new Error(jsonResponse.message || "Failed to place order");
+        }
+      } catch (error) {
+        console.error("❌ JSON Parse error:", error);
+        Alert.alert("Error", "Invalid server response. Please try again.");
+      }
       Alert.alert("Success", "Your order has been placed successfully!", [
         { text: "OK", onPress: () => router.replace("/OrdersScreen") },
       ]);
@@ -154,28 +156,11 @@ export default function CheckoutScreen() {
           />
 
           <View style={styles.paymentContainer}>
-            <Text style={styles.paymentTitle}>Select Payment Method</Text>
-            <TouchableOpacity
-              style={[
-                styles.paymentButton,
-                paymentMethod === "credit_card" && styles.selectedPayment,
-              ]}
-              onPress={() => setPaymentMethod("credit_card")}
-            >
-              <Ionicons name="card-outline" size={24} color="#6b4226" />
-              <Text style={styles.paymentText}>Credit Card</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.paymentButton,
-                paymentMethod === "paypal" && styles.selectedPayment,
-              ]}
-              onPress={() => setPaymentMethod("paypal")}
-            >
-              <Ionicons name="logo-paypal" size={24} color="#6b4226" />
-              <Text style={styles.paymentText}>PayPal</Text>
-            </TouchableOpacity>
+            <Text style={styles.paymentTitle}>Payment Method</Text>
+            <View style={styles.cashPayment}>
+              <Ionicons name="cash-outline" size={24} color="#6b4226" />
+              <Text style={styles.paymentText}>Cash</Text>
+            </View>
           </View>
 
           <View style={styles.checkoutContainer}>
@@ -219,6 +204,7 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     borderRadius: 10,
+    alignItems: "center",
   },
   paymentTitle: {
     fontSize: 18,
@@ -226,14 +212,13 @@ const styles = StyleSheet.create({
     color: "#6b4226",
     marginBottom: 10,
   },
-  paymentButton: {
+  cashPayment: {
     flexDirection: "row",
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    marginBottom: 10,
+    backgroundColor: "#f0e0d6",
   },
-  selectedPayment: { backgroundColor: "#f0e0d6" },
   paymentText: { fontSize: 16, color: "#6b4226", marginLeft: 10 },
   checkoutContainer: { marginTop: 20, alignItems: "center" },
   totalText: { fontSize: 18, fontWeight: "bold", color: "#6b4226" },
