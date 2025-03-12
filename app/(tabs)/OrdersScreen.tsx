@@ -38,19 +38,31 @@ export default function OrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<null | string>(null);
+  const checkStoredValues = async () => {
+    const token = await AsyncStorage.getItem("accessToken");
+    const userID = await AsyncStorage.getItem("userID");
+
+    console.log("🔍 accessToken:", token);
+    console.log("🔍 userID:", userID);
+  };
+
+  useEffect(() => {
+    checkStoredValues();
+  }, []);
 
   // **שליפת ההזמנות מהשרת**
   const fetchOrders = async () => {
     try {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
+      const userID = await AsyncStorage.getItem("userID"); // 🔹 קבלת userID
 
-      if (!token) {
-        console.error("[ERROR] No access token found.");
+      if (!token || !userID) {
+        console.error("[ERROR] Missing access token or user ID.");
         return;
       }
 
-      const response = await axios.get(`${config.BASE_URL}/order/orders`, {
+      const response = await axios.get(`${config.BASE_URL}/order/user/${userID}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -64,6 +76,7 @@ export default function OrdersScreen() {
       setRefreshing(false);
     }
   };
+
 
   useEffect(() => {
     fetchOrders();
@@ -100,7 +113,7 @@ export default function OrdersScreen() {
               style={[
                 styles.filterButton,
                 selectedFilter === status ||
-                (status === "all" && !selectedFilter)
+                  (status === "all" && !selectedFilter)
                   ? styles.activeFilter
                   : null,
               ]}

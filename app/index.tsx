@@ -121,6 +121,9 @@ export default function LoginScreen() {
 
         await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
         await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
+        const userid = data.userID || "null";
+
+        await AsyncStorage.setItem("userID", userid);
 
         const role = data.role || "user";
         await AsyncStorage.setItem("role", role);

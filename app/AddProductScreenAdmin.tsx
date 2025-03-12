@@ -143,8 +143,9 @@ const styles = StyleSheet.create({
     input: { borderWidth: 1, borderColor: "#6b4226", padding: 10, borderRadius: 8, marginBottom: 10, backgroundColor: "#fff" },
     imagePicker: { backgroundColor: "#d49a6a", padding: 10, borderRadius: 8, alignItems: "center", marginBottom: 10 },
     imagePickerText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-    imagePreview: { width: "100%", height: 200, borderRadius: 8, marginBottom: 10 },
-    submitButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8, alignItems: "center" },
+    imagePreview: { width: "100%", height: 410, borderRadius: 8, marginBottom: 10, },
+    submitButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8, alignItems: "center", marginTop: 10, bottom: 20, left: 20, right: 20, position: "absolute" },
+
     submitButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
 });
 

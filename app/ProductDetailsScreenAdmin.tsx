@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
         fontWeight: "bold",
     },
     title: { fontSize: 24, fontWeight: "bold", color: "#6b4226", textAlign: "center", padding: 10, marginBottom: 5 },
-    image: { width: "100%", height: 200, borderRadius: 10, },
+    image: { width: "100%", height: 450, borderRadius: 10, },
     input: { borderWidth: 1, borderColor: "#6b4226", padding: 8, borderRadius: 5, marginVertical: 8 },
     uploadButton: { backgroundColor: "#6b4226", padding: 10, borderRadius: 8, alignItems: "center", marginVertical: 10 },
     uploadButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },

@@ -36,6 +36,7 @@ export default function ProductDetailsScreen() {
       try {
         const parsedProduct = JSON.parse(params.product as string);
         if (parsedProduct && parsedProduct._id) {
+          parsedProduct.image = parsedProduct.image.replace(/(cakes)\//, "$1%2F");
           setProduct(parsedProduct);
         } else {
           console.error("❌ Invalid product data received:", params.product);
