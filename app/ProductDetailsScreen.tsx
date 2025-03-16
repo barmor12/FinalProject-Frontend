@@ -170,6 +170,7 @@ export default function ProductDetailsScreen() {
         >
           <Text style={styles.addButtonText}>Add to Cart</Text>
         </TouchableOpacity>
+
       </ScrollView>
     </SafeAreaView>
   );

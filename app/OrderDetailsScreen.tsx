@@ -11,7 +11,7 @@ import {
     Modal,
     Image
 } from "react-native";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 
@@ -37,7 +37,6 @@ export default function OrderDetailsScreen() {
     const [contactModalVisible, setContactModalVisible] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState("");
 
-    const navigation = useNavigation();
     const route = useRoute();
     const { orderId } = route.params as { orderId: string };
 
@@ -73,6 +72,60 @@ export default function OrderDetailsScreen() {
             Alert.alert("Error", "Failed to load order details.");
         } finally {
             setLoading(false);
+        }
+    };
+    const sendOrderEmail = async (isManagerMsg: boolean) => {
+        if (!order) {
+            Alert.alert("Error", "Order details are missing.");
+            return;
+        }
+
+        if (!order.user.email) {
+            Alert.alert("Error", "Customer email is missing.");
+            return;
+        }
+
+        if (!order.status) {
+            Alert.alert("Error", "Order status is missing.");
+            return;
+        }
+
+        const token = await AsyncStorage.getItem("accessToken");
+        if (!token) {
+            Alert.alert("Error", "Authorization token is required");
+            return;
+        }
+
+        // ✅ הדפסת נתונים לבדיקה
+        console.log("📩 Sending email with data:");
+        console.log("Email:", order.user.email);
+        console.log("Order ID:", order._id);
+        console.log("Status:", order.status);
+
+        try {
+            const response = await fetch(`${config.BASE_URL}/order/${order._id}/send-email`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    customerEmail: order.user.email,
+                    orderStatus: order.status,
+                    isManagerMsg
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to send email");
+            }
+
+            Alert.alert("Success", "Email sent successfully to the customer!");
+        } catch (error: any) {
+            console.error("❌ Error sending email:", error);
+            Alert.alert("Error", error.message || "Failed to send email. Please try again.");
         }
     };
 
@@ -140,7 +193,10 @@ export default function OrderDetailsScreen() {
 
             <Text style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
 
-            <TouchableOpacity style={styles.updateStatusButton} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={styles.updateStatusButton} onPress={() => {
+                setModalVisible(true);
+
+            }}>
                 <Text style={styles.updateStatusText}>Update Status</Text>
             </TouchableOpacity>
 
@@ -165,10 +221,10 @@ export default function OrderDetailsScreen() {
                                 <Text>{status}</Text>
                             </TouchableOpacity>
                         ))}
-                        <TouchableOpacity style={styles.modalButtonClose} onPress={updateOrderStatus}>
+                        <TouchableOpacity style={styles.modalButtonConfirm} onPress={() => { updateOrderStatus(); sendOrderEmail(false); }}>
                             <Text>Confirm</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.modalButtonClose} onPress={() => setContactModalVisible(false)}>
+                        <TouchableOpacity style={styles.modalButtonClose} onPress={() => setModalVisible(false)}>
                             <Text>Close</Text>
                         </TouchableOpacity>
                     </View>
@@ -280,7 +336,7 @@ const styles = StyleSheet.create({
         fontSize: 16
     },
     contactButton: {
-        backgroundColor: "#007bff",
+        backgroundColor: "#D2B48C",
         padding: 12,
         borderRadius: 8,
         alignItems: "center",
@@ -303,7 +359,7 @@ const styles = StyleSheet.create({
         alignItems: "center"
     },
     modalContent: {
-        backgroundColor: "#fff",
+        backgroundColor: "#f9f3ea",
         padding: 20,
         borderRadius: 10,
         width: "80%",
@@ -322,14 +378,14 @@ const styles = StyleSheet.create({
     },
     modalButton: {
         padding: 12,
-        backgroundColor: "#ddd",
+        backgroundColor: "#fff",
         marginVertical: 5,
         width: "100%",
         alignItems: "center",
         borderRadius: 8
     },
     selectedStatus: {
-        backgroundColor: "#6b4226",
+        backgroundColor: "#D2B48C",
     },
     modalButtonClose: {
         padding: 12,
@@ -341,7 +397,7 @@ const styles = StyleSheet.create({
     },
     modalButtonConfirm: {
         padding: 12,
-        backgroundColor: "#d9534f",
+        backgroundColor: "#32CD32",
         marginTop: 10,
         width: "100%",
         alignItems: "center",

@@ -13,7 +13,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
 export type RootStackParamList = {
-  AdminOrdersScreen: undefined;
+  AdminOrdersScreen: { shouldRefresh?: boolean };
   OrderDetailsScreen: { orderId: string };
 };
 export default function RootLayout() {
