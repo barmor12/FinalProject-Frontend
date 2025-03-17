@@ -132,9 +132,8 @@ export default function ProfileScreen() {
 
       const newProfilePicUrl = data.profilePicUrl.startsWith("http")
         ? `${data.profilePicUrl}?timestamp=${new Date().getTime()}`
-        : `${config.BASE_URL}${
-            data.profilePicUrl
-          }?timestamp=${new Date().getTime()}`;
+        : `${config.BASE_URL}${data.profilePicUrl
+        }?timestamp=${new Date().getTime()}`;
 
       setUser((prev) => ({
         ...prev,
@@ -209,6 +208,13 @@ export default function ProfileScreen() {
       >
         <MaterialIcons name="receipt-long" size={20} color="#fff" />
         <Text style={styles.buttonText}>My Orders</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push("/manageAddressScreen")}
+      >
+        <MaterialIcons name="receipt-long" size={20} color="#fff" />
+        <Text style={styles.buttonText}>Manage Addresses</Text>
       </TouchableOpacity>
 
       <TouchableOpacity

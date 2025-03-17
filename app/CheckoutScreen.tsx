@@ -9,6 +9,8 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  TextInput,
+  Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
@@ -25,11 +27,71 @@ interface CartItem {
   };
   quantity: number;
 }
+interface Address {
+  _id: string;
+  fullName: string;
+  phone: string;
+  street: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  country: string;
+  isDefault: boolean;
+}
 
 export default function CheckoutScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [shippingMethod, setShippingMethod] = useState("Standard Delivery (2-3 days)");
+  const [promoCode, setPromoCode] = useState("");
+  const [deliveryDetailsVisible, setDeliveryDetailsVisible] = useState(false);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
+  const [shippingModalVisible, setShippingModalVisible] = useState(false);
+
   const router = useRouter();
+
+  const fetchAddresses = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Alert.alert("Error", "You need to be logged in.");
+        return;
+      }
+
+      const response = await fetch(`${config.BASE_URL}/address`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch addresses");
+      }
+
+      const data: Address[] = await response.json(); // ✅ הגדרת טיפוס
+      setAddresses(data);
+
+      // ✅ בחירת הכתובת ברירת מחדל אם קיימת
+      const defaultAddress = data.find((addr) => addr.isDefault);
+      if (defaultAddress) {
+        setSelectedAddress(defaultAddress);
+      }
+    } catch (error) {
+      console.error("Error fetching addresses:", error);
+      Alert.alert("Error", "Failed to fetch addresses.");
+    }
+  };
+
+  // נטען את הכתובות בעת טעינת המסך
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
+
+
+  // קריאה לפונקציה בעת טעינת המסך
+  useEffect(() => {
+    fetchAddresses();
+  }, []);
 
   const fetchCartItems = async () => {
     try {
@@ -76,8 +138,27 @@ export default function CheckoutScreen() {
       .toFixed(2);
   };
 
+
+  const renderCartItem = ({ item }: { item: CartItem }) => (
+    <View style={styles.cartItem}>
+      <Image
+        source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
+        style={styles.itemImage}
+      />
+      <View style={styles.itemDetails}>
+        <Text style={styles.itemName}>{item.cake.name}</Text>
+        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
+        <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+      </View>
+    </View>
+  );
   const handlePlaceOrder = async () => {
     try {
+      if (!selectedAddress) {
+        Alert.alert("Error", "Please select a delivery address.");
+        return;
+      }
+
       setLoading(true);
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
@@ -94,46 +175,30 @@ export default function CheckoutScreen() {
             quantity: item.quantity,
           })),
           paymentMethod: "cash",
+          deliveryAddress: selectedAddress, // ✅ נשלחת הכתובת שנבחרה
         }),
       });
 
-      // 👇 הדפס את תגובת השרת
-      const textResponse = await response.text();
-      console.log("🔍 Server Response:", textResponse);
-
-      try {
-        const jsonResponse = JSON.parse(textResponse);
-        if (!response.ok) {
-          throw new Error(jsonResponse.message || "Failed to place order");
-        }
-      } catch (error) {
-        console.error("❌ JSON Parse error:", error);
-        Alert.alert("Error", "Invalid server response. Please try again.");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to place order");
       }
-      Alert.alert("Success", "Your order has been placed successfully!", [
+
+      Alert.alert("Success", "Your order has been placed!", [
         { text: "OK", onPress: () => router.replace("/OrdersScreen") },
       ]);
-    } catch (error: any) {
-      console.error("Error placing order:", error.message || error);
+    } catch (error) {
+      console.error("Error placing order:", error);
       Alert.alert("Error", "Failed to place order. Please try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
-      <Image
-        source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
-        style={styles.itemImage}
-      />
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.cake.name}</Text>
-        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-        <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-      </View>
-    </View>
-  );
+  const applyPromoCode = async () => {
+    Alert.alert("promo", `PromoCode: ${promoCode}`);
+    setPromoCode("");
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -154,6 +219,140 @@ export default function CheckoutScreen() {
             renderItem={renderCartItem}
             contentContainerStyle={styles.cartList}
           />
+          {/* Delivery Details Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Delivery Details</Text>
+            <TouchableOpacity
+              style={styles.deliveryDetailsBox}
+              onPress={() => setDeliveryDetailsVisible(true)}
+            >
+              <View>
+                {selectedAddress ? (
+                  <>
+                    <Text style={styles.deliveryName}>
+                      <Text style={{ fontWeight: "bold" }}>{selectedAddress.fullName}</Text> ({selectedAddress.phone})
+                    </Text>
+                    <Text style={styles.deliveryAddress}>
+                      {selectedAddress.street}, {selectedAddress.city},{"\n"}
+                      {selectedAddress.state}, {selectedAddress.zipCode}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={styles.deliveryAddress}>No address selected</Text>
+                )}
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#1D4ED8" />
+            </TouchableOpacity>
+          </View>
+
+          <Modal transparent={true} visible={deliveryDetailsVisible} animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Select a Delivery Address</Text>
+                <FlatList
+                  data={addresses}
+                  keyExtractor={(item) => item._id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.addressItem,
+                        selectedAddress?._id === item._id && styles.selectedAddress
+                      ]}
+                      onPress={() => {
+                        setSelectedAddress(item);
+                        setDeliveryDetailsVisible(false);
+                      }}
+                    >
+                      <Text style={styles.modalText}><Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})</Text>
+                      <Text style={styles.modalText}>{item.street}, {item.city}, {item.zipCode}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+                <TouchableOpacity style={styles.modalCloseButton} onPress={() => setDeliveryDetailsVisible(false)}>
+                  <Text style={styles.modalCloseText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+
+
+
+          {/* Shipping Method Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Shipping Method</Text>
+            <TouchableOpacity
+              style={styles.shippingOption}
+              onPress={() => setShippingModalVisible(true)}
+            >
+              <Text style={styles.shippingText}>{shippingMethod}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#6b4226" />
+            </TouchableOpacity>
+          </View>
+          <Modal transparent={true} visible={shippingModalVisible} animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Choose Shipping Method</Text>
+
+                {/* אפשרות למשלוח */}
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOption,
+                  ]}
+                  onPress={() => {
+                    setShippingMethod("Standard Delivery (2-3 days)");
+                    setShippingModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="bicycle" size={24} color="#6b4226" />
+                  <Text style={styles.modalText}>Standard Delivery (2-3 days)</Text>
+                </TouchableOpacity>
+
+                {/* אפשרות לאיסוף עצמי */}
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    shippingMethod === "Self Pickup" && styles.selectedOption,
+                  ]}
+                  onPress={() => {
+                    setShippingMethod("Self Pickup");
+                    setShippingModalVisible(false);
+                  }}
+                >
+                  <Ionicons name="storefront-outline" size={24} color="#6b4226" />
+                  <Text style={styles.modalText}>Self Pickup</Text>
+                </TouchableOpacity>
+
+                {/* כפתור סגירה */}
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setShippingModalVisible(false)}
+                >
+                  <Text style={styles.modalCloseText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+
+
+          {/* Promo Code Section */}
+          <View style={styles.sectionContainer}>
+            <Text style={styles.sectionTitle}>Promo Code</Text>
+
+            <View style={styles.promoContainer}>
+              <TextInput
+                style={styles.promoInput}
+                placeholder="Enter promo code"
+                value={promoCode}
+                onChangeText={setPromoCode}
+              />
+
+              <TouchableOpacity style={styles.applyButton} onPress={applyPromoCode}>
+                <Text style={styles.applyButtonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
 
           <View style={styles.paymentContainer}>
             <Text style={styles.paymentTitle}>Payment Method</Text>
@@ -162,7 +361,6 @@ export default function CheckoutScreen() {
               <Text style={styles.paymentText}>Cash</Text>
             </View>
           </View>
-
           <View style={styles.checkoutContainer}>
             <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
             <TouchableOpacity
@@ -179,37 +377,130 @@ export default function CheckoutScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9f3ea", padding: 16 },
+  container: {
+    flex: 1,
+    backgroundColor: "#FAF5EF",
+    padding: 16,
+  },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
-    color: "#6b4226",
+    color: "#5A3827",
     textAlign: "center",
+    marginBottom: 10,
   },
   cartList: { paddingBottom: 16 },
+
+  // 🎂 עיצוב המוצרים בעגלה
   cartItem: {
     flexDirection: "row",
     backgroundColor: "#fff",
     borderRadius: 12,
-    padding: 10,
+    padding: 12,
+    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    elevation: 3,
+  },
+  itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
+  itemDetails: { flex: 1 },
+  itemName: { fontSize: 16, fontWeight: "bold", color: "#5A3827" },
+  itemPrice: { fontSize: 14, color: "#5A3827", fontWeight: "500" },
+  itemQuantity: { fontSize: 14, color: "#7B6D63" },
+
+  // 📦 אזור המידע
+  sectionContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 9,
+    marginTop: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#5A3827",
     marginBottom: 10,
   },
-  itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
-  itemDetails: { flex: 1 },
-  itemName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
-  itemPrice: { fontSize: 14, color: "#6b4226" },
-  itemQuantity: { fontSize: 14, color: "#6b4226" },
+
+  // 📍 כתובת למשלוח
+  deliveryDetailsBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F8F1E7",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#E5D3C2",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 3,
+  },
+  deliveryName: { fontSize: 16, color: "#5A3827", fontWeight: "bold" },
+  deliveryAddress: { fontSize: 14, color: "#7B6D63", lineHeight: 20 },
+
+  // 🚚 בחירת סוג משלוח
+  shippingOption: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#FAEDE1",
+    padding: 12,
+    borderRadius: 10,
+  },
+  shippingText: { fontSize: 14, color: "#5A3827", fontWeight: "bold" },
+
+  // 🎟️ קופון הנחה
+  promoContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 1.5,
+    borderColor: "#E5D3C2",
+    borderRadius: 10,
+    overflow: "hidden",
+    backgroundColor: "#FFF",
+  },
+  promoInput: {
+    flex: 1,
+    padding: 12,
+    fontSize: 14,
+    color: "#5A3827",
+  },
+  applyButton: {
+    backgroundColor: "#5A3827",
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderTopRightRadius: 10,
+    borderBottomRightRadius: 10,
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+
+  // 💵 שיטת תשלום
   paymentContainer: {
     marginTop: 20,
     padding: 16,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 3,
   },
   paymentTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#6b4226",
+    color: "#5A3827",
     marginBottom: 10,
   },
   cashPayment: {
@@ -217,15 +508,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 10,
     borderRadius: 8,
-    backgroundColor: "#f0e0d6",
+    backgroundColor: "#F8F1E7",
   },
-  paymentText: { fontSize: 16, color: "#6b4226", marginLeft: 10 },
+  paymentText: { fontSize: 16, color: "#5A3827", marginLeft: 10 },
+
+  // 🛒 כפתור Checkout
   checkoutContainer: { marginTop: 20, alignItems: "center" },
-  totalText: { fontSize: 18, fontWeight: "bold", color: "#6b4226" },
+  totalText: { fontSize: 20, fontWeight: "bold", color: "#5A3827" },
   checkoutButton: {
-    backgroundColor: "#6b4226",
+    backgroundColor: "#5A3827",
     padding: 15,
-    borderRadius: 10,
+    borderRadius: 12,
     marginTop: 10,
     width: "100%",
   },
@@ -235,6 +528,84 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+
+  // 📌 מודלים
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 12,
+    width: "85%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#5A3827",
+    marginBottom: 15,
+    textAlign: "center",
+  },
+  modalText: {
+    fontSize: 16,
+    color: "#7B6D63",
+    marginBottom: 10,
+  },
+  modalCloseButton: {
+    backgroundColor: "#D9534F",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 15,
+  },
+  modalCloseText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+  // 📍 עיצוב אופציות במודל
+  modalButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    backgroundColor: "#FAEDE1",
+    marginVertical: 5,
+    width: "100%",
+    borderWidth: 1.5,
+    borderColor: "#E5D3C2",
+  },
+  selectedOption: {
+    backgroundColor: "#5A3827",
+    borderColor: "#5A3827",
+  },
+
+  // 📍 עיצוב כתובת במודל
+  addressItem: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5D3C2",
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    marginBottom: 10,
+  },
+  selectedAddress: {
+    borderColor: "#5A3827",
+    borderWidth: 2,
+    backgroundColor: "#F8F1E7",
+  },
   loading: { marginTop: 20 },
   emptyMessage: {
     fontSize: 18,
@@ -243,3 +614,4 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
 });
+
