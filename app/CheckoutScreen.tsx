@@ -48,6 +48,13 @@ export default function CheckoutScreen() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [shippingModalVisible, setShippingModalVisible] = useState(false);
+  const [ShowAddAddress, setShowAddAddress] = useState(false);
+  const [newAddress, setNewAddress] = useState({
+    fullName: "",
+    phone: "",
+    street: "",
+    city: "",
+  });
 
   const router = useRouter();
 
@@ -175,7 +182,7 @@ export default function CheckoutScreen() {
             quantity: item.quantity,
           })),
           paymentMethod: "cash",
-          deliveryAddress: selectedAddress, // ✅ נשלחת הכתובת שנבחרה
+          address: selectedAddress, // ✅ נשלחת הכתובת שנבחרה
         }),
       });
 
@@ -199,6 +206,36 @@ export default function CheckoutScreen() {
     Alert.alert("promo", `PromoCode: ${promoCode}`);
     setPromoCode("");
   }
+
+  const handleAddAddress = async () => {
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const response = await fetch(`${config.BASE_URL}/address`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ...newAddress, isDefault: false }),
+      });
+
+      if (!response.ok) throw new Error("Failed to add address");
+      const addedAddress = await response.json();
+      setSelectedAddress(addedAddress.address);
+      Alert.alert("Success", "Address added successfully!");
+      setNewAddress({ fullName: "", phone: "", street: "", city: "" });
+      fetchAddresses(); // רענון הרשימה
+    } catch (error) {
+      console.error("Error adding address:", error);
+      Alert.alert("Error", "Failed to add address.");
+    } finally {
+      setLoading(false);
+      setShowAddAddress(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -233,8 +270,7 @@ export default function CheckoutScreen() {
                       <Text style={{ fontWeight: "bold" }}>{selectedAddress.fullName}</Text> ({selectedAddress.phone})
                     </Text>
                     <Text style={styles.deliveryAddress}>
-                      {selectedAddress.street}, {selectedAddress.city},{"\n"}
-                      {selectedAddress.state}, {selectedAddress.zipCode}
+                      {selectedAddress.street}, {selectedAddress.city}
                     </Text>
                   </>
                 ) : (
@@ -249,31 +285,55 @@ export default function CheckoutScreen() {
             <View style={styles.modalOverlay}>
               <View style={styles.modalContent}>
                 <Text style={styles.modalTitle}>Select a Delivery Address</Text>
-                <FlatList
-                  data={addresses}
-                  keyExtractor={(item) => item._id}
-                  renderItem={({ item }) => (
+
+                {addresses.length === 0 ? (
+                  // אם אין כתובות שמורות
+                  <View style={styles.noAddressContainer}>
+                    <Text style={styles.noAddressText}>No addresses found</Text>
                     <TouchableOpacity
-                      style={[
-                        styles.addressItem,
-                        selectedAddress?._id === item._id && styles.selectedAddress
-                      ]}
+                      style={styles.addAddressButton}
                       onPress={() => {
-                        setSelectedAddress(item);
                         setDeliveryDetailsVisible(false);
+                        setShowAddAddress(true); // הצגת מסך הוספת כתובת
                       }}
                     >
-                      <Text style={styles.modalText}><Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})</Text>
-                      <Text style={styles.modalText}>{item.street}, {item.city}, {item.zipCode}</Text>
+                      <Text style={styles.addAddressText}>Add New Address</Text>
                     </TouchableOpacity>
-                  )}
-                />
-                <TouchableOpacity style={styles.modalCloseButton} onPress={() => setDeliveryDetailsVisible(false)}>
+                  </View>
+                ) : (
+                  <FlatList
+                    data={addresses}
+                    keyExtractor={(item) => item._id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.addressItem,
+                          selectedAddress?._id === item._id && styles.selectedAddress
+                        ]}
+                        onPress={() => {
+                          setSelectedAddress(item);
+                          setDeliveryDetailsVisible(false);
+                        }}
+                      >
+                        <Text style={styles.modalText}>
+                          <Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})
+                        </Text>
+                        <Text style={styles.modalText}>{item.street}, {item.city}</Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                )}
+
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setDeliveryDetailsVisible(false)}
+                >
                   <Text style={styles.modalCloseText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
           </Modal>
+
 
 
 
@@ -330,6 +390,55 @@ export default function CheckoutScreen() {
                   onPress={() => setShippingModalVisible(false)}
                 >
                   <Text style={styles.modalCloseText}>Close</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+          <Modal transparent={true} visible={ShowAddAddress} animationType="slide">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Add New Address</Text>
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Full Name"
+                  value={newAddress.fullName}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, fullName: text })}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Phone"
+                  value={newAddress.phone}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, phone: text })}
+                  keyboardType="phone-pad"
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="Street"
+                  value={newAddress.street}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, street: text })}
+                />
+
+                <TextInput
+                  style={styles.input}
+                  placeholder="City"
+                  value={newAddress.city}
+                  onChangeText={(text) => setNewAddress({ ...newAddress, city: text })}
+                />
+
+                <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+                  <Text style={styles.addButtonText}>Save Address</Text>
+
+                </TouchableOpacity>
+
+
+                <TouchableOpacity
+                  style={styles.modalCloseButton}
+                  onPress={() => setShowAddAddress(false)}
+                >
+                  <Text style={styles.modalCloseText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -613,5 +722,57 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 20,
   },
+  noAddressContainer: {
+    alignItems: "center",
+    padding: 20,
+  },
+  noAddressText: {
+    fontSize: 16,
+    color: "#6b4226",
+    marginBottom: 10,
+  },
+  addAddressButton: {
+    backgroundColor: "#6b4226",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  addAddressText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  input: {
+    width: "100%",
+    height: 45,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  addButton: {
+    backgroundColor: "#6b4226",
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+
+
+
 });
 

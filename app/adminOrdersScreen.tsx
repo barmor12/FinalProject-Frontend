@@ -50,7 +50,7 @@ export default function AdminOrdersScreen() {
     interface Order {
         _id: string;
         status: "pending" | "confirmed" | "delivered" | "cancelled";
-        user: { _id: string; firstName: string; lastName: string; phone: string; address: string; email: string };
+        user: { _id: string; firstName: string; lastName: string; email: string };
         items: { cake: string; quantity: number }[];
         totalPrice: number;
         createdAt: string;
