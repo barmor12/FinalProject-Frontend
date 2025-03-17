@@ -20,11 +20,19 @@ interface Cake {
     name: string;
     image: string;
 }
-
+interface Address {
+    fullName: string;
+    phone: string;
+    street: string;
+    city: string;
+    zipCode: string;
+    country: string;
+}
 interface Order {
     _id: string;
     status: "pending" | "confirmed" | "delivered" | "cancelled";
-    user: { firstName: string; lastName: string; email: string, phone: string, address: string };
+    user: { firstName: string; lastName: string; email: string };
+    address: Address;
     items: { cake: Cake; quantity: number }[];
     totalPrice: number;
     createdAt: string;
@@ -65,7 +73,7 @@ export default function OrderDetailsScreen() {
             }
 
             const data: Order = await response.json();
-            console.log(data);
+            console.log("📦 Order Details:", data);
             setOrder(data);
         } catch (error) {
             console.error("❌ Error fetching order:", error);
@@ -236,9 +244,9 @@ export default function OrderDetailsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Customer Contact Details</Text>
-                        <Text style={styles.contactInfo}>Customer: {order.user.firstName} {order.user.lastName}</Text>
-                        <Text style={styles.contactInfo}>Phone: {order.user.phone}</Text>
-                        <Text style={styles.contactInfo}>Address: {order.user.address}</Text>
+                        <Text style={styles.contactInfo}>{order.address.fullName}</Text>
+                        <Text style={styles.contactInfo}>Phone: {order.address.phone}</Text>
+                        <Text style={styles.contactInfo}>Address: {order.address.street}, {order.address.city}, {order.address.zipCode}, {order.address.country}</Text>
                         <Text style={styles.contactInfo}>Email: {order.user.email}</Text>
                         <TouchableOpacity style={styles.modalButtonClose} onPress={() => setContactModalVisible(false)}>
                             <Text>Close</Text>

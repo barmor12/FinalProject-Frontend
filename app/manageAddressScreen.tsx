@@ -39,8 +39,6 @@ export default function AddressManagementScreen() {
         phone: "",
         street: "",
         city: "",
-        zipCode: "",
-        country: "",
     });
 
     useEffect(() => {
@@ -91,11 +89,75 @@ export default function AddressManagementScreen() {
             if (!response.ok) throw new Error("Failed to add address");
 
             Alert.alert("Success", "Address added successfully!");
-            setNewAddress({ fullName: "", phone: "", street: "", city: "", zipCode: "", country: "" });
+            setNewAddress({ fullName: "", phone: "", street: "", city: "" });
             fetchAddresses(); // רענון הרשימה
         } catch (error) {
             console.error("Error adding address:", error);
             Alert.alert("Error", "Failed to add address.");
+        } finally {
+            setLoading(false);
+        }
+    };
+    const handleDeleteAddress = async (addressId: string) => {
+        Alert.alert(
+            "Delete Address",
+            "Are you sure you want to delete this address?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: async () => {
+                        try {
+                            setLoading(true);
+                            const token = await AsyncStorage.getItem("accessToken");
+                            if (!token) {
+                                Alert.alert("Error", "You need to be logged in.");
+                                return;
+                            }
+
+                            const response = await fetch(`${config.BASE_URL}/address/${addressId}`, {
+                                method: "DELETE",
+                                headers: { Authorization: `Bearer ${token}` },
+                            });
+
+                            if (!response.ok) throw new Error("Failed to delete address");
+
+                            Alert.alert("Success", "Address deleted successfully!");
+                            fetchAddresses(); // רענון הרשימה
+                        } catch (error) {
+                            console.error("Error deleting address:", error);
+                            Alert.alert("Error", "Failed to delete address.");
+                        } finally {
+                            setLoading(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
+    const handleSetDefaultAddress = async (addressId: string) => {
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "You need to be logged in.");
+                return;
+            }
+
+            const response = await fetch(`${config.BASE_URL}/address/default/${addressId}`, {
+                method: "PUT",
+                headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+            });
+
+            if (!response.ok) throw new Error("Failed to set default address");
+
+            Alert.alert("Success", "Default address updated!");
+            fetchAddresses(); // רענון הרשימה
+        } catch (error) {
+            console.error("Error setting default address:", error);
+            Alert.alert("Error", "Failed to update default address.");
         } finally {
             setLoading(false);
         }
@@ -128,18 +190,16 @@ export default function AddressManagementScreen() {
 
                                     <View style={styles.buttonContainer}>
                                         <View style={styles.defaultContainer}>
-                                            <TouchableOpacity>
-                                                <Ionicons
-                                                    name={item.isDefault ? "checkmark-circle" : "ellipse-outline"}
-                                                    size={24}
-                                                    color={item.isDefault ? "#6b4226" : "#ccc"}
-                                                />
+                                            <TouchableOpacity onPress={() => handleSetDefaultAddress(item._id)}>
+                                                <Ionicons name={item.isDefault ? "checkmark-circle" : "ellipse-outline"} size={24} color={item.isDefault ? "#6b4226" : "#ccc"} />
                                             </TouchableOpacity>
+
                                             {item.isDefault && <Text style={styles.defaultLabel}>Default</Text>}
                                         </View>
-                                        <TouchableOpacity>
+                                        <TouchableOpacity onPress={() => handleDeleteAddress(item._id)}>
                                             <Ionicons name="trash" size={24} color="#d9534f" />
                                         </TouchableOpacity>
+
                                     </View>
                                 </View>
                             )}
@@ -163,9 +223,6 @@ export default function AddressManagementScreen() {
                                 <TextInput style={styles.input} placeholder="Phone" value={newAddress.phone} onChangeText={(text) => setNewAddress({ ...newAddress, phone: text })} keyboardType="phone-pad" />
                                 <TextInput style={styles.input} placeholder="Street" value={newAddress.street} onChangeText={(text) => setNewAddress({ ...newAddress, street: text })} />
                                 <TextInput style={styles.input} placeholder="City" value={newAddress.city} onChangeText={(text) => setNewAddress({ ...newAddress, city: text })} />
-                                <TextInput style={styles.input} placeholder="Zip Code" value={newAddress.zipCode} onChangeText={(text) => setNewAddress({ ...newAddress, zipCode: text })} keyboardType="number-pad" />
-                                <TextInput style={styles.input} placeholder="Country" value={newAddress.country} onChangeText={(text) => setNewAddress({ ...newAddress, country: text })} />
-
                                 <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
                                     <Text style={styles.addButtonText}>Save Address</Text>
                                 </TouchableOpacity>

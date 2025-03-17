@@ -14,7 +14,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 
 interface Order {
-  [x: string]: any;
   _id: string;
   user: {
     _id: string;
@@ -29,7 +28,7 @@ interface Order {
     quantity: number;
   }>;
   totalPrice: number;
-  status: "pending" | "confirmed" | "completed" | "cancelled";
+  status: "pending" | "confirmed" | "delivered" | "cancelled";
 }
 
 export default function OrdersScreen() {
@@ -38,24 +37,13 @@ export default function OrdersScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<null | string>(null);
-  const checkStoredValues = async () => {
-    const token = await AsyncStorage.getItem("accessToken");
-    const userID = await AsyncStorage.getItem("userID");
 
-    console.log("🔍 accessToken:", token);
-    console.log("🔍 userID:", userID);
-  };
-
-  useEffect(() => {
-    checkStoredValues();
-  }, []);
-
-  // **שליפת ההזמנות מהשרת**
+  // **שליפת הזמנות מהשרת**
   const fetchOrders = async () => {
     try {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
-      const userID = await AsyncStorage.getItem("userID"); // 🔹 קבלת userID
+      const userID = await AsyncStorage.getItem("userID");
 
       if (!token || !userID) {
         console.error("[ERROR] Missing access token or user ID.");
@@ -66,7 +54,8 @@ export default function OrdersScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("[INFO] Fetched orders:", response.data);
+      console.log("[DEBUG] Fetched orders:", response.data); // ✅ בדיקת נתונים מהשרת
+
       setOrders(response.data);
       setFilteredOrders(response.data);
     } catch (error) {
@@ -76,7 +65,6 @@ export default function OrdersScreen() {
       setRefreshing(false);
     }
   };
-
 
   useEffect(() => {
     fetchOrders();
