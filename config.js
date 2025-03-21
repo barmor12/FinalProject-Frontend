@@ -1,5 +1,5 @@
 const config = {
-  BASE_URL: "http://10.0.0.19:3000", // aviel home
+  BASE_URL: "http://10.0.0.20:3000", // aviel home
 };
 
 // const config = {

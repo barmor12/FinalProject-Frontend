@@ -18,7 +18,10 @@ import config from "../config";
 interface Cake {
     _id: string;
     name: string;
-    image: string;
+    image: {
+        public_id: string;
+        url: string;
+    };
 }
 interface Address {
     fullName: string;
@@ -190,7 +193,15 @@ export default function OrderDetailsScreen() {
             <ScrollView contentContainerStyle={styles.scrollView}>
                 {order.items.map((item, index) => (
                     <View key={index} style={styles.itemContainer}>
-                        <Image source={{ uri: item.cake.image }} style={styles.itemImage} />
+                        {item.cake?.image?.url ? (
+                            <Image
+                                source={{ uri: item.cake.image.url }}
+                                style={styles.itemImage}
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <Text style={{ color: "#999" }}>No image available</Text>
+                        )}
                         <View style={styles.itemDetails}>
                             <Text style={styles.itemName}>{item.cake.name}</Text>
                             <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
@@ -244,7 +255,7 @@ export default function OrderDetailsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Customer Contact Details</Text>
-                        <Text style={styles.contactInfo}>{order.address.fullName}</Text>
+                        {/* <Text style={styles.contactInfo}>{order.address.fullName}</Text> */}
                         <Text style={styles.contactInfo}>Phone: {order.address.phone}</Text>
                         <Text style={styles.contactInfo}>Address: {order.address.street}, {order.address.city}, {order.address.zipCode}, {order.address.country}</Text>
                         <Text style={styles.contactInfo}>Email: {order.user.email}</Text>

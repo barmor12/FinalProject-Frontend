@@ -14,8 +14,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
-import { storage } from "../firebaseConfig";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 export default function AddProductScreenAdmin() {
     const router = useRouter();
@@ -45,61 +43,37 @@ export default function AddProductScreenAdmin() {
         }
     };
 
-    const uploadImage = async (): Promise<string | null> => {
-        if (!image) return null;
-
-        setUploading(true);
-        try {
-            const response = await fetch(image);
-            const blob = await response.blob();
-            const filename = image.substring(image.lastIndexOf("/") + 1);
-            const storageRef = ref(storage, `cakes/${filename}`);
-            const metadata = { contentType: "image/jpeg" };
-
-            await uploadBytes(storageRef, blob, metadata);
-            const downloadURL = await getDownloadURL(storageRef);
-            setImage(null);
-            return downloadURL;
-        } catch (error) {
-            console.error("Error uploading image:", error);
-            Alert.alert("error", "error while uploading image.");
-            return null;
-        } finally {
-            setUploading(false);
-        }
-    };
-
     const handleSubmit = async () => {
-        if (!name || !description || !price || !ingredients) {
-            Alert.alert("Error", "All fields are required");
+        if (!name || !description || !price || !ingredients || !image) {
+            Alert.alert("Error", "All fields including image are required");
             return;
         }
 
         setUploading(true);
         try {
-            const imageUrl = await uploadImage();
-            console.log(imageUrl);
-            const productData = {
-                name,
-                description,
-                price,
-                ingredients: ingredients.split(",").map((item) => item.trim()),
-                image: imageUrl || "",
-            };
-
             const token = await AsyncStorage.getItem("accessToken");
             if (!token) {
                 Alert.alert("Error", "Authorization token is required");
                 return;
             }
 
+            const formData = new FormData();
+            formData.append("name", name);
+            formData.append("description", description);
+            formData.append("price", price);
+            formData.append("ingredients", ingredients);
+            formData.append("image", {
+                uri: image,
+                name: image.split("/").pop(),
+                type: "image/jpeg",
+            } as any);
+
             const responseBackend = await fetch(`${config.BASE_URL}/cakes/addcake`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify(productData),
+                body: formData,
             });
 
             if (!responseBackend.ok) {

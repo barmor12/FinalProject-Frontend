@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -18,7 +19,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const [user, setUser] = useState<{
     name: string;
     profilePic: string | number;
@@ -33,18 +34,14 @@ export default function EditProfileScreen() {
         const userData = await fetchUserData();
         console.log("🔄 Fetched user data:", userData);
 
-        let profilePicUri:
-          | string
-          | number = require("../assets/images/userIcon.png");
+        let profilePicUri: string | number = require("../assets/images/userIcon.png");
 
-        if (userData.profilePic) {
-          profilePicUri = userData.profilePic.startsWith("http")
-            ? userData.profilePic
-            : `${config.BASE_URL}${userData.profilePic}`;
+        if (userData.profilePic && userData.profilePic.url) {
+          profilePicUri = userData.profilePic.url;
         }
 
         setUser({
-          name: `Hi ${userData.firstName}` || "Guest",
+          name: userData.firstName || "Guest",
           profilePic: profilePicUri,
         });
       } catch (error) {
@@ -54,13 +51,11 @@ export default function EditProfileScreen() {
     };
 
     fetchUserDataAndSetState();
-  }, [refreshKey]);
+  }, []);
 
-  // Function to pick an image from the gallery
   const pickImage = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Permission Denied", "You need to allow access to photos.");
         return;
@@ -78,11 +73,52 @@ export default function EditProfileScreen() {
         return;
       }
 
-      console.log("📸 Selected Image:", result.assets[0].uri);
       setUser({ ...user, profilePic: result.assets[0].uri });
+      await handleUpdateProfilePic(result.assets[0].uri);
     } catch (error) {
-      console.error("❌ Error picking image:", error);
       Alert.alert("Error", "Something went wrong.");
+    }
+  };
+
+  const handleUpdateProfilePic = async (imageUri: string) => {
+    try {
+      setIsUploading(true);
+
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Alert.alert("Error", "You must be logged in.");
+        setIsUploading(false);
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("profilePic", {
+        uri: imageUri,
+        type: "image/jpeg",
+        name: "profile_pic.jpg",
+      } as any);
+
+      const response = await fetch(`${config.BASE_URL}/user/update-profile-pic`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        Alert.alert("Error", data.message || "Failed to update profile picture.");
+        setIsUploading(false);
+        return;
+      }
+
+      Alert.alert("Success", "Profile picture updated successfully!");
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -100,7 +136,7 @@ export default function EditProfileScreen() {
         return;
       }
 
-      const response = await fetch(`${config.BASE_URL}/user/profile`, {
+      const response = await fetch(`${config.BASE_URL}/user/updateNameProfile`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -119,34 +155,47 @@ export default function EditProfileScreen() {
         return;
       }
 
-      Alert.alert("Success", "Name updated successfully!");
+      Alert.alert(
+        "Success",
+        "Name updated successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              router.back(); // לדוגמה: מעבר למסך הפרופיל
+            },
+          },
+        ]
+      );
+
     } catch (error) {
       console.error("❌ Error updating name:", error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
 
-
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
 
-      <TouchableOpacity onPress={pickImage}>
-        <Image
-          source={
-            typeof user.profilePic === "string"
-              ? { uri: user.profilePic }
-              : user.profilePic
-          }
-          style={styles.profileImage}
-          resizeMode="cover"
-        />
-        <Text style={styles.changePhotoText}>Change Photo</Text>
+      <TouchableOpacity onPress={pickImage} disabled={isUploading}>
+        <View>
+          {isUploading ? (
+            <ActivityIndicator size="large" color="#0000ff" />
+          ) : (
+            <Image
+              source={typeof user.profilePic === "string" ? { uri: user.profilePic } : user.profilePic}
+              style={styles.profileImage}
+              resizeMode="cover"
+            />
+          )}
+          <Text style={styles.changePhotoText}>Change Photo</Text>
+        </View>
       </TouchableOpacity>
 
       <TextInput
         style={styles.input}
-        placeholder="First Name"
+        placeholder={user.name}
         value={firstName}
         onChangeText={setFirstName}
       />
@@ -162,5 +211,4 @@ export default function EditProfileScreen() {
       </TouchableOpacity>
     </View>
   );
-}
-
+};

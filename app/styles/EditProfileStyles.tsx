@@ -14,10 +14,13 @@ export default StyleSheet.create({
     alignItems: "center",
   },
   loadingText: {
-    marginTop: 10,
+    textAlign: "center",
     fontSize: 16,
-    color: "#888",
+    fontWeight: "bold",
+    color: "#d49a6a",
+    marginVertical: 10,
   },
+
   backButton: {
     alignSelf: "flex-start",
     marginBottom: 10,
@@ -39,6 +42,7 @@ export default StyleSheet.create({
     marginBottom: 10,
   },
   changePhotoText: {
+    textAlign: "center",
     color: "#6b4226",
     fontWeight: "bold",
   },

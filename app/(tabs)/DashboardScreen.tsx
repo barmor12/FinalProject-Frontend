@@ -64,7 +64,7 @@ export default function DashboardScreen() {
       setUser({
         name: `Hi ${userData.firstName}` || "Guest",
         profilePic:
-          userData.profilePic || require("../../assets/images/userIcon.png"),
+          userData.profilePic.url || require("../../assets/images/userIcon.png"),
       });
     } catch (error) {
       console.error("Error fetching user data:", error);
@@ -82,14 +82,16 @@ export default function DashboardScreen() {
       }
 
       const data = await response.json();
+
       if (!Array.isArray(data)) {
         throw new Error("Unexpected response format from server");
       }
 
+      // התאמה לשימוש בשדה imageUrl שחוזר מהבקאנד
       const updatedProducts = data.map((product) => ({
         ...product,
-        image: product.image?.startsWith("http")
-          ? product.image
+        image: product.image?.url?.startsWith("http")
+          ? product.image.url
           : "https://via.placeholder.com/150",
       }));
 
