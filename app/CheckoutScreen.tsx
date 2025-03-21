@@ -22,11 +22,16 @@ interface CartItem {
   cake: {
     _id: string;
     name: string;
-    image: string;
+    image: {
+      public_id: string;
+      url: string;
+    };
     price: number;
+    description: string;
   };
   quantity: number;
 }
+
 interface Address {
   _id: string;
   fullName: string;
@@ -149,9 +154,11 @@ export default function CheckoutScreen() {
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <Image
-        source={{ uri: item.cake.image || "https://via.placeholder.com/100" }}
+        source={{ uri: item.cake.image.url }}
         style={styles.itemImage}
+        resizeMode="cover"
       />
+
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.cake.name}</Text>
         <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>

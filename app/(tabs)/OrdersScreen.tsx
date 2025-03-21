@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Image
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -23,7 +24,10 @@ interface Order {
     cake: {
       _id: string;
       name: string;
-      image?: string;
+      image: {
+        public_id: string;
+        url: string;
+      };
     };
     quantity: number;
   }>;
@@ -54,7 +58,7 @@ export default function OrdersScreen() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      console.log("[DEBUG] Fetched orders:", response.data); // ✅ בדיקת נתונים מהשרת
+      console.log("[DEBUG] Fetched items (expanded):", JSON.stringify(response.data, null, 2));
 
       setOrders(response.data);
       setFilteredOrders(response.data);
@@ -145,6 +149,17 @@ export default function OrdersScreen() {
                 <View style={styles.orderDetails}>
                   {order.items.map((item, index) => (
                     <View key={index} style={styles.itemContainer}>
+                      {item.cake?.image?.url ? (
+                        <Image
+                          source={{ uri: item.cake.image.url }}
+                          style={styles.itemImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Text style={{ color: "#999" }}>No image available</Text>
+                      )}
+
+
                       <Text style={styles.orderText}>
                         🍰 {item.cake?.name || "Unknown"}
                       </Text>
@@ -241,4 +256,6 @@ const styles: { [key: string]: any } = StyleSheet.create({
   itemContainer: {
     marginBottom: 5,
   },
+  itemImage: { width: 50, height: 50, borderRadius: 8, marginRight: 12 },
+
 });

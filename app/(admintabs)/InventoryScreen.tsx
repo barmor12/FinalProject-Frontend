@@ -70,8 +70,8 @@ export default function InventoryScreen() {
 
       const updatedProducts = data.map((product) => ({
         ...product,
-        image: product.image?.startsWith("http")
-          ? product.image
+        image: product.image?.url?.startsWith("http")
+          ? product.image.url
           : "https://via.placeholder.com/150",
       }));
 
@@ -82,6 +82,7 @@ export default function InventoryScreen() {
       Alert.alert("Error", "Failed to fetch products. Please try again later.");
     }
   };
+
 
   useEffect(() => {
     fetchProducts();

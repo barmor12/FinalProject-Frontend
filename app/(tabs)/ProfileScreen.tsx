@@ -19,9 +19,12 @@ import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const [user, setUser] = useState({
+  const [user, setUser] = useState<{
+    name: string;
+    profilePic: string | number;
+  }>({
     name: "",
-    profilePic: "",
+    profilePic: require("../../assets/images/Welcome.jpg"),
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -38,22 +41,22 @@ export default function ProfileScreen() {
 
   const fetchUserDataAndSetState = async () => {
     try {
-      console.log("Fetching user data...");
       const userData = await fetchUserData();
-      console.log("Fetched user data:", userData);
+      console.log("🔄 Fetched user data:", userData);
 
-      const profilePicUrl = userData.profilePic
-        ? `${config.BASE_URL}${userData.profilePic}`
-        : require("../../assets/images/userIcon.png");
+      let profilePicUri: string | number = require("../../assets/images/userIcon.png");
 
-      console.log("Profile picture URL:", profilePicUrl);
+      if (userData.profilePic && userData.profilePic.url) {
+        profilePicUri = userData.profilePic.url;
+      }
 
       setUser({
-        name: `Hi ${userData.firstName}` || "Guest",
-        profilePic: profilePicUrl,
+        name: userData.firstName || "Guest",
+        profilePic: profilePicUri,
       });
     } catch (error) {
-      console.error("Error fetching user data:", error);
+      console.error("❌ Error fetching user data:", error);
+      Alert.alert("Error", "Failed to load user data.");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -67,29 +70,29 @@ export default function ProfileScreen() {
   };
 
   const pickImage = async () => {
-    console.log("Requesting permission to access gallery...");
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
+    try {
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permissionResult.granted) {
+        Alert.alert("Permission Denied", "You need to allow access to photos.");
+        return;
+      }
 
-    if (!permissionResult.granted) {
-      Alert.alert("Permission required", "You need to allow access to photos.");
-      return;
-    }
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 1,
+      });
 
-    console.log("Opening image picker...");
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 1,
-    });
+      if (result.canceled || !result.assets?.length) {
+        Alert.alert("No Image Selected", "You need to select an image.");
+        return;
+      }
 
-    if (!result.canceled && result.assets.length > 0) {
-      const selectedImage = result.assets[0].uri;
-      console.log("Selected image URI:", selectedImage);
-      uploadImage(selectedImage);
-    } else {
-      console.log("Image selection canceled.");
+      setUser({ ...user, profilePic: result.assets[0].uri });
+      await uploadImage(result.assets[0].uri);
+    } catch (error) {
+      Alert.alert("Error", "Something went wrong.");
     }
   };
 
@@ -107,22 +110,17 @@ export default function ProfileScreen() {
       const formData = new FormData();
       formData.append("profilePic", {
         uri: imageUri,
-        name: "profile.jpg",
         type: "image/jpeg",
+        name: "profile_pic.jpg",
       } as any);
 
-      console.log("Uploading image to server...");
-      const response = await fetch(
-        `${config.BASE_URL}/auth/upload-profile-pic`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "multipart/form-data",
-          },
-          body: formData,
-        }
-      );
+      const response = await fetch(`${config.BASE_URL}/user/update-profile-pic`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
 
       const data = await response.json();
       console.log("Server response:", data);
@@ -130,17 +128,6 @@ export default function ProfileScreen() {
       if (!response.ok)
         throw new Error(data.message || "Failed to upload image");
 
-      const newProfilePicUrl = data.profilePicUrl.startsWith("http")
-        ? `${data.profilePicUrl}?timestamp=${new Date().getTime()}`
-        : `${config.BASE_URL}${data.profilePicUrl
-        }?timestamp=${new Date().getTime()}`;
-
-      setUser((prev) => ({
-        ...prev,
-        profilePic: newProfilePicUrl,
-      }));
-
-      console.log("Final Profile Pic URL:", newProfilePicUrl);
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -153,7 +140,7 @@ export default function ProfileScreen() {
       await AsyncStorage.removeItem("accessToken");
       await AsyncStorage.removeItem("refreshToken");
       Alert.alert("Success", "You have been logged out successfully!");
-      router.push("/");
+      router.replace("/");
     } catch (error) {
       console.error("Logout error:", error);
       Alert.alert("Error", "Something went wrong.");
@@ -170,12 +157,7 @@ export default function ProfileScreen() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
+    <View style={styles.container}>
       <TouchableOpacity onPress={pickImage}>
         {user.profilePic ? (
           <Image
@@ -232,7 +214,7 @@ export default function ProfileScreen() {
         <MaterialIcons name="logout" size={20} color="#fff" />
         <Text style={styles.buttonText}>Log Out</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 }
 

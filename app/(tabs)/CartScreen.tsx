@@ -21,12 +21,16 @@ interface CartItem {
   cake: {
     _id: string;
     name: string;
-    image: string;
+    image: {
+      public_id: string;
+      url: string;
+    };
     price: number;
     description: string;
   };
   quantity: number;
 }
+
 
 export default function CartScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
@@ -147,7 +151,11 @@ export default function CartScreen() {
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <TouchableOpacity onPress={() => openProductModal(item)}>
-        <Image source={{ uri: item.cake.image }} style={styles.itemImage} />
+        <Image
+          source={{ uri: item.cake.image.url }}
+          style={styles.itemImage}
+          resizeMode="cover"
+        />
       </TouchableOpacity>
       <View style={styles.itemDetails}>
         <Text style={styles.itemName}>{item.cake.name}</Text>
@@ -202,9 +210,11 @@ export default function CartScreen() {
             {selectedProduct && (
               <>
                 <Image
-                  source={{ uri: selectedProduct.cake.image }}
-                  style={styles.modalImage}
+                  source={{ uri: selectedProduct.cake.image.url }}
+                  style={styles.itemImage}
+                  resizeMode="cover"
                 />
+
                 <Text style={styles.modalTitle}>
                   {selectedProduct.cake.name}
                 </Text>
