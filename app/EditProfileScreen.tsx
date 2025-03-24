@@ -21,10 +21,12 @@ export default function EditProfileScreen() {
   const [lastName, setLastName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [user, setUser] = useState<{
-    name: string;
+    firstName: string;
+    lastName: string;
     profilePic: string | number;
   }>({
-    name: "",
+    firstName: "",
+    lastName: "",
     profilePic: require("../assets/images/Welcome.jpg"),
   });
 
@@ -41,7 +43,8 @@ export default function EditProfileScreen() {
         }
 
         setUser({
-          name: userData.firstName || "Guest",
+          firstName: userData.firstName || "Guest",
+          lastName: userData.lastName || "Null",
           profilePic: profilePicUri,
         });
       } catch (error) {
@@ -195,13 +198,13 @@ export default function EditProfileScreen() {
 
       <TextInput
         style={styles.input}
-        placeholder={user.name}
+        placeholder={user.firstName}
         value={firstName}
         onChangeText={setFirstName}
       />
       <TextInput
         style={styles.input}
-        placeholder="Last Name"
+        placeholder={user.lastName}
         value={lastName}
         onChangeText={setLastName}
       />

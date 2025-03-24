@@ -40,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="ProductDetailsScreenAdmin" />
         <Stack.Screen name="AddProductScreenAdmin" />
         <Stack.Screen name="manageAddressScreen" />
+        <Stack.Screen name="adminDiscountCodesScreen" />
 
         <Stack.Screen name="adminOrdersScreen" />
         <Stack.Screen name="OrderDetailsScreen" />

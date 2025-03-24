@@ -118,6 +118,13 @@ export default function AdminPanelScreen() {
 
       <TouchableOpacity
         style={styles.button}
+        onPress={() => router.push("/adminDiscountCodesScreen")}
+      >
+        <Text style={styles.buttonText}>Manage Discount Codes</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={styles.button}
         onPress={() => router.push("/StatisticsScreen")}
       >
         <Text style={styles.buttonText}>View Statistics</Text>

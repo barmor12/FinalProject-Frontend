@@ -23,6 +23,7 @@ interface Product {
   description: string;
   ingredients: string[];
   price: number;
+  stock: number;
 }
 
 export default function DashboardScreen() {
@@ -133,6 +134,47 @@ export default function DashboardScreen() {
     });
   };
 
+
+  const renderProductCardHorizontal = ({ item }: { item: Product }) => {
+    return (
+      <TouchableOpacity
+        style={styles.horizontalProductCard}
+        onPress={() => {
+          if (item.stock > 0) {
+            navigateToProduct(item);
+          }
+        }}
+      >
+        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Text style={styles.productName}>{item.name}</Text>
+        {item.stock <= 0 ? (
+          <Text style={styles.outOfStockText}>Out of Stock</Text>
+        ) : (
+          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
+  const renderProductCardVertical = ({ item }: { item: Product }) => {
+    return (
+      <TouchableOpacity
+        style={styles.productCardHorizon}
+        onPress={() => {
+          if (item.stock > 0) {
+            navigateToProduct(item);
+          }
+        }}
+      >
+        <Image source={{ uri: item.image }} style={styles.productImage} />
+        <Text style={styles.productName}>{item.name}</Text>
+        {item.stock <= 0 ? (
+          <Text style={styles.outOfStockText}>Out of Stock</Text>
+        ) : (
+          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+        )}
+      </TouchableOpacity>
+    );
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -173,18 +215,7 @@ export default function DashboardScreen() {
           <FlatList
             data={filteredProducts}
             keyExtractor={(item) => item._id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.horizontalProductCard}
-                onPress={() => navigateToProduct(item)}
-              >
-                <Image
-                  source={{ uri: item.image }}
-                  style={styles.productImage}
-                />
-                <Text style={styles.productName}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
+            renderItem={renderProductCardHorizontal}
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.hotCakeList}
@@ -196,15 +227,7 @@ export default function DashboardScreen() {
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item._id}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.productCard}
-            onPress={() => navigateToProduct(item)}
-          >
-            <Image source={{ uri: item.image }} style={styles.productImage} />
-            <Text style={styles.productName}>{item.name}</Text>
-          </TouchableOpacity>
-        )}
+        renderItem={renderProductCardVertical}
         numColumns={2}
         columnWrapperStyle={styles.row}
         refreshControl={
@@ -242,15 +265,21 @@ const styles = StyleSheet.create({
   },
   hotCakeList: { paddingHorizontal: 8 },
   horizontalScrollContainer: { marginBottom: 8 },
-  productCard: {
+  productCardHorizon: {
     backgroundColor: "#fff",
-    padding: 10,
-    borderRadius: 8,
-    marginBottom: 16,
-    alignItems: "center",
-    width: "48%",
-    elevation: 2,
+    padding: 12, // הגדלה קלה של הריפוד כדי שיהיה יותר מרווח
+    borderRadius: 10, // יותר מעוגל
+    marginBottom: 12, // מרווח קטן יותר למניעת רווחים מיותרים
+    alignItems: "center", // מיישר את כל התוכן במרכז
+    justifyContent: "space-between", // אם אתה רוצה למקם את התוכן בצורה אחידה בתוך הכרטיס
+    width: "48%", // נשאר כמו שזה כדי לשמור על 2 כרטיסים בשורה
+    elevation: 5, // למראה צל יותר מודרני
+    shadowColor: "#000", // צל מתחת לכרטיס
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 }, // הגדרת הצל כדי להיות אחיד
   },
+
   horizontalProductCard: {
     backgroundColor: "#fff",
     padding: 10,
@@ -268,4 +297,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   row: { justifyContent: "space-between" },
+  itemPrice: {},
+  outOfStockText: { fontSize: 14, color: "#d9534f", fontWeight: "bold" }, // צהוב לעידוד
+
 });
