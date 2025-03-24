@@ -15,6 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import config from "@/config";
 import { fetchUserData } from "../utils/fetchUserData";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Product {
   _id: string;
@@ -37,6 +38,7 @@ export default function DashboardScreen() {
   const [searchText, setSearchText] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
+  const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -74,35 +76,38 @@ export default function DashboardScreen() {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${config.BASE_URL}/cakes`, {
-        method: "GET",
-      });
+      const token = await AsyncStorage.getItem("accessToken");
+      const userId = await AsyncStorage.getItem("userID");
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch products: ${response.statusText}`);
-      }
+      const productsResponse = await fetch(`${config.BASE_URL}/cakes`, { method: "GET" });
+      if (!productsResponse.ok) throw new Error(`Failed to fetch products: ${productsResponse.statusText}`);
+      const productsData = await productsResponse.json();
 
-      const data = await response.json();
-
-      if (!Array.isArray(data)) {
-        throw new Error("Unexpected response format from server");
-      }
-
-      // התאמה לשימוש בשדה imageUrl שחוזר מהבקאנד
-      const updatedProducts = data.map((product) => ({
+      const updatedProducts = productsData.map((product: any) => ({
         ...product,
-        image: product.image?.url?.startsWith("http")
-          ? product.image.url
-          : "https://via.placeholder.com/150",
+        image: product.image?.url?.startsWith("http") ? product.image.url : "https://via.placeholder.com/150",
       }));
 
       setProducts(updatedProducts);
       setFilteredProducts(updatedProducts);
+
+      if (token && userId) {
+        const likesResponse = await fetch(`${config.BASE_URL}/cakes/favorites/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!likesResponse.ok) throw new Error("Failed to fetch liked products");
+        const likedData = await likesResponse.json();
+
+        // התיקון כאן - ממפה למערך של IDs בלבד
+        setLikedProducts(new Set(likedData.favorites.map((product: { _id: string }) => product._id)));
+      }
     } catch (error) {
-      console.error("Error fetching products:", error);
-      Alert.alert("Error", "Failed to fetch products. Please try again later.");
+      console.error("Error fetching products or likes:", error);
+      Alert.alert("Error", "Failed to fetch products or likes. Please try again later.");
     }
   };
+
 
   useEffect(() => {
     fetchUserDataAndSetState();
@@ -132,6 +137,41 @@ export default function DashboardScreen() {
       pathname: "/ProductDetailsScreen",
       params: { product: JSON.stringify(product) },
     });
+  };
+  const handleLike = async (cakeId: string) => {
+    const token = await AsyncStorage.getItem("accessToken");
+    const userId = await AsyncStorage.getItem("userID"); // מניח ש-userId שמור ב-AsyncStorage
+
+    if (!token || !userId) {
+      Alert.alert("Error", "Please login to save favorites.");
+      return;
+    }
+
+    const isLiked = likedProducts.has(cakeId);
+    const endpoint = `${config.BASE_URL}/cakes/favorites`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: isLiked ? "DELETE" : "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, cakeId }), // שולח userId ו-cakeId כמו שמוגדר בבקאנד
+      });
+
+      if (!response.ok) throw new Error("Failed to update favorites");
+
+      setLikedProducts((prevLiked) => {
+        const updatedLiked = new Set(prevLiked);
+        if (isLiked) updatedLiked.delete(cakeId);
+        else updatedLiked.add(cakeId);
+        return updatedLiked;
+      });
+    } catch (error) {
+      console.error("Error updating favorites:", error);
+      Alert.alert("Error", "Could not update favorites.");
+    }
   };
 
 
@@ -172,6 +212,13 @@ export default function DashboardScreen() {
         ) : (
           <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
         )}
+        <TouchableOpacity onPress={() => handleLike(item._id)} style={styles.favoriteButton}>
+          <Ionicons
+            name={likedProducts.has(item._id) ? "heart" : "heart-outline"}
+            size={24}
+            color={likedProducts.has(item._id) ? "#d9534f" : "#ccc"}
+          />
+        </TouchableOpacity>
       </TouchableOpacity>
     );
   };
@@ -263,6 +310,8 @@ const styles = StyleSheet.create({
     color: "#6b4226",
     textAlign: "center",
   },
+  favoriteButton: { position: "absolute", bottom: 8, right: 8 },
+
   hotCakeList: { paddingHorizontal: 8 },
   horizontalScrollContainer: { marginBottom: 8 },
   productCardHorizon: {
