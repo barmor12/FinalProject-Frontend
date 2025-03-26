@@ -21,10 +21,12 @@ export default function ProfileScreen() {
   const router = useRouter();
   const [user, setUser] = useState<{
     name: string;
+    lastName: string;
     profilePic: string | number;
   }>({
     name: "",
-    profilePic: require("../../assets/images/Welcome.jpg"),
+    lastName: "",
+    profilePic: require("../../assets/images/userIcon.png"),
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -52,6 +54,7 @@ export default function ProfileScreen() {
 
       setUser({
         name: userData.firstName || "Guest",
+        lastName: userData.lastName || "",
         profilePic: profilePicUri,
       });
     } catch (error) {
@@ -173,7 +176,7 @@ export default function ProfileScreen() {
         )}
       </TouchableOpacity>
 
-      <Text style={styles.userName}>{user.name || "User"}</Text>
+      <Text style={styles.userName}>{user.name || "User"} {user.lastName || ""}</Text>
       <Text style={styles.title}>Profile</Text>
 
       <TouchableOpacity
