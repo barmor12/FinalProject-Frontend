@@ -10,10 +10,12 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Google from "expo-auth-session/providers/google"; // Import the Google auth hook
 // שימוש בייבוא require אם אין esModuleInterop
 const { default: jwtDecode } = require("jwt-decode");
 import styles from "./styles/LoginStyles";
 import config from "../config";
+import { Platform } from "react-native"; // Importing Platform for redirect URI
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -148,6 +150,60 @@ export default function LoginScreen() {
     }
   };
 
+  // פונקציה להתחברות עם גוגל
+  const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: Platform.select({
+      ios: config.googleClientIdIos, // ה-Client ID שלך עבור iOS
+      android: config.googleClientIdAndroid, // ה-Client ID שלך עבור אנדרואיד
+      web: config.googleClientIdWeb, // ה-Client ID שלך עבור Web
+    }),
+    redirectUri: Platform.select({
+      ios: "com.avielandbar.cakebusinessapp:/oauth2redirect",
+      android: "exp://localhost:8081",
+      web: "YOUR_WEB_REDIRECT_URI",
+    }),
+  });
+
+  useEffect(() => {
+    if (response?.type === "success") {
+      const { id_token } = response.params;
+      // שלח את הטוקן לשרת שלך לבדוק את ה־ID token
+      console.log("🔹 Google login success, token:", id_token);
+
+      fetch(`${config.BASE_URL}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id_token }),
+      })
+        .then((res) => {
+          if (!res.ok) {
+            // אם הסטטוס לא 2xx, זורקים שגיאה
+            throw new Error("Failed to authenticate with Google");
+          }
+          return res.json(); // המרת התגובה ל-JSON
+        })
+        .then((data) => {
+          if (data.success) {
+            // אם התחברות הצליחה, נשמור את הטוקנים
+            AsyncStorage.setItem("accessToken", data.accessToken);
+            AsyncStorage.setItem("userID", data.userID);
+            router.replace("/(tabs)/DashboardScreen");
+          } else {
+            // אם יש שגיאה בנתונים (לא success)
+            console.error(
+              "Google login failed:",
+              data.message || "Unknown error"
+            );
+          }
+        })
+        .catch((error) => {
+          // אם קרתה שגיאה כלשהי, נציג את השגיאה במסך
+          console.error("❌ Google login error:", error.message);
+          Alert.alert("Error", "Google login failed. Please try again.");
+        });
+    }
+  }, [response]);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back!</Text>
@@ -183,7 +239,11 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.googleButton}>
+      {/* כפתור גוגל */}
+      <TouchableOpacity
+        style={styles.googleButton}
+        onPress={() => promptAsync()}
+      >
         <Image
           source={{
             uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png",
