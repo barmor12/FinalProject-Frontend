@@ -1,8 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, FlatList, Button, TouchableOpacity, StyleSheet, ActivityIndicator } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import React, { useState, useEffect, useCallback } from "react";
+import { View, Text, TextInput, FlatList, Button, StyleSheet, ActivityIndicator, TouchableOpacity, Modal } from "react-native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import config from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import type { RootStackParamList } from "./_layout";
+import { useFocusEffect } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface User {
     _id: string;
@@ -13,19 +17,37 @@ interface User {
 }
 
 export default function AdminUsersScreen() {
-    const [users, setUsers] = useState<User[]>([]);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
-    const [loading, setLoading] = useState(false);
+    const [users, setUsers] = useState<User[]>([]); // כל המשתמשים
+    const [searchQuery, setSearchQuery] = useState(""); // חיפוש
+    const [filteredUsers, setFilteredUsers] = useState<User[]>([]); // משתמשים אחרי סינון
+    const [loading, setLoading] = useState(false); // מצב טעינה
+    const [selectedUserId, setSelectedUserId] = useState<string | null>(null); // משתמש שנבחר לתפריט
+    const [menuVisible, setMenuVisible] = useState(false); // תצוגת התפריט
 
-    const navigation = useNavigation();
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
+    type manageUsersScreenRouteProp = RouteProp<{ manageUsersScreen: { shouldRefresh?: boolean } }, "manageUsersScreen">;
+    const route = useRoute<manageUsersScreenRouteProp>();
+
+    const { shouldRefresh } = route.params || {}; // אם יש צורך לעדכן את המשתמשים
+
+    // טעינה מחדש של המשתמשים כאשר צריך
+    useFocusEffect(
+        useCallback(() => {
+            if (shouldRefresh) {
+                fetchUsers();
+                navigation.setParams({ shouldRefresh: false });
+            }
+        }, [shouldRefresh])
+    );
+
+    // טעינת המשתמשים ב-Effect ראשון
     useEffect(() => {
         fetchUsers();
     }, []);
 
+    // סינון המשתמשים לפי חיפוש
     useEffect(() => {
-        // חיפוש דינמי
         if (searchQuery) {
             setFilteredUsers(
                 users.filter(
@@ -35,10 +57,11 @@ export default function AdminUsersScreen() {
                 )
             );
         } else {
-            setFilteredUsers(users);
+            setFilteredUsers(users); // אם אין חיפוש, החזרת כל המשתמשים
         }
     }, [searchQuery, users]);
 
+    // פונקציה לטיפול בטעינת המשתמשים
     const fetchUsers = async () => {
         try {
             setLoading(true);
@@ -48,7 +71,7 @@ export default function AdminUsersScreen() {
                 return;
             }
 
-            const response = await fetch(`${config.BASE_URL}/users`, {
+            const response = await fetch(`${config.BASE_URL}/admin/users`, {
                 method: "GET",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -60,8 +83,10 @@ export default function AdminUsersScreen() {
             }
 
             const data = await response.json();
+            console.log(data);  // הדפסת הנתונים
             setUsers(data);
-            setFilteredUsers(data);
+            setFilteredUsers(data); // עדכון גם את המשתמשים המסוננים
+
         } catch (error) {
             console.error("Error fetching users:", error);
             alert("Failed to fetch users.");
@@ -70,11 +95,23 @@ export default function AdminUsersScreen() {
         }
     };
 
+    // ניווט לפרטי המשתמש
     const handleUserPress = (userId: string) => {
-        // ניווט למסך פרטי המשתמש
+        console.log(userId);
         navigation.navigate("UserDetails", { userId });
     };
 
+    // הצגת תפריט ליד המשתמש
+    const toggleMenu = (userId: string) => {
+        if (selectedUserId === userId) {
+            setMenuVisible(!menuVisible);
+        } else {
+            setSelectedUserId(userId);
+            setMenuVisible(true);
+        }
+    };
+
+    // רכיב של כל משתמש ב-FlatList
     const renderItem = ({ item }: { item: User }) => (
         <View style={styles.userItem}>
             <Text style={styles.userName}>{`${item.firstName} ${item.lastName}`}</Text>
@@ -83,30 +120,50 @@ export default function AdminUsersScreen() {
                 title="View Details"
                 onPress={() => handleUserPress(item._id)}
             />
+            <TouchableOpacity onPress={() => toggleMenu(item._id)} style={styles.menuButton}>
+                <Text style={styles.menuText}>•••</Text>
+            </TouchableOpacity>
+
+            {menuVisible && selectedUserId === item._id && (
+                <Modal
+                    transparent={true}
+                    visible={menuVisible}
+                    animationType="fade"
+                    onRequestClose={() => setMenuVisible(false)}
+                >
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Button title="Edit" onPress={() => { }} />
+                            <Button title="Delete" onPress={() => { }} />
+                            <Button title="Cancel" onPress={() => setMenuVisible(false)} />
+                        </View>
+                    </View>
+                </Modal>
+            )}
         </View>
     );
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView>
             <Text style={styles.title}>Admin User Management</Text>
 
             <TextInput
                 style={styles.searchInput}
                 placeholder="Search by name"
                 value={searchQuery}
-                onChangeText={setSearchQuery}
+                onChangeText={setSearchQuery} // עדכון של חיפוש בזמן אמת
             />
 
             {loading ? (
                 <ActivityIndicator size="large" color="#0000ff" />
             ) : (
                 <FlatList
-                    data={filteredUsers}
+                    data={filteredUsers} // מוצג רק מה שנמצא אחרי סינון
                     keyExtractor={(item) => item._id}
                     renderItem={renderItem}
                 />
             )}
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -140,6 +197,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 5,
         elevation: 2,
+        position: "relative",
     },
     userName: {
         fontSize: 18,
@@ -149,5 +207,27 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: "#777",
         marginBottom: 10,
+    },
+    menuButton: {
+        position: "absolute",
+        top: 15,
+        right: 15,
+    },
+    menuText: {
+        fontSize: 20,
+        color: "#000",
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    modalContent: {
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 8,
+        width: "80%",
+        alignItems: "center",
     },
 });

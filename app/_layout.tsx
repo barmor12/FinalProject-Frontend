@@ -1,3 +1,4 @@
+
 import {
   DarkTheme,
   DefaultTheme,
@@ -9,12 +10,15 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import AdminUsersNavigator from "./navigation/AdminUsersNavigator";
 
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
 export type RootStackParamList = {
   AdminOrdersScreen: { shouldRefresh?: boolean };
   OrderDetailsScreen: { orderId: string };
+  AdminUsersScreen: undefined; // אין פרמטרים למסך הזה
+  UserDetails: { userId: string }; // מקבל פרמטר של userId
 };
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -36,6 +40,10 @@ export default function RootLayout() {
           name="EmailVerificationScreen"
           options={{ title: "Verify Email" }}
         />
+        <Stack.Screen name="AdminUsers">
+          {() => <AdminUsersNavigator />}
+        </Stack.Screen>
+
         <Stack.Screen name="ProductDetailsScreen" />
         <Stack.Screen name="ProductDetailsScreenAdmin" />
         <Stack.Screen name="AddProductScreenAdmin" />

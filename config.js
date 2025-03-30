@@ -3,7 +3,7 @@
 // };
 
 const config = {
-  BASE_URL: "http://192.168.0.86:3000", // bar home
+  BASE_URL: "http://10.0.0.37:3000", // bar home
   googleClientIdWeb:
     "382363420678-4vo977g15lco32t0br17iv9tjq40jk0f.apps.googleusercontent.com",
   googleClientIdAndroid:
