@@ -1,4 +1,3 @@
-
 import {
   DarkTheme,
   DefaultTheme,
@@ -14,12 +13,14 @@ import AdminUsersNavigator from "./navigation/AdminUsersNavigator";
 
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
+
 export type RootStackParamList = {
   AdminOrdersScreen: { shouldRefresh?: boolean };
   OrderDetailsScreen: { orderId: string };
   AdminUsersScreen: undefined; // אין פרמטרים למסך הזה
   UserDetails: { userId: string }; // מקבל פרמטר של userId
 };
+
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 
@@ -40,9 +41,9 @@ export default function RootLayout() {
           name="EmailVerificationScreen"
           options={{ title: "Verify Email" }}
         />
-        <Stack.Screen name="AdminUsers">
-          {() => <AdminUsersNavigator />}
-        </Stack.Screen>
+
+        {/* כאן יש להשתמש ב-component */}
+        <Stack.Screen name="AdminUsers" component={AdminUsersNavigator} />
 
         <Stack.Screen name="ProductDetailsScreen" />
         <Stack.Screen name="ProductDetailsScreenAdmin" />
