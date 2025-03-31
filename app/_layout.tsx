@@ -9,7 +9,6 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
-import AdminUsersNavigator from "./navigation/AdminUsersNavigator";
 
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
@@ -18,7 +17,6 @@ export type RootStackParamList = {
   AdminOrdersScreen: { shouldRefresh?: boolean };
   OrderDetailsScreen: { orderId: string };
   AdminUsersScreen: undefined; // אין פרמטרים למסך הזה
-  UserDetails: { userId: string }; // מקבל פרמטר של userId
 };
 
 export default function RootLayout() {
@@ -43,8 +41,7 @@ export default function RootLayout() {
         />
 
         {/* כאן יש להשתמש ב-component */}
-        <Stack.Screen name="AdminUsers" component={AdminUsersNavigator} />
-
+        <Stack.Screen name="manageUsersScreen" />
         <Stack.Screen name="ProductDetailsScreen" />
         <Stack.Screen name="ProductDetailsScreenAdmin" />
         <Stack.Screen name="AddProductScreenAdmin" />
