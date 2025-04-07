@@ -160,8 +160,9 @@ export default function LoginScreen() {
     redirectUri: Platform.select({
       ios: "com.avielandbar.cakebusinessapp:/oauth2redirect",
       android: "exp://localhost:8081",
-      web: "YOUR_WEB_REDIRECT_URI",
+      web: "http://localhost:8081",
     }),
+    scopes: ["profile", "email"],
   });
 
   useEffect(() => {
@@ -170,35 +171,29 @@ export default function LoginScreen() {
       // שלח את הטוקן לשרת שלך לבדוק את ה־ID token
       console.log("🔹 Google login success, token:", id_token);
 
-      fetch(`${config.BASE_URL}/auth/google`, {
+      fetch(`${config.BASE_URL}/auth/google/callback`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_token }),
       })
         .then((res) => {
           if (!res.ok) {
-            // אם הסטטוס לא 2xx, זורקים שגיאה
-            throw new Error("Failed to authenticate with Google");
+            throw new Error(`Google login failed with status: ${res.status}`);
           }
-          return res.json(); // המרת התגובה ל-JSON
+          return res.json();
         })
         .then((data) => {
-          if (data.success) {
-            // אם התחברות הצליחה, נשמור את הטוקנים
+          if (data.accessToken && data.refreshToken) {
             AsyncStorage.setItem("accessToken", data.accessToken);
-            AsyncStorage.setItem("userID", data.userID);
+            AsyncStorage.setItem("refreshToken", data.refreshToken);
+            AsyncStorage.setItem("userID", data.userID || "");
             router.replace("/(tabs)/DashboardScreen");
           } else {
-            // אם יש שגיאה בנתונים (לא success)
-            console.error(
-              "Google login failed:",
-              data.message || "Unknown error"
-            );
+            throw new Error("Missing tokens in response");
           }
         })
         .catch((error) => {
-          // אם קרתה שגיאה כלשהי, נציג את השגיאה במסך
-          console.error("❌ Google login error:", error.message);
+          console.error("❌ Google login error:", error);
           Alert.alert("Error", "Google login failed. Please try again.");
         });
     }
