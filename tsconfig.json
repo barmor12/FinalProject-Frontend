@@ -5,9 +5,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ]
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -15,6 +13,8 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts",
-    "app/product/[id].tsx"
+    "app/product/[id].tsx",
+    "app/storage.js",
+    "app/storage.js"
   ]
 }
