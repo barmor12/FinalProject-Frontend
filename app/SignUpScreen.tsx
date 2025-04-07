@@ -13,6 +13,8 @@ import {
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
+import * as ImagePicker from "expo-image-picker";
+import { Image } from "react-native";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -21,149 +23,192 @@ export default function SignUpScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    number: false,
+    special: false,
+  });
+  type RequirementKey = "length" | "lowercase" | "uppercase" | "number" | "special";
 
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7,
+    });
+
+    if (!result.canceled) {
+      setProfileImage(result.assets[0].uri);
+    }
+  };
   const handleSignUp = async () => {
-    console.log("Starting sign-up process..."); // Log to indicate the start of the process
-
-    // Validate form inputs
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
-      console.warn("Form validation failed: missing fields");
       return;
     }
 
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
-      console.warn("Password validation failed: passwords do not match");
       return;
     }
 
-    // Check password strength
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (!passwordRegex.test(password)) {
-      Alert.alert(
-        "Error",
-        "Password must be at least 8 characters long, include an uppercase letter, a lowercase letter, a number, and a special character."
-      );
-      console.warn("Password validation failed: weak password");
-      return;
+    const formData = new FormData();
+    formData.append("firstName", firstName);
+    formData.append("lastName", lastName);
+    formData.append("email", email);
+    formData.append("password", password);
+
+    if (profileImage) {
+      const fileName = profileImage.split("/").pop() || "profile.jpg";
+      const match = /\.(\w+)$/.exec(fileName);
+      const fileType = match ? `image/${match[1]}` : `image`;
+
+      formData.append("profileImage", {
+        uri: profileImage,
+        name: fileName,
+        type: fileType,
+      } as any); // אם אתה מקבל טעות על זה, תשתמש ב־any
     }
 
     try {
-      console.log("Sending registration request to backend..."); // Log before sending request
-
-      // Send request to the backend
       const response = await fetch(`${config.BASE_URL}/auth/register`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ firstName, lastName, email, password }),
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        body: formData,
       });
 
-      console.log("Parsing backend response..."); // Log before parsing response
       const data = await response.json().catch(() => null);
 
-      console.log("Backend response received:", data); // Log the server response
-
       if (response.ok) {
-        // Show success message and inform the user about email verification
-        Alert.alert(
-          "Success",
-          "Account created successfully! Please check your email to verify your account."
-        );
-        console.log("Registration successful, navigating to login screen...");
-        router.push("/"); // Navigate to the login screen
+        Alert.alert("Success", "Account created! Please verify via email.");
+        router.push("/");
       } else {
-        // Show backend error message
-        const errorMessage =
-          data?.message || "Registration failed. Please try again.";
-        Alert.alert("Error", errorMessage);
-        console.warn("Registration failed:", errorMessage);
+        Alert.alert("Error", data?.error || "Registration Failed");
       }
     } catch (error) {
-      console.error("Error during registration process:", error); // Log the error
-      Alert.alert("Error", "Something went wrong. Please try again later.");
+      console.error("Error:", error);
+      Alert.alert("Error", "Something went wrong.");
     }
   };
+
+  const checkPasswordStrength = (value: string) => {
+    const updatedReqs = {
+      length: value.length >= 8,
+      lowercase: /[a-z]/.test(value),
+      uppercase: /[A-Z]/.test(value),
+      number: /\d/.test(value),
+      special: /[@$!%*?&]/.test(value),
+    };
+    setPasswordRequirements(updatedReqs);
+  };
+
+  const requirementList: { label: string; key: RequirementKey }[] = [
+    { label: "At least 8 characters", key: "length" },
+    { label: "Lowercase letter", key: "lowercase" },
+    { label: "Uppercase letter", key: "uppercase" },
+    { label: "Number", key: "number" },
+    { label: "Special character", key: "special" },
+  ];
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>Create an Account</Text>
-        <Text style={styles.subtitle}>
-          Join us and start managing your cake business
-        </Text>
+      <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40 }}>
+        <View style={{ width: "100%", maxWidth: 360 }}>
 
-        <View style={styles.instructionsContainer}>
-          <Text style={styles.instructionsTitle}>Password Instructions:</Text>
-          <Text style={styles.instructionsText}>
-            1. Password must be at least 8 characters long.
+          <Text style={styles.title}>Create an Account</Text>
+          <Text style={styles.subtitle}>
+            Join us and order your first cake with us
           </Text>
-          <Text style={styles.instructionsText}>2. Password must include:</Text>
-          <Text style={styles.instructionsText}>
-            - At least one uppercase letter.
-          </Text>
-          <Text style={styles.instructionsText}>
-            - At least one lowercase letter.
-          </Text>
-          <Text style={styles.instructionsText}>- At least one number.</Text>
-          <Text style={styles.instructionsText}>
-            - At least one special character (e.g., @, $, !, %, *, ?, &).
+
+          <TouchableOpacity onPress={pickImage} style={styles.imageCircle}>
+            {profileImage ? (
+              <Image source={{ uri: profileImage }} style={styles.imageCircle} />
+            ) : (
+              <Image source={require("../assets/images/profile-user.png")} style={styles.imageCircle} />
+            )}
+          </TouchableOpacity>
+
+          <TextInput
+            style={styles.input}
+            placeholder="First Name"
+            value={firstName}
+            placeholderTextColor="#000"
+            onChangeText={setFirstName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Last Name"
+            value={lastName}
+            placeholderTextColor="#000"
+            onChangeText={setLastName}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            value={email}
+            placeholderTextColor="#000"
+            keyboardType="email-address"
+            onChangeText={setEmail}
+          />
+          <TextInput
+            placeholder="Password"
+            secureTextEntry
+            style={styles.input}
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              checkPasswordStrength(text);
+            }}
+          />
+          <View style={styles.passwordContainer}>
+            {requirementList.map((item) => (
+              <View key={item.key} style={styles.requirementItem}>
+                <Text style={styles.requirementIcon}>
+                  {passwordRequirements[item.key] ? "✔️" : "❌"}
+                </Text>
+                <Text
+                  style={[
+                    styles.requirementText,
+                    { color: passwordRequirements[item.key] ? "green" : "red" },
+                  ]}
+                >
+                  {item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+
+
+          <TextInput
+            style={styles.input}
+            placeholderTextColor="#000"
+            placeholder="Confirm Password"
+            secureTextEntry
+            value={confirmPassword}
+            onChangeText={setConfirmPassword}
+          />
+
+          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <Text style={styles.buttonText}>Sign Up</Text>
+          </TouchableOpacity>
+          <Text style={styles.loginText}>
+            Already has account?{" "}
+            <Text style={styles.loginLink} onPress={() => router.replace("/")}>
+              Log In
+            </Text>
           </Text>
         </View>
-
-        <TextInput
-          style={styles.input}
-          placeholder="First Name"
-          value={firstName}
-          placeholderTextColor="#000"
-          onChangeText={setFirstName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Last Name"
-          value={lastName}
-          placeholderTextColor="#000"
-          onChangeText={setLastName}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          placeholderTextColor="#000"
-          keyboardType="email-address"
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="Password"
-          placeholderTextColor="#000"
-          secureTextEntry
-          value={password}
-          onChangeText={setPassword}
-        />
-        <TextInput
-          style={styles.input}
-          placeholderTextColor="#000"
-          placeholder="Confirm Password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-
-        <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-          <Text style={styles.buttonText}>Sign Up</Text>
-        </TouchableOpacity>
-        <Text style={styles.loginText}>
-          Already has account?{" "}
-          <Text style={styles.loginLink} onPress={() => router.replace("/")}>
-            Log In
-          </Text>
-        </Text>
       </ScrollView>
-    </KeyboardAvoidingView>
+    </KeyboardAvoidingView >
   );
 }

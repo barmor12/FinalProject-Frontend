@@ -3,16 +3,32 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f9f3ea", // צבע רקע אחיד כמו במסך ההתחברות
-    padding: 16,
+    backgroundColor: "#f9f3ea",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
   },
+
+  imageCircle: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "#eee",
+    alignSelf: "center",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    overflow: "hidden",
+  },
+
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#6b4226", // צבע חום עדין
     marginBottom: 10,
+    textAlign: "center",
+    marginTop: 15
+
   },
   subtitle: {
     fontSize: 16,
@@ -21,23 +37,26 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   input: {
-    width: "90%",
-    padding: 12,
+    width: "100%", // במקום 90%
+    padding: 16,    // שיהיה יותר מרווח
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 10,
     marginBottom: 15,
     backgroundColor: "#fff",
     fontSize: 16,
   },
+
   button: {
-    backgroundColor: "#d49a6a", // גוון זהב כמו במסך ההתחברות
-    padding: 15,
-    borderRadius: 8,
-    width: "90%",
+    width: "100%", // במקום 90%
+    paddingVertical: 16,
+    borderRadius: 10,
+    backgroundColor: "#d49a6a",
     alignItems: "center",
+    marginTop: 10,
     marginBottom: 15,
   },
+
   buttonText: {
     color: "#fff",
     fontWeight: "bold",
@@ -92,6 +111,31 @@ const styles = StyleSheet.create({
     color: "#555",
     marginBottom: 3,
   },
+  passwordContainer: {
+    width: "90%",
+    minHeight: 90,
+    justifyContent: "space-around",
+    marginBottom: 10,
+  },
+
+  requirementItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 2,
+  },
+  requirementIcon: {
+    fontSize: 14, // היה 16
+    width: 20,
+    textAlign: "center",
+    marginRight: 6,
+    color: "#555",
+  },
+
+  requirementText: {
+    fontSize: 14,
+    flexShrink: 1,
+  },
+
 });
 
 export default styles;
