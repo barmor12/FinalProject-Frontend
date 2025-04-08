@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -39,17 +39,28 @@ export default function DashboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+  // משתנה state חדש שמציין האם להציג רק מוצרים אהובים
+  const [showOnlyLiked, setShowOnlyLiked] = useState(false);
 
   const handleSearch = (text: string) => {
     setSearchText(text);
     if (text.trim() === "") {
-      setFilteredProducts(products);
+      // במצב חיפוש סגור, אם גם מצב אהובים מופעל – עדכן לפי likedProducts
+      if (showOnlyLiked) {
+        setFilteredProducts(products.filter((product) => likedProducts.has(product._id)));
+      } else {
+        setFilteredProducts(products);
+      }
     } else {
-      setFilteredProducts(
-        products.filter((product) =>
-          product.name.toLowerCase().includes(text.toLowerCase())
-        )
+      const searched = products.filter((product) =>
+        product.name.toLowerCase().includes(text.toLowerCase())
       );
+      // אם מופעל מצב "אהובים", מסננים גם לפי זאת
+      if (showOnlyLiked) {
+        setFilteredProducts(searched.filter((product) => likedProducts.has(product._id)));
+      } else {
+        setFilteredProducts(searched);
+      }
     }
   };
 
@@ -59,6 +70,20 @@ export default function DashboardScreen() {
       return !prev;
     });
     setShowHorizontalScroll((prev) => !prev);
+  };
+
+  const toggleShowFavorites = () => {
+    setShowOnlyLiked((prev) => {
+      const newVal = !prev;
+      if (newVal) {
+        // מסנן מוצרים שאהובים בלבד
+        setFilteredProducts(products.filter((p) => likedProducts.has(p._id)));
+      } else {
+        // מציג את כל המוצרים
+        setFilteredProducts(products);
+      }
+      return newVal;
+    });
   };
 
   const fetchUserDataAndSetState = async () => {
@@ -89,7 +114,10 @@ export default function DashboardScreen() {
       }));
 
       setProducts(updatedProducts);
-      setFilteredProducts(updatedProducts);
+      // אם מופעל מצב "אהובים", מסנן לפי likedProducts, אחרת מציג את כל המוצרים
+      setFilteredProducts(showOnlyLiked
+        ? updatedProducts.filter((p: Product) => likedProducts.has(p._id))
+        : updatedProducts);
 
       if (token && userId) {
         const likesResponse = await fetch(`${config.BASE_URL}/cakes/favorites/${userId}`, {
@@ -99,7 +127,7 @@ export default function DashboardScreen() {
         if (!likesResponse.ok) throw new Error("Failed to fetch liked products");
         const likedData = await likesResponse.json();
 
-        // התיקון כאן - ממפה למערך של IDs בלבד
+        // ממפה למערך של IDs בלבד
         setLikedProducts(new Set(likedData.favorites.map((product: { _id: string }) => product._id)));
       }
     } catch (error) {
@@ -107,7 +135,6 @@ export default function DashboardScreen() {
       Alert.alert("Error", "Failed to fetch products or likes. Please try again later.");
     }
   };
-
 
   useEffect(() => {
     fetchUserDataAndSetState();
@@ -122,8 +149,11 @@ export default function DashboardScreen() {
   );
 
   useEffect(() => {
-    setFilteredProducts(products);
-  }, [products]);
+    // מעדכן את המוצרים המסוננים כאשר רשימת המוצרים משתנה
+    setFilteredProducts(showOnlyLiked
+      ? products.filter((p) => likedProducts.has(p._id))
+      : products);
+  }, [products, likedProducts, showOnlyLiked]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -138,6 +168,7 @@ export default function DashboardScreen() {
       params: { product: JSON.stringify(product) },
     });
   };
+
   const handleLike = async (cakeId: string) => {
     const token = await AsyncStorage.getItem("accessToken");
     const userId = await AsyncStorage.getItem("userID"); // מניח ש-userId שמור ב-AsyncStorage
@@ -173,7 +204,6 @@ export default function DashboardScreen() {
       Alert.alert("Error", "Could not update favorites.");
     }
   };
-
 
   const renderProductCardHorizontal = ({ item }: { item: Product }) => {
     return (
@@ -225,17 +255,25 @@ export default function DashboardScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => router.push("/ProfileScreen")}
-          style={styles.profileContainer}
-        >
-          <Image
-            source={{ uri: user.profilePic }}
-            style={styles.profileImage}
-          />
-          <Text style={styles.userName}>{user.name}</Text>
-        </TouchableOpacity>
+        {/* צד שמאל: פרופיל */}
+        <View style={styles.leftHeader}>
+          <TouchableOpacity
+            onPress={() => router.push("/ProfileScreen")}
+            style={styles.profileContainer}
+          >
+            <Image source={{ uri: user.profilePic }} style={styles.profileImage} />
+            <Text style={styles.userName}>{user.name}</Text>
+          </TouchableOpacity>
+        </View>
 
+        {/* מרכז: כפתור קטן עם אייקון לב */}
+        <View style={styles.centerHeader}>
+          <TouchableOpacity onPress={toggleShowFavorites} style={styles.favoritesHeaderButton}>
+            <Ionicons name="heart" size={20} color="#d9534f" />
+          </TouchableOpacity>
+        </View>
+
+        {/* צד ימין: חיפוש */}
         <View style={styles.rightHeader}>
           {searchVisible && (
             <TextInput
@@ -247,11 +285,7 @@ export default function DashboardScreen() {
             />
           )}
           <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-            <Ionicons
-              name={searchVisible ? "close" : "search"}
-              size={24}
-              color="#fff"
-            />
+            <Ionicons name={searchVisible ? "close" : "search"} size={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -292,6 +326,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+  leftHeader: {
+    flex: 1,
+    alignItems: "flex-start"
+  },
+  centerHeader: {
+    flex: 1,
+    alignItems: "center"
+  },
+
   profileContainer: { flexDirection: "row", alignItems: "center" },
   profileImage: { width: 40, height: 40, borderRadius: 20, marginRight: 10 },
   userName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
@@ -310,25 +353,35 @@ const styles = StyleSheet.create({
     color: "#6b4226",
     textAlign: "center",
   },
+  favoritesButton: {
+    backgroundColor: "#6b4226",
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginVertical: 8,
+    alignItems: "center",
+  },
+  favoritesButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   favoriteButton: { position: "absolute", bottom: 8, right: 8 },
-
   hotCakeList: { paddingHorizontal: 8 },
   horizontalScrollContainer: { marginBottom: 8 },
   productCardHorizon: {
     backgroundColor: "#fff",
-    padding: 12, // הגדלה קלה של הריפוד כדי שיהיה יותר מרווח
-    borderRadius: 10, // יותר מעוגל
-    marginBottom: 12, // מרווח קטן יותר למניעת רווחים מיותרים
-    alignItems: "center", // מיישר את כל התוכן במרכז
-    justifyContent: "space-between", // אם אתה רוצה למקם את התוכן בצורה אחידה בתוך הכרטיס
-    width: "48%", // נשאר כמו שזה כדי לשמור על 2 כרטיסים בשורה
-    elevation: 5, // למראה צל יותר מודרני
-    shadowColor: "#000", // צל מתחת לכרטיס
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 12,
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "48%",
+    elevation: 5,
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 }, // הגדרת הצל כדי להיות אחיד
+    shadowOffset: { width: 0, height: 2 },
   },
-
   horizontalProductCard: {
     backgroundColor: "#fff",
     padding: 10,
@@ -337,6 +390,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: 150,
     elevation: 2,
+    marginRight: 10
+  },
+  favoritesHeaderButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: "#fff",
+    marginEnd: 90
+
   },
   productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
   productName: {
@@ -347,6 +408,5 @@ const styles = StyleSheet.create({
   },
   row: { justifyContent: "space-between" },
   itemPrice: {},
-  outOfStockText: { fontSize: 14, color: "#d9534f", fontWeight: "bold" }, // צהוב לעידוד
-
+  outOfStockText: { fontSize: 14, color: "#d9534f", fontWeight: "bold" },
 });

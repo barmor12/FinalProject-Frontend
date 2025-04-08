@@ -8,11 +8,13 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
-  Image
+  Image,
+  Alert
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
+import { router } from "expo-router";
 
 interface Order {
   _id: string;
@@ -92,32 +94,63 @@ export default function OrdersScreen() {
     }
   };
 
+  const handleReorder = async (order: Order) => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      // יצירת מערך פריטים להוספה לעגלה
+      const itemsToAdd = order.items.map((item) => ({
+        cakeId: item.cake._id,
+        quantity: item.quantity,
+      }));
+
+      // קריאה ל־API להוספת כל הפריטים לעגלה בבת אחת
+      const response = await fetch(`${config.BASE_URL}/order/duplicate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ items: itemsToAdd }),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to add items to cart");
+      }
+
+      // מעבר לעמוד הקופה
+      router.push("/CartScreen");
+    } catch (error: any) {
+      console.error("Error in reorder:", error.message);
+      Alert.alert("Error", "Failed to reorder, please try again.");
+    }
+  };
+
+
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Your Orders</Text>
 
-      {/* **כפתורי סינון סטטוס** */}
-      <View style={styles.filterContainer}>
-        {["all", "pending", "confirmed", "completed", "cancelled"].map(
-          (status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.filterButton,
-                selectedFilter === status ||
-                  (status === "all" && !selectedFilter)
-                  ? styles.activeFilter
-                  : null,
-              ]}
-              onPress={() => filterOrders(status === "all" ? null : status)}
-            >
-              <Text style={styles.filterText}>
-                {status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
+      {/* כפתורי סינון סטטוס בתוך גלילה אופקית */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
+        {["all", "pending", "confirmed", "completed", "cancelled"].map((status) => (
+          <TouchableOpacity
+            key={status}
+            style={[
+              styles.filterButton,
+              selectedFilter === status ||
+                (status === "all" && !selectedFilter) ? styles.activeFilter : null,
+            ]}
+            onPress={() => filterOrders(status === "all" ? null : status)}
+          >
+            <Text style={styles.filterText}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
 
       {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
       {loading ? (
@@ -158,8 +191,6 @@ export default function OrdersScreen() {
                       ) : (
                         <Text style={{ color: "#999" }}>No image available</Text>
                       )}
-
-
                       <Text style={styles.orderText}>
                         🍰 {item.cake?.name || "Unknown"}
                       </Text>
@@ -172,6 +203,10 @@ export default function OrdersScreen() {
                     💰 Total: ${order.totalPrice.toFixed(2)}
                   </Text>
                 </View>
+                {/* כפתור להזמנה מחדש */}
+                <TouchableOpacity style={styles.reorderButton} onPress={() => handleReorder(order)}>
+                  <Text style={styles.reorderButtonText}>הזמן שוב</Text>
+                </TouchableOpacity>
               </View>
             ))
           )}
@@ -195,18 +230,32 @@ const styles: { [key: string]: any } = StyleSheet.create({
     justifyContent: "space-around",
     marginBottom: 10,
   },
+  filterScroll: {
+    marginBottom: 10,
+  },
   filterButton: {
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+    height: 45, // קובע גובה קבוע לכפתור
+    paddingHorizontal: 20,
     borderRadius: 20,
     backgroundColor: "#ddd",
-  },
-  activeFilter: {
-    backgroundColor: "#6b4226",
+    marginRight: 10,
+    flexShrink: 0,
+    minWidth: 90,
+    justifyContent: "center", // ממרכז אנכית את תוכן הכפתור
+    alignItems: "center",      // ממרכז אופקית את התוכן
+    marginBottom: 10
   },
   filterText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 15,
+    lineHeight: 45, // מקביל לגובה הכפתור, כך שהטקסט יתמרכז
+    textAlign: "center",
+    textAlignVertical: "center", // עוזר בהמרת הטקסט גם באנדרואיד
+    includeFontPadding: false,  // יכול לעזור במקרים מסוימים
+  },
+  activeFilter: {
+    backgroundColor: "#6b4226",
   },
   scrollViewContent: {
     paddingBottom: 120,
@@ -257,5 +306,16 @@ const styles: { [key: string]: any } = StyleSheet.create({
     marginBottom: 5,
   },
   itemImage: { width: 50, height: 50, borderRadius: 8, marginRight: 12 },
-
+  reorderButton: {
+    backgroundColor: "#6b4226",
+    paddingVertical: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  reorderButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
