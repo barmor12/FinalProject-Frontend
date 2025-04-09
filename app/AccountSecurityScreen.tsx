@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
@@ -25,6 +26,139 @@ export default function AccountSecurityScreen() {
   const [recoveryEmail, setRecoveryEmail] = useState("");
   const [isTwoFAEnabled, setIsTwoFAEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [isEnabling2FA, setIsEnabling2FA] = useState(false);
+
+  // Fetch current 2FA status when component mounts
+  useEffect(() => {
+    fetch2FAStatus();
+  }, []);
+
+  const fetch2FAStatus = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const response = await fetch(`${config.BASE_URL}/auth/2fa/status`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsTwoFAEnabled(data.isEnabled);
+      }
+    } catch (error) {
+      console.error("Error fetching 2FA status:", error);
+    }
+  };
+
+  const handle2FAToggle = async (value: boolean) => {
+    if (value) {
+      // Enabling 2FA
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
+        if (!token) {
+          Alert.alert("Error", "You must be logged in to enable 2FA.");
+          return;
+        }
+
+        const response = await fetch(`${config.BASE_URL}/auth/2fa/enable`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setIsEnabling2FA(true);
+          setShowVerificationModal(true);
+        } else {
+          const data = await response.json();
+          Alert.alert("Error", data.message || "Failed to enable 2FA.");
+        }
+      } catch (error) {
+        console.error("Error enabling 2FA:", error);
+        Alert.alert("Error", "Something went wrong while enabling 2FA.");
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      // Disabling 2FA
+      try {
+        setLoading(true);
+        const token = await AsyncStorage.getItem("accessToken");
+        if (!token) {
+          Alert.alert("Error", "You must be logged in to disable 2FA.");
+          return;
+        }
+
+        const response = await fetch(`${config.BASE_URL}/auth/2fa/disable`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          setIsTwoFAEnabled(false);
+          Alert.alert("Success", "2FA has been disabled successfully.");
+        } else {
+          const data = await response.json();
+          Alert.alert("Error", data.message || "Failed to disable 2FA.");
+        }
+      } catch (error) {
+        console.error("Error disabling 2FA:", error);
+        Alert.alert("Error", "Something went wrong while disabling 2FA.");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleVerify2FA = async () => {
+    if (!verificationCode.trim()) {
+      Alert.alert("Error", "Please enter the verification code.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Alert.alert("Error", "You must be logged in to verify 2FA.");
+        return;
+      }
+      console.log("checking 2fa");
+      const response = await fetch(`${config.BASE_URL}/auth/2fa/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: verificationCode }),
+      });
+
+      if (response.ok) {
+        setIsTwoFAEnabled(true);
+        setShowVerificationModal(false);
+        setVerificationCode("");
+        setIsEnabling2FA(false);
+        Alert.alert("Success", "2FA has been enabled successfully.");
+      } else {
+        const data = await response.json();
+        Alert.alert("Error", data.message || "Invalid verification code.");
+      }
+    } catch (error) {
+      console.error("Error verifying 2FA:", error);
+      Alert.alert("Error", "Something went wrong while verifying 2FA.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleUpdatePassword = async () => {
     if (!oldPassword.trim() || !newPassword.trim() || !verifyPassword.trim()) {
@@ -233,7 +367,8 @@ export default function AccountSecurityScreen() {
               <Text style={styles.label}>Enable Two-Factor Authentication</Text>
               <Switch
                 value={isTwoFAEnabled}
-                onValueChange={() => setIsTwoFAEnabled(!isTwoFAEnabled)}
+                onValueChange={handle2FAToggle}
+                disabled={loading}
               />
             </View>
 
@@ -271,6 +406,61 @@ export default function AccountSecurityScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* 2FA Verification Modal */}
+      <Modal
+        visible={showVerificationModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          setShowVerificationModal(false);
+          setIsEnabling2FA(false);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {isEnabling2FA ? "Enable Two-Factor Authentication" : "Verify 2FA Setup"}
+            </Text>
+            <Text style={styles.modalSubtitle}>
+              {isEnabling2FA
+                ? "A verification code has been sent to your email. Please enter it below to enable 2FA."
+                : "Please enter the verification code sent to your email"}
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Verification Code"
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+              keyboardType="numeric"
+              maxLength={6}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleVerify2FA}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>
+                  {isEnabling2FA ? "Enable 2FA" : "Verify"}
+                </Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={() => {
+                setShowVerificationModal(false);
+                setIsEnabling2FA(false);
+                setVerificationCode("");
+              }}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
