@@ -7,6 +7,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -22,6 +23,10 @@ export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState("");
+  const [tempTokens, setTempTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
+  const [tempUserData, setTempUserData] = useState<{ userID: string; role: string } | null>(null);
 
   // פונקציה לרענון ה-Access Token
   const refreshAccessToken = async () => {
@@ -119,24 +124,22 @@ export default function LoginScreen() {
       console.log("🔹 Server response:", data);
 
       if (response.ok) {
-        console.log("✅ Login successful, saving tokens...");
+        // Check if the response has the expected structure
+        if (!data.tokens || !data.tokens.accessToken || !data.tokens.refreshToken) {
+          throw new Error("Invalid response format from server");
+        }
 
-        await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
-        await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
-        const userid = data.userID || "null";
-
-        await AsyncStorage.setItem("userID", userid);
-
-        const role = data.role || "user";
-        await AsyncStorage.setItem("role", role);
-        console.log("🗂 Tokens & role saved successfully:", role);
-
-        Alert.alert("Success", "Logged in successfully!");
-
-        if (role === "admin") {
-          router.replace("/(admintabs)/AdminDashboardScreen");
+        if (data.requires2FA) {
+          // Store temporary tokens and user data
+          setTempTokens(data.tokens);
+          setTempUserData({
+            userID: data.userID || "",
+            role: data.role || "user"
+          });
+          setShow2FAModal(true);
         } else {
-          router.replace("/(tabs)/DashboardScreen");
+          // No 2FA required, proceed with normal login
+          await completeLogin(data.tokens, data.userID || "", data.role || "user");
         }
       } else {
         console.warn("⚠️ Login failed:", data?.error || "Unknown error");
@@ -144,9 +147,63 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error("❌ Error during login process:", error);
+      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handle2FAVerification = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      Alert.alert("Error", "Please enter a valid 6-digit code");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await fetch(`${config.BASE_URL}/auth/2fa/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${tempTokens?.accessToken}`
+        },
+        body: JSON.stringify({ code: verificationCode }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 2FA verification successful, complete login
+        if (tempTokens && tempUserData) {
+          await completeLogin(tempTokens, tempUserData.userID, tempUserData.role);
+        }
+      } else {
+        Alert.alert("Error", data?.error || "Invalid verification code");
+      }
+    } catch (error) {
+      console.error("❌ Error during 2FA verification:", error);
       Alert.alert("Error", "Something went wrong. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const completeLogin = async (tokens: { accessToken: string; refreshToken: string }, userID: string, role: string) => {
+    await AsyncStorage.setItem("accessToken", tokens.accessToken);
+    await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
+    await AsyncStorage.setItem("userID", userID);
+    await AsyncStorage.setItem("role", role);
+
+    Alert.alert("Success", "Logged in successfully!");
+    setShow2FAModal(false);
+    setVerificationCode("");
+    setTempTokens(null);
+    setTempUserData(null);
+
+    if (role === "admin") {
+      router.replace("/(admintabs)/AdminDashboardScreen");
+    } else {
+      router.replace("/(tabs)/DashboardScreen");
     }
   };
 
@@ -256,7 +313,7 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <Text style={styles.signupText}>
-        Don’t have an account?{" "}
+        Don't have an account?{" "}
         <Text
           style={styles.signupLink}
           onPress={() => router.push("/SignUpScreen")}
@@ -264,6 +321,59 @@ export default function LoginScreen() {
           Sign Up here
         </Text>
       </Text>
+
+      {/* 2FA Verification Modal */}
+      <Modal
+        visible={show2FAModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => {
+          setShow2FAModal(false);
+          setVerificationCode("");
+          setTempTokens(null);
+          setTempUserData(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Two-Factor Authentication</Text>
+            <Text style={styles.modalSubtitle}>
+              Please enter the 6-digit verification code sent to your email
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Verification Code"
+              placeholderTextColor="#000"
+              keyboardType="numeric"
+              maxLength={6}
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handle2FAVerification}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Verify</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.button, styles.cancelButton]}
+              onPress={() => {
+                setShow2FAModal(false);
+                setVerificationCode("");
+                setTempTokens(null);
+                setTempUserData(null);
+              }}
+            >
+              <Text style={styles.buttonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

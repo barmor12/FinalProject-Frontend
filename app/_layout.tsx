@@ -54,7 +54,6 @@ export default function RootLayout() {
         {/* הטאבים נטענים תמיד */}
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="(admintabs)" />
-        <Stack.Screen name="product/[id]" options={{ title: "Product" }} />
 
         <Stack.Screen name="SaveDraftOrder" />
         <Stack.Screen name="DuplicateOrder" />
