@@ -8,6 +8,9 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,7 +19,7 @@ import * as Google from "expo-auth-session/providers/google"; // Import the Goog
 const { default: jwtDecode } = require("jwt-decode");
 import styles from "./styles/LoginStyles";
 import config from "../config";
-import { Platform } from "react-native"; // Importing Platform for redirect URI
+import { FontAwesome } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -257,123 +260,133 @@ export default function LoginScreen() {
   }, [response]);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back!</Text>
-      <Text style={styles.subtitle}>Manage your cake business with ease</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#000"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#000"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleLogin}
-        disabled={loading}
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
       >
-        {loading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Log In</Text>
-        )}
-      </TouchableOpacity>
+        <View style={styles.container}>
+          <Text style={styles.title}>Welcome Back!</Text>
+          <Text style={styles.subtitle}>Making your celebrations sweeter {"\n"}one cake at a time!</Text>
 
-      {/* כפתור גוגל */}
-      <TouchableOpacity
-        style={styles.googleButton}
-        onPress={() => promptAsync()}
-      >
-        <Image
-          source={{
-            uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Google_%22G%22_Logo.svg/512px-Google_%22G%22_Logo.svg.png",
-          }}
-          style={styles.googleIcon}
-        />
-        <Text style={styles.googleButtonText}>Sign in with Google</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={styles.forgotPasswordButton}
-        onPress={() => router.push("/ForgotPasswordScreen")}
-      >
-        <Text style={styles.signupLink}>Forgot Password?</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.signupText}>
-        Don't have an account?{" "}
-        <Text
-          style={styles.signupLink}
-          onPress={() => router.push("/SignUpScreen")}
-        >
-          Sign Up here
-        </Text>
-      </Text>
-
-      {/* 2FA Verification Modal */}
-      <Modal
-        visible={show2FAModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => {
-          setShow2FAModal(false);
-          setVerificationCode("");
-          setTempTokens(null);
-          setTempUserData(null);
-        }}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Two-Factor Authentication</Text>
-            <Text style={styles.modalSubtitle}>
-              Please enter the 6-digit verification code sent to your email
-            </Text>
+          <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Verification Code"
+              placeholder="Email"
               placeholderTextColor="#000"
-              keyboardType="numeric"
-              maxLength={6}
-              value={verificationCode}
-              onChangeText={setVerificationCode}
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
             />
+
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              placeholderTextColor="#000"
+              secureTextEntry
+              value={password}
+              onChangeText={setPassword}
+            />
+
             <TouchableOpacity
               style={styles.button}
-              onPress={handle2FAVerification}
+              onPress={handleLogin}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Verify</Text>
+                <Text style={styles.buttonText}>Log In</Text>
               )}
             </TouchableOpacity>
+
+            {/* Google Sign In Button */}
             <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={() => {
-                setShow2FAModal(false);
-                setVerificationCode("");
-                setTempTokens(null);
-                setTempUserData(null);
-              }}
+              style={styles.googleButton}
+              onPress={() => promptAsync()}
             >
-              <Text style={styles.buttonText}>Cancel</Text>
+              <FontAwesome name="google" size={22} color="#DB4437" />
+              <Text style={styles.googleButtonText}>Sign in with Google</Text>
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.forgotPasswordButton}
+              onPress={() => router.push("/ForgotPasswordScreen")}
+            >
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.signupText}>
+              Don't have an account?{" "}
+              <Text
+                style={styles.signupLink}
+                onPress={() => router.push("/SignUpScreen")}
+              >
+                Sign Up here
+              </Text>
+            </Text>
           </View>
+
+          {/* 2FA Verification Modal */}
+          <Modal
+            visible={show2FAModal}
+            transparent={true}
+            animationType="slide"
+            onRequestClose={() => {
+              setShow2FAModal(false);
+              setVerificationCode("");
+              setTempTokens(null);
+              setTempUserData(null);
+            }}
+          >
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : "height"}
+              style={styles.modalOverlay}
+            >
+              <View style={styles.modalContent}>
+                <Text style={styles.modalTitle}>Two-Factor Authentication</Text>
+                <Text style={styles.modalSubtitle}>
+                  Please enter the 6-digit verification code sent to your email
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Verification Code"
+                  placeholderTextColor="#000"
+                  keyboardType="numeric"
+                  maxLength={6}
+                  value={verificationCode}
+                  onChangeText={setVerificationCode}
+                />
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handle2FAVerification}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.buttonText}>Verify</Text>
+                  )}
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.cancelButton]}
+                  onPress={() => {
+                    setShow2FAModal(false);
+                    setVerificationCode("");
+                    setTempTokens(null);
+                    setTempUserData(null);
+                  }}
+                >
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+              </View>
+            </KeyboardAvoidingView>
+          </Modal>
         </View>
-      </Modal>
-    </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
