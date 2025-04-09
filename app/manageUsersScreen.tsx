@@ -127,7 +127,7 @@ export default function AdminUsersScreen() {
                                 return;
                             }
 
-                            const response = await fetch(`${config.BASE_URL}/delete/sendEmail/${selectedUserId}`, {
+                            const response = await fetch(`${config.BASE_URL}/sendEmail/delete/${selectedUserId}`, {
                                 method: "DELETE",
                                 headers: {
                                     Authorization: `Bearer ${token}`,
@@ -176,7 +176,7 @@ export default function AdminUsersScreen() {
         }
 
         try {
-            const response = await fetch(`${config.BASE_URL}/sendEmail/order/${selectedUser._id}/message`, {
+            const response = await fetch(`${config.BASE_URL}/sendEmail/${selectedUser._id}/message`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,

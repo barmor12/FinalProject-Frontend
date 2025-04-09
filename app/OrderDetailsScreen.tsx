@@ -9,7 +9,8 @@ import {
     StyleSheet,
     Alert,
     Modal,
-    Image
+    Image,
+    TextInput
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -47,6 +48,8 @@ export default function OrderDetailsScreen() {
     const [modalVisible, setModalVisible] = useState(false);
     const [contactModalVisible, setContactModalVisible] = useState(false);
     const [selectedStatus, setSelectedStatus] = useState("");
+    const [messageModalVisible, setMessageModalVisible] = useState(false);
+    const [managerMessage, setManagerMessage] = useState("");
 
     const route = useRoute();
     const { orderId } = route.params as { orderId: string };
@@ -214,14 +217,88 @@ export default function OrderDetailsScreen() {
 
             <TouchableOpacity style={styles.updateStatusButton} onPress={() => {
                 setModalVisible(true);
-
             }}>
                 <Text style={styles.updateStatusText}>Update Status</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.updateStatusButton} onPress={() => {
+                setMessageModalVisible(true);
+            }}>
+                <Text style={styles.updateStatusText}>Send Message</Text>
+            </TouchableOpacity>
+
+
 
             <TouchableOpacity style={styles.contactButton} onPress={() => setContactModalVisible(true)}>
                 <Text style={styles.contactText}>View Contact Details</Text>
             </TouchableOpacity>
+
+            <Modal transparent={true} visible={messageModalVisible} animationType="slide">
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Send Message to Customer</Text>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Enter your message..."
+                            multiline
+                            value={managerMessage}
+                            onChangeText={setManagerMessage}
+                        />
+                        <TouchableOpacity
+                            style={styles.modalButtonConfirm}
+                            onPress={async () => {
+                                if (!managerMessage.trim()) {
+                                    Alert.alert("Error", "Please enter a message.");
+                                    return;
+                                }
+
+                                const token = await AsyncStorage.getItem("accessToken");
+                                if (!token) {
+                                    Alert.alert("Error", "Authorization token is required");
+                                    return;
+                                }
+
+                                try {
+                                    const response = await fetch(`${config.BASE_URL}/sendEmail/${order.user.email}/message`, {
+                                        method: "POST",
+                                        headers: {
+                                            Authorization: `Bearer ${token}`,
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            customerEmail: order.user.email,
+                                            managerMessage,
+                                            isManagerMessage: true,
+                                        }),
+                                    });
+
+                                    const data = await response.json();
+
+                                    if (!response.ok) {
+                                        throw new Error(data.error || "Failed to send message");
+                                    }
+
+                                    Alert.alert("Success", "Message sent successfully to the customer!");
+                                    setManagerMessage("");
+                                    setMessageModalVisible(false);
+                                } catch (error: any) {
+                                    console.error("❌ Error sending message:", error);
+                                    Alert.alert("Error", error.message || "Failed to send message.");
+                                }
+                            }}
+                        >
+                            <Text style={styles.updateStatusText}>Send</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.modalButtonClose}
+                            onPress={() => setMessageModalVisible(false)}
+                        >
+                            <Text style={styles.updateStatusText}>Close</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
+
 
             {/* מודאל שינוי סטטוס */}
             <Modal transparent={true} visible={modalVisible} animationType="slide">
@@ -255,7 +332,7 @@ export default function OrderDetailsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Customer Contact Details</Text>
-                        {/* <Text style={styles.contactInfo}>{order.address.fullName}</Text> */}
+                        <Text style={styles.contactInfo}>{order.address.fullName}</Text>
                         <Text style={styles.contactInfo}>Phone: {order.address.phone}</Text>
                         <Text style={styles.contactInfo}>Address: {order.address.street}, {order.address.city}, {order.address.zipCode}, {order.address.country}</Text>
                         <Text style={styles.contactInfo}>Email: {order.user.email}</Text>
@@ -312,6 +389,19 @@ const styles = StyleSheet.create({
         shadowRadius: 3,
         elevation: 3
     },
+    input: {
+        width: "100%",
+        height: 100,
+        borderWidth: 1,
+        borderColor: "#ccc",
+        borderRadius: 8,
+        padding: 10,
+        backgroundColor: "#fff",
+        textAlignVertical: "top",
+        marginBottom: 10,
+        color: "#333"
+    },
+
     itemImage: {
         width: 80,
         height: 80,
@@ -416,7 +506,7 @@ const styles = StyleSheet.create({
     },
     modalButtonConfirm: {
         padding: 12,
-        backgroundColor: "#32CD32",
+        backgroundColor: "#6b4226",
         marginTop: 10,
         width: "100%",
         alignItems: "center",

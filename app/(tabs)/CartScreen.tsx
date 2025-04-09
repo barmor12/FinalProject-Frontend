@@ -31,7 +31,6 @@ interface CartItem {
   quantity: number;
 }
 
-
 export default function CartScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -75,6 +74,32 @@ export default function CartScreen() {
       Alert.alert("Error", "Failed to fetch cart items. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // פונקציה לניקוי כל הפריטים בעגלה
+  const clearCart = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const response = await fetch(`${config.BASE_URL}/cart/clear`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "Failed to clear cart");
+      }
+
+      setCartItems([]);
+    } catch (error: any) {
+      console.error("Error clearing cart:", error.message || error);
+      Alert.alert("Error", "Failed to clear cart");
     }
   };
 
@@ -161,23 +186,16 @@ export default function CartScreen() {
         <Text style={styles.itemName}>{item.cake.name}</Text>
         <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
         <View style={styles.quantityContainer}>
-          <TouchableOpacity
-            onPress={() => updateQuantity(item._id, item.quantity - 1)}
-          >
+          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)}>
             <Ionicons name="remove-circle-outline" size={26} color="#6b4226" />
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity
-            onPress={() => updateQuantity(item._id, item.quantity + 1)}
-          >
+          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity + 1)}>
             <Ionicons name="add-circle-outline" size={26} color="#6b4226" />
           </TouchableOpacity>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.removeButton}
-        onPress={() => removeItem(item.cake._id)}
-      >
+      <TouchableOpacity style={styles.removeButton} onPress={() => removeItem(item.cake._id)}>
         <MaterialIcons name="delete" size={22} color="white" />
       </TouchableOpacity>
     </View>
@@ -185,14 +203,17 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Cart</Text>
+      {/* Header עם כפתור לניקוי העגלה בצד ימין */}
+      <View style={styles.header}>
+        <View style={{ width: 28 }} />
+        <Text style={styles.headerTitle}>Your Cart</Text>
+        <TouchableOpacity onPress={clearCart} style={styles.clearButton}>
+          <MaterialIcons name="delete-sweep" size={28} color="#6b4226" />
+        </TouchableOpacity>
+      </View>
 
       {loading ? (
-        <ActivityIndicator
-          size="large"
-          color="#6b4226"
-          style={styles.loading}
-        />
+        <ActivityIndicator size="large" color="#6b4226" style={styles.loading} />
       ) : cartItems.length === 0 ? (
         <Text style={styles.emptyMessage}>Your cart is empty.</Text>
       ) : (
@@ -203,7 +224,7 @@ export default function CartScreen() {
         />
       )}
 
-      {/* ✅ מודל להצגת פרטי מוצר */}
+      {/* מודל להצגת פרטי מוצר */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
@@ -214,20 +235,10 @@ export default function CartScreen() {
                   style={styles.itemImage}
                   resizeMode="cover"
                 />
-
-                <Text style={styles.modalTitle}>
-                  {selectedProduct.cake.name}
-                </Text>
-                <Text style={styles.modalDescription}>
-                  {selectedProduct.cake.description}
-                </Text>
-                <Text style={styles.modalPrice}>
-                  ${selectedProduct.cake.price.toFixed(2)}
-                </Text>
-                <TouchableOpacity
-                  style={styles.closeButton}
-                  onPress={closeProductModal}
-                >
+                <Text style={styles.modalTitle}>{selectedProduct.cake.name}</Text>
+                <Text style={styles.modalDescription}>{selectedProduct.cake.description}</Text>
+                <Text style={styles.modalPrice}>${selectedProduct.cake.price.toFixed(2)}</Text>
+                <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
@@ -239,10 +250,7 @@ export default function CartScreen() {
       {!isModalVisible && cartItems.length > 0 && (
         <View style={styles.checkoutContainer}>
           <Text style={styles.totalText}>Total: ${calculateTotalPrice()}</Text>
-          <TouchableOpacity
-            style={styles.checkoutButton}
-            onPress={() => router.push("/CheckoutScreen")}
-          >
+          <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push("/CheckoutScreen")}>
             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
           </TouchableOpacity>
         </View>
@@ -250,15 +258,25 @@ export default function CartScreen() {
     </SafeAreaView>
   );
 }
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f9f3ea", padding: 16 },
-  title: {
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
+  clearButton: {
+    padding: 5,
+    marginRight: 5
+  },
+  headerTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "#6b4226",
     textAlign: "center",
   },
-  cartList: { paddingBottom: 16 },
   cartItem: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -272,18 +290,14 @@ const styles = StyleSheet.create({
   itemDetails: { flex: 1 },
   itemName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
   itemPrice: { fontSize: 14, color: "#6b4226" },
-  quantityContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginTop: 5,
-  },
+  quantityContainer: { flexDirection: "row", alignItems: "center", marginTop: 5 },
   quantityText: { fontSize: 16, marginHorizontal: 10 },
   removeButton: { backgroundColor: "#ff4444", padding: 8, borderRadius: 30 },
-
-  // עיצוב למודל
+  loading: { marginTop: 20 },
+  emptyMessage: { fontSize: 18, color: "#6b4226", textAlign: "center", marginTop: 20 },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // רקע כהה למחוץ למודל
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -295,64 +309,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 5,
   },
-  modalImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 10,
-    marginBottom: 15,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginBottom: 10,
-  },
-  modalDescription: {
-    fontSize: 16,
-    color: "#555",
-    textAlign: "center",
-    marginBottom: 10,
-  },
-  modalPrice: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#d49a6a",
-    marginBottom: 15,
-  },
-  closeButton: {
-    backgroundColor: "#6b4226",
-    padding: 12,
-    borderRadius: 8,
-    width: "80%",
-    alignItems: "center",
-  },
-  closeButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-
+  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 10 },
+  modalDescription: { fontSize: 16, color: "#555", textAlign: "center", marginBottom: 10 },
+  modalPrice: { fontSize: 18, fontWeight: "bold", color: "#d49a6a", marginBottom: 15 },
+  closeButton: { backgroundColor: "#6b4226", padding: 12, borderRadius: 8, width: "80%", alignItems: "center" },
+  closeButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   checkoutContainer: { position: "absolute", bottom: 80, left: 20, right: 20 },
-  totalText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
-  },
+  totalText: { fontSize: 18, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
   checkoutButton: { backgroundColor: "#6b4226", padding: 15, borderRadius: 10 },
-  checkoutButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  loading: {
-    marginTop: 20,
-  },
-  emptyMessage: {
-    fontSize: 18,
-    color: "#6b4226",
-    textAlign: "center",
-    marginTop: 20,
-  },
+  checkoutButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold", textAlign: "center" },
 });
