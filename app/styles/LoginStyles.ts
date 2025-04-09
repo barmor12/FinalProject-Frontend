@@ -3,15 +3,16 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#f9f3ea",
+    backgroundColor: "#fdf6f0",
     padding: 20,
+    paddingTop: "40%",
   },
   inputContainer: {
     width: "100%",
     alignItems: "center",
-    marginTop: 20,
+    marginTop: 40,
   },
   title: {
     fontSize: 32,
