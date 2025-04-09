@@ -151,7 +151,6 @@ export default function AdminOrdersScreen() {
             fetchOrders();
         }, [fetchOrders])
     );
-
     const updateOrderStatus = async () => {
         if (!selectedStatus) {
             Alert.alert("Error", "Please select a status.");
@@ -187,6 +186,7 @@ export default function AdminOrdersScreen() {
 
             Alert.alert("Success", "Order status updated successfully.");
 
+            // עדכון סטטוס ההזמנה במערך המקומי
             setOrders((prevOrders) =>
                 prevOrders.map((order) =>
                     order._id === selectedOrder._id ? { ...order, status: newStatus } : order
@@ -195,11 +195,34 @@ export default function AdminOrdersScreen() {
 
             setStatusModalVisible(false);
             setModalVisible(false);
+
+            // אם הסטטוס החדש הוא delivered – שליחת מייל לבקשת ביקורת
+            if (newStatus === "delivered") {
+                console.log("sending review email....");
+                const reviewResponse = await fetch(`${config.BASE_URL}/sendEmail/${selectedOrder._id}/send-review-email`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        customerEmail: selectedOrder.user.email,
+                        orderId: selectedOrder._id
+                    }),
+                });
+
+                if (!reviewResponse.ok) {
+                    console.error("❌ Failed to send review email:", await reviewResponse.text());
+                } else {
+                    console.log("✅ Review email sent successfully.");
+                }
+            }
         } catch (error) {
             console.error("❌ Error updating order:", error);
             Alert.alert("Error", "Failed to update order status.");
         }
     };
+
 
     const sendOrderEmail = async (managerMessage: string, hasMsg: boolean) => {
         if (!selectedOrder) {
