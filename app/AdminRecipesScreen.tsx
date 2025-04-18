@@ -13,17 +13,21 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import config from "../config";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Recipe {
     _id: string;
     name: string;
     description: string;
     servings: number;
-    ingredients: string[];
-    directions: string[];
+    ingredients: { [key: string]: string };
+    instructions: { [key: string]: string };
     difficulty: "Easy" | "Medium" | "Hard";
     makingTime: string;
-    image: string;
+    image: {
+        url: string;
+        public_id: string;
+    };
 }
 
 export default function AdminRecipesScreen() {
@@ -31,6 +35,7 @@ export default function AdminRecipesScreen() {
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedRecipe, setEditedRecipe] = useState<Partial<Recipe>>({});
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchRecipes();
@@ -38,12 +43,36 @@ export default function AdminRecipesScreen() {
 
     const fetchRecipes = async () => {
         try {
-            const response = await fetch(`${config.BASE_URL}/recipes`);
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "You must be logged in");
+                router.replace("/");
+                return;
+            }
+
+            const response = await fetch(`${config.BASE_URL}/recipes`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    Alert.alert("Error", "Your session has expired. Please log in again.");
+                    router.replace("/");
+                    return;
+                }
+                throw new Error("Failed to fetch recipes");
+            }
+
             const data = await response.json();
             setRecipes(data);
+            console.log(data);
         } catch (error) {
             console.error("Error fetching recipes:", error);
             Alert.alert("Error", "Failed to fetch recipes");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -57,22 +86,35 @@ export default function AdminRecipesScreen() {
         if (!selectedRecipe) return;
 
         try {
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "You must be logged in");
+                router.replace("/");
+                return;
+            }
+
             const response = await fetch(`${config.BASE_URL}/recipes/${selectedRecipe._id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify(editedRecipe),
             });
 
-            if (response.ok) {
-                Alert.alert("Success", "Recipe updated successfully");
-                fetchRecipes();
-                setIsEditing(false);
-                setSelectedRecipe(null);
-            } else {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    Alert.alert("Error", "Your session has expired. Please log in again.");
+                    router.replace("/");
+                    return;
+                }
                 throw new Error("Failed to update recipe");
             }
+
+            Alert.alert("Success", "Recipe updated successfully");
+            fetchRecipes();
+            setIsEditing(false);
+            setSelectedRecipe(null);
         } catch (error) {
             console.error("Error updating recipe:", error);
             Alert.alert("Error", "Failed to update recipe");
@@ -90,16 +132,31 @@ export default function AdminRecipesScreen() {
                     style: "destructive",
                     onPress: async () => {
                         try {
+                            const token = await AsyncStorage.getItem("accessToken");
+                            if (!token) {
+                                Alert.alert("Error", "You must be logged in");
+                                router.replace("/");
+                                return;
+                            }
+
                             const response = await fetch(`${config.BASE_URL}/recipes/${recipeId}`, {
                                 method: "DELETE",
+                                headers: {
+                                    Authorization: `Bearer ${token}`,
+                                },
                             });
 
-                            if (response.ok) {
-                                Alert.alert("Success", "Recipe deleted successfully");
-                                fetchRecipes();
-                            } else {
+                            if (!response.ok) {
+                                if (response.status === 401) {
+                                    Alert.alert("Error", "Your session has expired. Please log in again.");
+                                    router.replace("/");
+                                    return;
+                                }
                                 throw new Error("Failed to delete recipe");
                             }
+
+                            Alert.alert("Success", "Recipe deleted successfully");
+                            fetchRecipes();
                         } catch (error) {
                             console.error("Error deleting recipe:", error);
                             Alert.alert("Error", "Failed to delete recipe");
@@ -110,156 +167,15 @@ export default function AdminRecipesScreen() {
         );
     };
 
-    const renderRecipeCard = (recipe: Recipe) => (
-        <TouchableOpacity
-            key={recipe._id}
-            style={styles.recipeCard}
-            onPress={() => handleEdit(recipe)}
-        >
-            <Image source={{ uri: recipe.image }} style={styles.recipeImage} />
-            <View style={styles.recipeInfo}>
-                <Text style={styles.recipeTitle}>{recipe.name}</Text>
-                <Text style={styles.recipeDescription} numberOfLines={2}>
-                    {recipe.description}
-                </Text>
-                <View style={styles.recipeMeta}>
-                    <View style={styles.metaItem}>
-                        <Ionicons name="time-outline" size={16} color="#6b4226" />
-                        <Text style={styles.metaText}>{recipe.makingTime}</Text>
-                    </View>
-                    <View style={styles.metaItem}>
-                        <Ionicons name="flame-outline" size={16} color="#6b4226" />
-                        <Text style={styles.metaText}>{recipe.difficulty}</Text>
-                    </View>
-                </View>
-            </View>
-            <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => handleDelete(recipe._id)}
-            >
-                <Ionicons name="trash-outline" size={24} color="#ff4444" />
-            </TouchableOpacity>
-        </TouchableOpacity>
-    );
-
-    const renderEditModal = () => {
-        if (!selectedRecipe || !isEditing) return null;
-
+    if (loading) {
         return (
-            <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                    <TouchableOpacity
-                        style={styles.closeButton}
-                        onPress={() => {
-                            setIsEditing(false);
-                            setSelectedRecipe(null);
-                        }}
-                    >
-                        <Ionicons name="close" size={24} color="#6b4226" />
-                    </TouchableOpacity>
-                    <ScrollView style={styles.modalScrollView}>
-                        <Text style={styles.modalTitle}>Edit Recipe</Text>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Name</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={editedRecipe.name}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, name: text })}
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Description</Text>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                value={editedRecipe.description}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, description: text })}
-                                multiline
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Servings</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={editedRecipe.servings?.toString()}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, servings: parseInt(text) })}
-                                keyboardType="numeric"
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Ingredients (one per line)</Text>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                value={editedRecipe.ingredients?.join("\n")}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, ingredients: text.split("\n") })}
-                                multiline
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Directions (one per line)</Text>
-                            <TextInput
-                                style={[styles.input, styles.textArea]}
-                                value={editedRecipe.directions?.join("\n")}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, directions: text.split("\n") })}
-                                multiline
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Difficulty</Text>
-                            <View style={styles.difficultyButtons}>
-                                {["Easy", "Medium", "Hard"].map((level) => (
-                                    <TouchableOpacity
-                                        key={level}
-                                        style={[
-                                            styles.difficultyButton,
-                                            editedRecipe.difficulty === level && styles.selectedDifficulty,
-                                        ]}
-                                        onPress={() => setEditedRecipe({ ...editedRecipe, difficulty: level as "Easy" | "Medium" | "Hard" })}
-                                    >
-                                        <Text style={[
-                                            styles.difficultyText,
-                                            editedRecipe.difficulty === level && styles.selectedDifficultyText,
-                                        ]}>
-                                            {level}
-                                        </Text>
-                                    </TouchableOpacity>
-                                ))}
-                            </View>
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Making Time</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={editedRecipe.makingTime}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, makingTime: text })}
-                                placeholder="e.g., 30m, 1h 30m"
-                            />
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Image URL</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={editedRecipe.image}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, image: text })}
-                                placeholder="Enter image URL"
-                            />
-                        </View>
-
-                        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                            <Text style={styles.saveButtonText}>Save Changes</Text>
-                        </TouchableOpacity>
-                    </ScrollView>
+            <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                    <Text>Loading recipes...</Text>
                 </View>
-            </View>
+            </SafeAreaView>
         );
-    };
+    }
 
     return (
         <SafeAreaView style={styles.container}>
@@ -275,11 +191,163 @@ export default function AdminRecipesScreen() {
 
             <ScrollView style={styles.scrollView}>
                 <View style={styles.recipeGrid}>
-                    {recipes.map(renderRecipeCard)}
+                    {recipes.map((recipe) => (
+                        <TouchableOpacity
+                            key={recipe._id}
+                            style={styles.recipeCard}
+                            onPress={() => handleEdit(recipe)}
+                        >
+                            <Image source={{ uri: recipe.image.url }} style={styles.recipeImage} />
+
+                            <View style={styles.recipeInfo}>
+                                <Text style={styles.recipeTitle}>{recipe.name}</Text>
+                                <Text style={styles.recipeDescription} numberOfLines={2}>
+                                    {recipe.description}
+                                </Text>
+                                <View style={styles.recipeMeta}>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="time-outline" size={16} color="#6b4226" />
+                                        <Text style={styles.metaText}>{recipe.makingTime}</Text>
+                                    </View>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="flame-outline" size={16} color="#6b4226" />
+                                        <Text style={styles.metaText}>{recipe.difficulty}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                            <TouchableOpacity
+                                style={styles.deleteButton}
+                                onPress={() => handleDelete(recipe._id)}
+                            >
+                                <Ionicons name="trash-outline" size={24} color="#ff4444" />
+                            </TouchableOpacity>
+                        </TouchableOpacity>
+                    ))}
                 </View>
             </ScrollView>
 
-            {renderEditModal()}
+            {isEditing && selectedRecipe && (
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => {
+                                setIsEditing(false);
+                                setSelectedRecipe(null);
+                            }}
+                        >
+                            <Ionicons name="close" size={24} color="#6b4226" />
+                        </TouchableOpacity>
+                        <ScrollView style={styles.modalScrollView}>
+                            <Text style={styles.modalTitle}>Edit Recipe</Text>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Name</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={editedRecipe.name}
+                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, name: text })}
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Description</Text>
+                                <TextInput
+                                    style={[styles.input, styles.textArea]}
+                                    value={editedRecipe.description}
+                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, description: text })}
+                                    multiline
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Servings</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={editedRecipe.servings?.toString()}
+                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, servings: parseInt(text) })}
+                                    keyboardType="numeric"
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Ingredients (one per line)</Text>
+                                <TextInput
+                                    style={[styles.input, styles.textArea]}
+                                    value={Object.values(editedRecipe.ingredients || {}).join("\n")}
+                                    onChangeText={(text) => {
+                                        const lines = text.split("\n");
+                                        const ingredients: { [key: string]: string } = {};
+                                        lines.forEach((line, index) => {
+                                            if (line.trim()) {
+                                                ingredients[`ingredient${index + 1}`] = line.trim();
+                                            }
+                                        });
+                                        setEditedRecipe({ ...editedRecipe, ingredients });
+                                    }}
+                                    multiline
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>instructions (one per line)</Text>
+                                <TextInput
+                                    style={[styles.input, styles.textArea]}
+                                    value={Object.values(editedRecipe.instructions || {}).join("\n")}
+                                    onChangeText={(text) => {
+                                        const lines = text.split("\n");
+                                        const instructions: { [key: string]: string } = {};
+                                        lines.forEach((line, index) => {
+                                            if (line.trim()) {
+                                                instructions[`step${index + 1}`] = line.trim();
+                                            }
+                                        });
+                                        setEditedRecipe({ ...editedRecipe, instructions });
+                                    }}
+                                    multiline
+                                />
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Difficulty</Text>
+                                <View style={styles.difficultyButtons}>
+                                    {["Easy", "Medium", "Hard"].map((level) => (
+                                        <TouchableOpacity
+                                            key={level}
+                                            style={[
+                                                styles.difficultyButton,
+                                                editedRecipe.difficulty === level && styles.selectedDifficulty,
+                                            ]}
+                                            onPress={() => setEditedRecipe({ ...editedRecipe, difficulty: level as "Easy" | "Medium" | "Hard" })}
+                                        >
+                                            <Text style={[
+                                                styles.difficultyText,
+                                                editedRecipe.difficulty === level && styles.selectedDifficultyText,
+                                            ]}>
+                                                {level}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    ))}
+                                </View>
+                            </View>
+
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Making Time</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={editedRecipe.makingTime}
+                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, makingTime: text })}
+                                    placeholder="e.g., 30m, 1h 30m"
+                                />
+                            </View>
+
+                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                                <Text style={styles.saveButtonText}>Save Changes</Text>
+                            </TouchableOpacity>
+                        </ScrollView>
+                    </View>
+                </View>
+            )}
         </SafeAreaView>
     );
 }
@@ -288,6 +356,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: "#f9f3ea",
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     header: {
         flexDirection: "row",
