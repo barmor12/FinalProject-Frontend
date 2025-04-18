@@ -109,12 +109,6 @@ export default function AdminPanelScreen() {
         <Text style={styles.buttonText}>Manage Orders</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/InventoryScreen")}
-      >
-        <Text style={styles.buttonText}>Manage Inventory</Text>
-      </TouchableOpacity>
 
       <TouchableOpacity
         style={styles.button}
@@ -131,9 +125,9 @@ export default function AdminPanelScreen() {
 
       <TouchableOpacity
         style={styles.button}
-        onPress={() => router.push("/StatisticsScreen")}
+        onPress={() => router.push("/AdminRecipesScreen")}
       >
-        <Text style={styles.buttonText}>View Statistics</Text>
+        <Text style={styles.buttonText}>Manage Recipes</Text>
       </TouchableOpacity>
 
       {/* כפתור התנתקות */}

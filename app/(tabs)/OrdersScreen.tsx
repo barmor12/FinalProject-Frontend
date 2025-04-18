@@ -205,7 +205,7 @@ export default function OrdersScreen() {
                 </View>
                 {/* כפתור להזמנה מחדש */}
                 <TouchableOpacity style={styles.reorderButton} onPress={() => handleReorder(order)}>
-                  <Text style={styles.reorderButtonText}>הזמן שוב</Text>
+                  <Text style={styles.reorderButtonText}>Re-Order</Text>
                 </TouchableOpacity>
               </View>
             ))

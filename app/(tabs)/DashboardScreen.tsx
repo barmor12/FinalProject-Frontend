@@ -320,7 +320,7 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 15, backgroundColor: "#f9f3ea" },
+  container: { flex: 1, padding: 15, backgroundColor: "#f9f3ea", marginBottom: 30 },
   header: {
     flexDirection: "row",
     alignItems: "center",

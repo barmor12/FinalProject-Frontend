@@ -27,6 +27,7 @@ interface Product {
     description: string;
     ingredients: string[];
     price: number;
+    cost: number;
     stock: string;
 }
 
@@ -70,6 +71,12 @@ export default function ProductDetailsScreen() {
     const handleSave = async () => {
         if (!editedProduct) return;
 
+        // Validate cost and price
+        if (editedProduct.cost >= editedProduct.price) {
+            Alert.alert("Error", "Price must be higher than cost");
+            return;
+        }
+
         // בדיקת מלאי - אם stock שווה ל־0, עדכון ל־0
         const finalStock = editedProduct.stock === "" ? "" : editedProduct.stock;
 
@@ -97,16 +104,13 @@ export default function ProductDetailsScreen() {
             }
 
             Alert.alert("Success", "Product updated successfully!");
-            setProduct(updatedProduct); // עדכון המוצר המוצג
-            setIsEditing(false); // סגירת מצב עריכה
+            setProduct(updatedProduct);
+            setIsEditing(false);
         } catch (error) {
             console.error("❌ Error updating product:", error);
             Alert.alert("Error", "Failed to update product");
         }
     };
-
-
-
 
     if (!product) {
         return (
@@ -162,44 +166,54 @@ export default function ProductDetailsScreen() {
                 >
                     <ScrollView contentContainerStyle={styles.scrollContent}>
                         {isEditing ? (
-                            <>
-                                <Text>Name:</Text>
+                            <View style={styles.editContainer}>
+                                <Text style={styles.editLabel}>Product Name</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={styles.editInput}
                                     value={editedProduct?.name}
                                     onChangeText={(text) =>
                                         setEditedProduct((prev) => prev && { ...prev, name: text })
                                     }
                                 />
-                                <Text>Image URL:</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedProduct?.image}
-                                    onChangeText={(text) =>
-                                        setEditedProduct((prev) => prev && { ...prev, image: text })
-                                    }
-                                />
-                                <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                                    <Text style={styles.uploadButtonText}>Upload Image</Text>
-                                </TouchableOpacity>
 
-                                <Image
-                                    source={{ uri: editedProduct?.image || "https://via.placeholder.com/200" }}
-                                    style={styles.image}
-                                />
+                                <Text style={styles.editLabel}>Product Image</Text>
+                                <View style={styles.editImageContainer}>
+                                    <Image
+                                        source={{ uri: editedProduct?.image || "https://via.placeholder.com/200" }}
+                                        style={styles.editImage}
+                                    />
+                                    <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                                        <Text style={styles.uploadButtonText}>Upload New Image</Text>
+                                    </TouchableOpacity>
+                                </View>
 
-                                <Text>Description:</Text>
+                                <Text style={styles.editLabel}>Description</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={styles.editDescriptionInput}
                                     value={editedProduct?.description}
                                     onChangeText={(text) =>
                                         setEditedProduct((prev) => prev && { ...prev, description: text })
                                     }
+                                    multiline
                                 />
 
-                                <Text>Price:</Text>
+                                <Text style={styles.editLabel}>Cost</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={styles.editInput}
+                                    value={editedProduct?.cost?.toString()}
+                                    keyboardType="numeric"
+                                    onChangeText={(text) => {
+                                        const parsedValue = parseFloat(text);
+                                        setEditedProduct((prev) => prev && {
+                                            ...prev,
+                                            cost: isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2))
+                                        });
+                                    }}
+                                />
+
+                                <Text style={styles.editLabel}>Price</Text>
+                                <TextInput
+                                    style={styles.editInput}
                                     value={editedProduct?.price.toString()}
                                     keyboardType="numeric"
                                     onChangeText={(text) => {
@@ -210,44 +224,76 @@ export default function ProductDetailsScreen() {
                                         });
                                     }}
                                 />
-                                <Text>Stock:</Text>
+
+                                <Text style={styles.editLabel}>Stock</Text>
                                 <TextInput
-                                    style={styles.input}
+                                    style={styles.editInput}
                                     value={editedProduct?.stock}
                                     onChangeText={(text) =>
                                         setEditedProduct((prev) => prev && { ...prev, stock: text })
                                     }
                                 />
 
-
-                                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                                </TouchableOpacity>
-                            </>
+                                <View style={styles.editButtonContainer}>
+                                    <TouchableOpacity
+                                        style={styles.editSaveButton}
+                                        onPress={handleSave}
+                                    >
+                                        <Text style={styles.editButtonText}>Save Changes</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.editCancelButton}
+                                        onPress={() => setIsEditing(false)}
+                                    >
+                                        <Text style={styles.editButtonText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
                         ) : (
-                            <>
-                                <Text style={styles.title}>{product.name}</Text>
+                            <View style={styles.viewContainer}>
                                 <Image
                                     source={{ uri: product.image || "https://via.placeholder.com/200" }}
-                                    style={styles.image}
+                                    style={styles.productImage}
                                 />
-                                <Text style={styles.description}>{product.description}</Text>
-                                <Text style={styles.price}>Price: ${product.price.toFixed(2)}</Text>
-                                <TouchableOpacity
-                                    style={styles.editButton}
-                                    onPress={() => setIsEditing(true)}
-                                >
-                                    <Text style={styles.editButtonText}>Edit Product</Text>
-                                </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={styles.deleteButton}
-                                    onPress={handleDelete}
-                                >
-                                    <Text style={styles.deleteButtonText}>Delete Product</Text>
-                                </TouchableOpacity>
+                                <View style={styles.contentContainer}>
+                                    <Text style={styles.productTitle}>{product.name}</Text>
 
-                            </>
+                                    <View style={styles.priceTag}>
+                                        <Text style={styles.priceText}>${product.price.toFixed(2)}</Text>
+                                    </View>
+
+                                    <View style={styles.profitContainer}>
+                                        <View style={styles.profitItem}>
+                                            <Text style={styles.profitLabel}>Cost</Text>
+                                            <Text style={styles.profitValue}>${product.cost?.toFixed(2) || '0.00'}</Text>
+                                        </View>
+                                        <View style={styles.profitItem}>
+                                            <Text style={styles.profitLabel}>Profit</Text>
+                                            <Text style={styles.profitValue}>${((product.price - (product.cost || 0))).toFixed(2)}</Text>
+                                        </View>
+                                    </View>
+
+                                    <Text style={styles.sectionTitle}>Description</Text>
+                                    <Text style={styles.descriptionText}>{product.description}</Text>
+
+                                    <View style={styles.buttonContainer}>
+                                        <TouchableOpacity
+                                            style={styles.editButton}
+                                            onPress={() => setIsEditing(true)}
+                                        >
+                                            <Text style={styles.buttonText}>Edit Product</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={styles.deleteButton}
+                                            onPress={handleDelete}
+                                        >
+                                            <Text style={styles.buttonText}>Delete Product</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </View>
                         )}
                     </ScrollView>
                 </KeyboardAvoidingView>
@@ -283,4 +329,163 @@ const styles = StyleSheet.create({
     saveButton: { backgroundColor: "#4caf50", padding: 10, borderRadius: 8, alignItems: "center", marginTop: 10 },
     saveButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
     error: { fontSize: 18, color: "red", textAlign: "center", marginTop: 20 },
+    editContainer: {
+        backgroundColor: '#f5e9d9',
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#e8d5c4',
+    },
+    editLabel: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#6b4226',
+        marginBottom: 8,
+        marginTop: 15,
+    },
+    editInput: {
+        borderWidth: 1,
+        borderColor: '#e8d5c4',
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#fff',
+        marginBottom: 5,
+    },
+    editDescriptionInput: {
+        height: 100,
+        textAlignVertical: 'top',
+        borderWidth: 1,
+        borderColor: '#e8d5c4',
+        borderRadius: 12,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#fff',
+        marginBottom: 5,
+    },
+    editImageContainer: {
+        alignItems: 'center',
+        marginVertical: 15,
+    },
+    editImage: {
+        width: '100%',
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 10,
+    },
+    editButtonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+    },
+    editSaveButton: {
+        flex: 1,
+        backgroundColor: '#4caf50',
+        padding: 15,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginRight: 10,
+    },
+    editCancelButton: {
+        flex: 1,
+        backgroundColor: '#6b4226',
+        padding: 15,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginLeft: 10,
+    },
+    viewContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 20,
+        padding: 0,
+        marginBottom: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+        overflow: 'hidden',
+    },
+    productImage: {
+        width: '100%',
+        height: 300,
+        borderBottomLeftRadius: 20,
+        borderBottomRightRadius: 20,
+    },
+    contentContainer: {
+        padding: 20,
+    },
+    productTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        color: '#6b4226',
+        marginBottom: 15,
+        textTransform: 'capitalize',
+    },
+    priceTag: {
+        backgroundColor: '#6b4226',
+        paddingHorizontal: 15,
+        paddingVertical: 8,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        marginBottom: 20,
+    },
+    priceText: {
+        color: '#fff',
+        fontSize: 18,
+        fontWeight: 'bold',
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#6b4226',
+        marginBottom: 10,
+        marginTop: 15,
+    },
+    descriptionText: {
+        fontSize: 16,
+        color: '#666',
+        lineHeight: 24,
+        marginBottom: 20,
+    },
+    buttonContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 20,
+        paddingTop: 20,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    profitContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
+        backgroundColor: '#f9f3ea',
+        borderRadius: 12,
+        padding: 15,
+    },
+    profitItem: {
+        alignItems: 'center',
+    },
+    profitLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 5,
+    },
+    profitValue: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#6b4226',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+    },
 });

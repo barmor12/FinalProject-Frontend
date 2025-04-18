@@ -116,6 +116,15 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="RecipeScreen"
+        options={{
+          title: "Recipes",
+          tabBarIcon: ({ color }) => (
+            <Icon name="menu-book" size={24} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="ProfileScreen"
         options={{
           title: "Profile",
@@ -124,6 +133,7 @@ export default function TabLayout() {
           ),
         }}
       />
+
     </Tabs>
   );
 }

@@ -47,13 +47,18 @@ export default function RootLayout() {
         <Stack.Screen name="AddProductScreenAdmin" />
         <Stack.Screen name="manageAddressScreen" />
         <Stack.Screen name="adminDiscountCodesScreen" />
-
+        <Stack.Screen name="index"
+          options={{ gestureEnabled: false }}
+        />
         <Stack.Screen name="adminOrdersScreen" />
         <Stack.Screen name="OrderDetailsScreen" />
 
         {/* הטאבים נטענים תמיד */}
-        <Stack.Screen name="(tabs)" />
-        <Stack.Screen name="(admintabs)" />
+        <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+        <Stack.Screen
+          name="(admintabs)"
+          options={{ gestureEnabled: false }} // Disable swipe back for admin dashboard
+        />
         <Stack.Screen name="SaveDraftOrder" />
         <Stack.Screen name="DuplicateOrder" />
       </Stack>

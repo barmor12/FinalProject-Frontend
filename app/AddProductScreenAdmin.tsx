@@ -22,6 +22,7 @@ export default function AddProductScreenAdmin() {
     const router = useRouter();
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [cost, setCost] = useState("");
     const [price, setPrice] = useState("");
     const [ingredients, setIngredients] = useState("");
     const [stock, setStock] = useState("");
@@ -50,8 +51,22 @@ export default function AddProductScreenAdmin() {
 
     // הגיש את הנתונים לשרת ויוצרים את המוצר
     const handleSubmit = async () => {
-        if (!name || !description || !price || !ingredients || !image) {
+        if (!name || !description || !cost || !price || !ingredients || !image) {
             Alert.alert("Error", "All fields including image are required");
+            return;
+        }
+
+        // Validate cost and price
+        const costValue = parseFloat(cost);
+        const priceValue = parseFloat(price);
+
+        if (isNaN(costValue) || isNaN(priceValue)) {
+            Alert.alert("Error", "Cost and price must be valid numbers");
+            return;
+        }
+
+        if (costValue >= priceValue) {
+            Alert.alert("Error", "Price must be higher than cost");
             return;
         }
 
@@ -66,6 +81,7 @@ export default function AddProductScreenAdmin() {
             const formData = new FormData();
             formData.append("name", name);
             formData.append("description", description);
+            formData.append("cost", cost);
             formData.append("price", price);
             formData.append("ingredients", ingredients);
             formData.append("image", {
@@ -136,12 +152,29 @@ export default function AddProductScreenAdmin() {
                         onChangeText={setDescription}
                     />
                     <TextInput
-                        placeholder="Price"
+                        placeholder="Cost (Production cost)"
+                        style={styles.input}
+                        keyboardType="numeric"
+                        value={cost}
+                        onChangeText={setCost}
+                    />
+                    <TextInput
+                        placeholder="Price (Selling price)"
                         style={styles.input}
                         keyboardType="numeric"
                         value={price}
                         onChangeText={setPrice}
                     />
+                    {cost && price && (
+                        <View style={styles.profitInfo}>
+                            <Text style={styles.profitText}>
+                                Profit per unit: ${(parseFloat(price) - parseFloat(cost)).toFixed(2)}
+                            </Text>
+                            <Text style={styles.profitText}>
+                                Profit margin: {(((parseFloat(price) - parseFloat(cost)) / parseFloat(price)) * 100).toFixed(1)}%
+                            </Text>
+                        </View>
+                    )}
                     <TextInput
                         placeholder="Ingredients (comma-separated)"
                         style={styles.input}
@@ -180,6 +213,7 @@ const styles = StyleSheet.create({
         flex: 1,
         padding: 20,
         backgroundColor: "#f9f3ea",
+
     },
     title: {
         fontSize: 22,
@@ -228,5 +262,16 @@ const styles = StyleSheet.create({
     },
     formItem: {
         marginBottom: 20,
+    },
+    profitInfo: {
+        backgroundColor: '#f9f3ea',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 10,
+    },
+    profitText: {
+        fontSize: 14,
+        color: '#6b4226',
+        marginVertical: 2,
     },
 });
