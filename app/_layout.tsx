@@ -9,6 +9,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 // מונע סגירה אוטומטית של מסך הפתיחה
 SplashScreen.preventAutoHideAsync();
@@ -27,43 +28,45 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          headerShown: false, // מחיקת כותרת
-        }}
-      >
-        {/* מסכי הרשמה ואימות */}
-        <Stack.Screen name="SignUpScreen" />
-        <Stack.Screen
-          name="EmailVerificationScreen"
-          options={{ title: "Verify Email" }}
-        />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+        <Stack
+          screenOptions={{
+            headerShown: false, // מחיקת כותרת
+          }}
+        >
+          {/* מסכי הרשמה ואימות */}
+          <Stack.Screen name="SignUpScreen" />
+          <Stack.Screen
+            name="EmailVerificationScreen"
+            options={{ title: "Verify Email" }}
+          />
 
-        {/* כאן יש להשתמש ב-component */}
-        <Stack.Screen name="manageUsersScreen" />
-        <Stack.Screen name="ProductDetailsScreen" />
-        <Stack.Screen name="ProductDetailsScreenAdmin" />
-        <Stack.Screen name="AddProductScreenAdmin" />
-        <Stack.Screen name="manageAddressScreen" />
-        <Stack.Screen name="adminDiscountCodesScreen" />
-        <Stack.Screen name="index"
-          options={{ gestureEnabled: false }}
-        />
-        <Stack.Screen name="adminOrdersScreen" />
-        <Stack.Screen name="OrderDetailsScreen" />
+          {/* כאן יש להשתמש ב-component */}
+          <Stack.Screen name="manageUsersScreen" />
+          <Stack.Screen name="ProductDetailsScreen" />
+          <Stack.Screen name="ProductDetailsScreenAdmin" />
+          <Stack.Screen name="AddProductScreenAdmin" />
+          <Stack.Screen name="manageAddressScreen" />
+          <Stack.Screen name="adminDiscountCodesScreen" />
+          <Stack.Screen name="index"
+            options={{ gestureEnabled: false }}
+          />
+          <Stack.Screen name="adminOrdersScreen" />
+          <Stack.Screen name="OrderDetailsScreen" />
 
-        {/* הטאבים נטענים תמיד */}
-        <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
-        <Stack.Screen
-          name="(admintabs)"
-          options={{ gestureEnabled: false }} // Disable swipe back for admin dashboard
-        />
-        <Stack.Screen name="SaveDraftOrder" />
-        <Stack.Screen name="DuplicateOrder" />
-      </Stack>
+          {/* הטאבים נטענים תמיד */}
+          <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+          <Stack.Screen
+            name="(admintabs)"
+            options={{ gestureEnabled: false }} // Disable swipe back for admin dashboard
+          />
+          <Stack.Screen name="SaveDraftOrder" />
+          <Stack.Screen name="DuplicateOrder" />
+        </Stack>
 
-      <StatusBar style="auto" />
-    </ThemeProvider>
+        <StatusBar style="auto" />
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }

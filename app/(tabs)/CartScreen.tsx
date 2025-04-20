@@ -36,6 +36,7 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -68,7 +69,18 @@ export default function CartScreen() {
       }
 
       const data = await response.json();
+
+      // Instead of filtering out invalid items, keep them all
       setCartItems(data.items);
+
+      // Log if there are any items with missing data
+      const missingDataItems = data.items.filter((item: CartItem) =>
+        !item || !item.cake || !item.cake._id || !item.cake.name || item.cake.price === undefined
+      );
+
+      if (missingDataItems.length > 0) {
+        console.log(`${missingDataItems.length} items have missing data but will be displayed as unavailable`);
+      }
     } catch (error: any) {
       console.error("Error fetching cart items:", error.message || error);
       Alert.alert("Error", "Failed to fetch cart items. Please try again.");
@@ -105,7 +117,10 @@ export default function CartScreen() {
 
   const calculateTotalPrice = () => {
     return cartItems
-      .reduce((sum, item) => sum + item.cake.price * item.quantity, 0)
+      .reduce((sum, item) => {
+        // Check if item has valid price before adding
+        return sum + (item.cake?.price || 0) * (item.quantity || 0);
+      }, 0)
       .toFixed(2);
   };
 
@@ -135,13 +150,24 @@ export default function CartScreen() {
       setCartItems(updatedCart);
     } catch (error) {
       console.error("❌ Error updating quantity:", error);
+      Alert.alert("Error", "Failed to update quantity. The product might have been deleted.");
+      // Refresh cart items to get the latest state
+      fetchCartItems();
     }
   };
 
-  const removeItem = async (cakeId: string) => {
+  const removeItem = async (cakeId: string, itemId?: string) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
+
+      // For unavailable products, we'll use the item ID as the cake ID
+      const finalCakeId = cakeId || itemId;
+
+      if (!finalCakeId) {
+        Alert.alert("Error", "Could not identify the product to remove");
+        return;
+      }
 
       const response = await fetch(`${config.BASE_URL}/cart/remove`, {
         method: "DELETE",
@@ -149,21 +175,50 @@ export default function CartScreen() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ cakeId }),
+        body: JSON.stringify({ cakeId: finalCakeId }),
       });
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Failed to remove item");
+      // Even if the server responds with an error (product not found),
+      // we should still remove it from the local cart
+      const updatedCart = cartItems.filter((item) => {
+        if (itemId && item._id === itemId) return false;
+        if (cakeId && item.cake && item.cake._id === cakeId) return false;
+        return true;
+      });
 
-      const updatedCart = cartItems.filter((item) => item.cake._id !== cakeId);
       setCartItems(updatedCart);
+
+      // Try to parse the response but don't fail if it's not JSON
+      try {
+        const data = await response.json();
+        if (!response.ok) {
+          console.log(`Server responded with error: ${data.error || 'Unknown error'}`);
+        }
+      } catch (e) {
+        console.log("Could not parse server response for remove item");
+      }
     } catch (error) {
       console.error("Error removing item:", error);
-      Alert.alert("Error", "Failed to remove item");
+
+      // Still remove from local cart even if server request fails
+      if (itemId || cakeId) {
+        const updatedCart = cartItems.filter((item) => {
+          if (itemId && item._id === itemId) return false;
+          if (cakeId && item.cake && item.cake._id === cakeId) return false;
+          return true;
+        });
+
+        setCartItems(updatedCart);
+        Alert.alert("Warning", "Item removed from cart locally. Changes may not be saved on server.");
+      } else {
+        Alert.alert("Error", "Failed to remove item");
+      }
     }
   };
 
   const openProductModal = (product: CartItem) => {
+    // Always open the modal, even for invalid products
+    // This allows users to see details about unavailable products
     setSelectedProduct(product);
     setModalVisible(true);
   };
@@ -173,33 +228,79 @@ export default function CartScreen() {
     setModalVisible(false);
   };
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
-      <TouchableOpacity onPress={() => openProductModal(item)}>
-        <Image
-          source={{ uri: item.cake.image.url }}
-          style={styles.itemImage}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.cake.name}</Text>
-        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-        <View style={styles.quantityContainer}>
-          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)}>
-            <Ionicons name="remove-circle-outline" size={26} color="#6b4226" />
+  const handleImageError = (itemId: string) => {
+    setImageErrors(prev => ({ ...prev, [itemId]: true }));
+  };
+
+  const removeUnavailableProduct = (itemId: string) => {
+    // Remove locally without server call for unavailable products
+    if (itemId) {
+      const updatedCart = cartItems.filter(item => item._id !== itemId);
+      setCartItems(updatedCart);
+      Alert.alert("Success", "Unavailable product removed from cart");
+    }
+  };
+
+  const renderCartItem = ({ item }: { item: CartItem }) => {
+    // Safety check - if cake data is invalid, show placeholder with removal option
+    if (!item.cake || !item.cake.name || !item.cake._id) {
+      return (
+        <View style={styles.cartItem}>
+          <TouchableOpacity onPress={() => openProductModal(item)} style={styles.cartItemContent}>
+            <View style={[styles.itemImage, styles.placeholderImage]}>
+              <Text style={styles.placeholderText}>!</Text>
+            </View>
+            <View style={styles.itemDetails}>
+              <Text style={styles.itemName}>Product Unavailable</Text>
+              <Text style={styles.errorText}>This product may have been deleted from our database</Text>
+              <Text style={styles.itemQuantity}>Quantity: {item.quantity || 1}</Text>
+            </View>
           </TouchableOpacity>
-          <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity + 1)}>
-            <Ionicons name="add-circle-outline" size={26} color="#6b4226" />
+          <TouchableOpacity
+            style={styles.removeButton}
+            onPress={() => removeUnavailableProduct(item._id)}
+          >
+            <MaterialIcons name="delete" size={22} color="white" />
           </TouchableOpacity>
         </View>
+      );
+    }
+
+    return (
+      <View style={styles.cartItem}>
+        <TouchableOpacity onPress={() => openProductModal(item)} style={styles.cartItemContent}>
+          {imageErrors[item._id] || !item.cake.image?.url ? (
+            <View style={[styles.itemImage, styles.placeholderImage]}>
+              <Text style={styles.placeholderText}>No Image</Text>
+            </View>
+          ) : (
+            <Image
+              source={{ uri: item.cake.image.url || 'https://via.placeholder.com/80' }}
+              style={styles.itemImage}
+              resizeMode="cover"
+              onError={() => handleImageError(item._id)}
+            />
+          )}
+          <View style={styles.itemDetails}>
+            <Text style={styles.itemName}>{item.cake.name}</Text>
+            <Text style={styles.itemPrice}>${(item.cake.price || 0).toFixed(2)}</Text>
+            <View style={styles.quantityContainer}>
+              <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)}>
+                <Ionicons name="remove-circle-outline" size={26} color="#6b4226" />
+              </TouchableOpacity>
+              <Text style={styles.quantityText}>{item.quantity}</Text>
+              <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity + 1)}>
+                <Ionicons name="add-circle-outline" size={26} color="#6b4226" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.removeButton} onPress={() => removeItem(item.cake._id, item._id)}>
+          <MaterialIcons name="delete" size={22} color="white" />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.removeButton} onPress={() => removeItem(item.cake._id)}>
-        <MaterialIcons name="delete" size={22} color="white" />
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -228,20 +329,56 @@ export default function CartScreen() {
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {selectedProduct && (
+            {selectedProduct && selectedProduct.cake && selectedProduct.cake.name ? (
               <>
-                <Image
-                  source={{ uri: selectedProduct.cake.image.url }}
-                  style={styles.itemImage}
-                  resizeMode="cover"
-                />
+                {imageErrors[selectedProduct._id] || !selectedProduct.cake.image?.url ? (
+                  <View style={[styles.modalImage, styles.placeholderImage]}>
+                    <Text style={styles.placeholderText}>No Image Available</Text>
+                  </View>
+                ) : (
+                  <Image
+                    source={{ uri: selectedProduct.cake.image.url || 'https://via.placeholder.com/200' }}
+                    style={styles.modalImage}
+                    resizeMode="cover"
+                    onError={() => handleImageError(selectedProduct._id)}
+                  />
+                )}
                 <Text style={styles.modalTitle}>{selectedProduct.cake.name}</Text>
-                <Text style={styles.modalDescription}>{selectedProduct.cake.description}</Text>
-                <Text style={styles.modalPrice}>${selectedProduct.cake.price.toFixed(2)}</Text>
+                <Text style={styles.modalDescription}>{selectedProduct.cake.description || 'No description available'}</Text>
+                <Text style={styles.modalPrice}>${(selectedProduct.cake.price || 0).toFixed(2)}</Text>
                 <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
+            ) : (
+              <View style={styles.unavailableProductContainer}>
+                <View style={[styles.modalImage, styles.placeholderImage]}>
+                  <Text style={styles.placeholderText}>!</Text>
+                </View>
+                <Text style={styles.modalTitle}>Product Unavailable</Text>
+                <Text style={styles.errorText}>
+                  This product is no longer available in our database. It may have been deleted or temporarily removed.
+                </Text>
+                <Text style={styles.modalDescription}>
+                  We recommend removing this product from your cart and choosing another item.
+                </Text>
+                <View style={styles.modalButtonsContainer}>
+                  <TouchableOpacity
+                    style={styles.modalRemoveButton}
+                    onPress={() => {
+                      if (selectedProduct) {
+                        removeUnavailableProduct(selectedProduct._id);
+                        closeProductModal();
+                      }
+                    }}
+                  >
+                    <Text style={styles.removeButtonText}>Remove from Cart</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
+                    <Text style={styles.closeButtonText}>Close</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             )}
           </View>
         </View>
@@ -287,6 +424,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
+  modalImage: { width: 200, height: 200, borderRadius: 8, marginBottom: 15 },
+  placeholderImage: {
+    backgroundColor: "#e0e0e0",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  placeholderText: {
+    color: "#666",
+    fontSize: 14,
+    textAlign: "center",
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 14,
+    marginBottom: 10,
+    textAlign: "center",
+  },
   itemDetails: { flex: 1 },
   itemName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
   itemPrice: { fontSize: 14, color: "#6b4226" },
@@ -312,10 +466,44 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 10 },
   modalDescription: { fontSize: 16, color: "#555", textAlign: "center", marginBottom: 10 },
   modalPrice: { fontSize: 18, fontWeight: "bold", color: "#d49a6a", marginBottom: 15 },
-  closeButton: { backgroundColor: "#6b4226", padding: 12, borderRadius: 8, width: "80%", alignItems: "center" },
+  closeButton: {
+    backgroundColor: "#6b4226",
+    padding: 12,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center"
+  },
   closeButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   checkoutContainer: { position: "absolute", bottom: 80, left: 20, right: 20 },
   totalText: { fontSize: 18, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
   checkoutButton: { backgroundColor: "#6b4226", padding: 15, borderRadius: 10 },
   checkoutButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold", textAlign: "center" },
+  itemQuantity: { fontSize: 14, color: "#6b4226", marginTop: 5 },
+  unavailableProductContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  modalButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    width: "100%"
+  },
+  removeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 10,
+  },
+  modalRemoveButton: {
+    backgroundColor: "#ff4444",
+    padding: 12,
+    borderRadius: 8,
+    width: "45%",
+    alignItems: "center",
+    marginRight: 10
+  },
+  cartItemContent: { flexDirection: "row", alignItems: "center", flex: 1 },
 });

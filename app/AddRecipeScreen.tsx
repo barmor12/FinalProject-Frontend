@@ -9,6 +9,8 @@ import {
     TouchableOpacity,
     Alert,
     Image,
+    KeyboardAvoidingView,
+    Platform
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -51,6 +53,8 @@ export default function AddRecipeScreen() {
         image: null,
     });
     const [uploading, setUploading] = useState(false);
+    const [hours, setHours] = useState<string>('');
+    const [minutes, setMinutes] = useState<string>('');
 
     const pickImage = async () => {
         try {
@@ -71,20 +75,15 @@ export default function AddRecipeScreen() {
     };
 
     const validateRecipe = () => {
-        // if (!recipe.name || !recipe.description || !recipe.servings ||
-        //     recipe.ingredients.length === 0 || recipe.instructions.length === 0 || !recipe.makingTime) {
-        //     Alert.alert("Error", "All fields are required");
-        //     return false;
-        // }
-
         if (!recipe.image) {
             Alert.alert("Error", "Recipe image is required");
             return false;
         }
 
-        const makingTimeNum = parseInt(recipe.makingTime);
-        if (isNaN(makingTimeNum) || makingTimeNum < 1) {
-            Alert.alert("Error", "Making time must be a positive number");
+        const hoursNum = parseInt(hours);
+        const minutesNum = parseInt(minutes);
+        if (isNaN(hoursNum) || isNaN(minutesNum) || hoursNum < 0 || minutesNum < 0 || minutesNum > 59) {
+            Alert.alert("Error", "Invalid time format");
             return false;
         }
 
@@ -94,6 +93,8 @@ export default function AddRecipeScreen() {
     const handleSave = async () => {
         if (!validateRecipe()) return;
         setUploading(true);
+
+        const makingTime = `${hours ? `${hours}H` : ''} ${minutes ? `${minutes}M` : ''}`.trim();
 
         try {
             const token = await AsyncStorage.getItem("accessToken");
@@ -109,7 +110,7 @@ export default function AddRecipeScreen() {
             formData.append("ingredients", JSON.stringify(recipe.ingredients));
             formData.append("instructions", JSON.stringify(recipe.instructions));
             formData.append("difficulty", recipe.difficulty);
-            formData.append("makingTime", recipe.makingTime);
+            formData.append("makingTime", makingTime);
             formData.append("image", {
                 uri: recipe.image!,
                 type: "image/jpeg",
@@ -121,7 +122,7 @@ export default function AddRecipeScreen() {
             console.log("ingredients", recipe.ingredients);
             console.log("instructions", recipe.instructions);
             console.log("difficulty", recipe.difficulty);
-            console.log("makingTime", recipe.makingTime);
+            console.log("makingTime", makingTime);
             const response = await fetch(`${config.BASE_URL}/recipes/newRecipe`, {
                 method: "POST",
                 headers: {
@@ -172,138 +173,152 @@ export default function AddRecipeScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <Ionicons name="arrow-back" size={24} color="#6b4226" />
-                </TouchableOpacity>
-                <Text style={styles.title}>Add New Recipe</Text>
-                <View style={{ width: 40 }} />
-            </View>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+            >
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        style={styles.backButton}
+                        onPress={() => router.back()}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#6b4226" />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Add New Recipe</Text>
+                    <View style={{ width: 40 }} />
+                </View>
 
-            <ScrollView style={styles.scrollView}>
-                <View style={styles.form}>
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Recipe Image</Text>
-                        <TouchableOpacity
-                            style={styles.imagePicker}
-                            onPress={pickImage}
-                        >
-                            {recipe.image ? (
-                                <Image
-                                    source={{ uri: recipe.image }}
-                                    style={styles.imagePreview}
+                <ScrollView style={styles.scrollView}>
+                    <View style={styles.form}>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Recipe Image</Text>
+                            <TouchableOpacity
+                                style={styles.imagePicker}
+                                onPress={pickImage}
+                            >
+                                {recipe.image ? (
+                                    <Image
+                                        source={{ uri: recipe.image }}
+                                        style={styles.imagePreview}
+                                    />
+                                ) : (
+                                    <View style={styles.imagePlaceholder}>
+                                        <Ionicons name="camera" size={40} color="#6b4226" />
+                                        <Text style={styles.imagePlaceholderText}>
+                                            Tap to add image
+                                        </Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Name</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={recipe.name}
+                                onChangeText={(text) => setRecipe({ ...recipe, name: text })}
+                                placeholder="Enter recipe name"
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Description</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                value={recipe.description}
+                                onChangeText={(text) => setRecipe({ ...recipe, description: text })}
+                                placeholder="Enter recipe description"
+                                multiline
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Servings</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={recipe.servings}
+                                onChangeText={(text) => setRecipe({ ...recipe, servings: text })}
+                                placeholder="Enter number of servings"
+                                keyboardType="numeric"
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Ingredients (one per line)</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                onChangeText={handleIngredientsChange}
+                                placeholder="Enter ingredients, one per line"
+                                multiline
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Directions (one per line)</Text>
+                            <TextInput
+                                style={[styles.input, styles.textArea]}
+                                onChangeText={handleInstructionsChange}
+                                placeholder="Enter directions, one per line"
+                                multiline
+                            />
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Difficulty</Text>
+                            <View style={styles.difficultyButtons}>
+                                {["Easy", "Medium", "Hard"].map((level) => (
+                                    <TouchableOpacity
+                                        key={level}
+                                        style={[
+                                            styles.difficultyButton,
+                                            recipe.difficulty === level && styles.selectedDifficulty,
+                                        ]}
+                                        onPress={() => setRecipe({ ...recipe, difficulty: level as "Easy" | "Medium" | "Hard" })}
+                                    >
+                                        <Text style={[
+                                            styles.difficultyText,
+                                            recipe.difficulty === level && styles.selectedDifficultyText,
+                                        ]}>
+                                            {level}
+                                        </Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Making Time</Text>
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <TextInput
+                                    style={[styles.input, { width: '45%' }]}
+                                    value={hours}
+                                    onChangeText={setHours}
+                                    placeholder="Hours"
+                                    keyboardType="numeric"
                                 />
-                            ) : (
-                                <View style={styles.imagePlaceholder}>
-                                    <Ionicons name="camera" size={40} color="#6b4226" />
-                                    <Text style={styles.imagePlaceholderText}>
-                                        Tap to add image
-                                    </Text>
-                                </View>
-                            )}
+                                <TextInput
+                                    style={[styles.input, { width: '45%' }]}
+                                    value={minutes}
+                                    onChangeText={setMinutes}
+                                    placeholder="Minutes"
+                                    keyboardType="numeric"
+                                />
+                            </View>
+                        </View>
+
+                        <TouchableOpacity
+                            style={[styles.saveButton, uploading && styles.saveButtonDisabled]}
+                            onPress={handleSave}
+                            disabled={uploading}
+                        >
+                            <Text style={styles.saveButtonText}>
+                                {uploading ? "Uploading..." : "Add Recipe"}
+                            </Text>
                         </TouchableOpacity>
                     </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Name</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={recipe.name}
-                            onChangeText={(text) => setRecipe({ ...recipe, name: text })}
-                            placeholder="Enter recipe name"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Description</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            value={recipe.description}
-                            onChangeText={(text) => setRecipe({ ...recipe, description: text })}
-                            placeholder="Enter recipe description"
-                            multiline
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Servings</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={recipe.servings}
-                            onChangeText={(text) => setRecipe({ ...recipe, servings: text })}
-                            placeholder="Enter number of servings"
-                            keyboardType="numeric"
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Ingredients (one per line)</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            onChangeText={handleIngredientsChange}
-                            placeholder="Enter ingredients, one per line"
-                            multiline
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Directions (one per line)</Text>
-                        <TextInput
-                            style={[styles.input, styles.textArea]}
-                            onChangeText={handleInstructionsChange}
-                            placeholder="Enter directions, one per line"
-                            multiline
-                        />
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Difficulty</Text>
-                        <View style={styles.difficultyButtons}>
-                            {["Easy", "Medium", "Hard"].map((level) => (
-                                <TouchableOpacity
-                                    key={level}
-                                    style={[
-                                        styles.difficultyButton,
-                                        recipe.difficulty === level && styles.selectedDifficulty,
-                                    ]}
-                                    onPress={() => setRecipe({ ...recipe, difficulty: level as "Easy" | "Medium" | "Hard" })}
-                                >
-                                    <Text style={[
-                                        styles.difficultyText,
-                                        recipe.difficulty === level && styles.selectedDifficultyText,
-                                    ]}>
-                                        {level}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
-                    </View>
-
-                    <View style={styles.inputGroup}>
-                        <Text style={styles.label}>Making Time (in minutes)</Text>
-                        <TextInput
-                            style={styles.input}
-                            value={recipe.makingTime}
-                            onChangeText={(text) => setRecipe({ ...recipe, makingTime: text })}
-                            placeholder="Enter making time in minutes"
-                            keyboardType="numeric"
-                        />
-                    </View>
-
-                    <TouchableOpacity
-                        style={[styles.saveButton, uploading && styles.saveButtonDisabled]}
-                        onPress={handleSave}
-                        disabled={uploading}
-                    >
-                        <Text style={styles.saveButtonText}>
-                            {uploading ? "Uploading..." : "Add Recipe"}
-                        </Text>
-                    </TouchableOpacity>
-                </View>
-            </ScrollView>
+                </ScrollView>
+            </KeyboardAvoidingView>
         </SafeAreaView>
     );
 }
