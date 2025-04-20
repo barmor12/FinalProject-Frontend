@@ -9,6 +9,10 @@ import {
     TouchableOpacity,
     Modal,
     Alert,
+    ScrollView,
+    Dimensions,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import config from "../config";
@@ -36,6 +40,8 @@ export default function AdminUsersScreen() {
     const [menuVisible, setMenuVisible] = useState(false);
     const [messageText, setMessageText] = useState("");
     const [emailModalVisible, setEmailModalVisible] = useState(false);
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [editedUser, setEditedUser] = useState<Partial<User>>({});
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -212,6 +218,70 @@ export default function AdminUsersScreen() {
         }
     };
 
+    const handleEditUser = (userId: string) => {
+        const userToEdit = users.find(user => user._id === userId);
+        if (!userToEdit) {
+            Alert.alert("Error", "User not found");
+            return;
+        }
+
+        setEditedUser({
+            _id: userToEdit._id,
+            firstName: userToEdit.firstName,
+            lastName: userToEdit.lastName,
+            email: userToEdit.email,
+            role: userToEdit.role
+        });
+
+        setMenuVisible(false);
+        setEditModalVisible(true);
+    };
+
+    const saveUserChanges = async () => {
+        if (!editedUser._id) return;
+
+        try {
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "Authorization token is required");
+                return;
+            }
+
+            // Validate required fields
+            if (!editedUser.firstName || !editedUser.lastName || !editedUser.email) {
+                Alert.alert("Error", "First name, last name, and email are required");
+                return;
+            }
+
+            const response = await fetch(`${config.BASE_URL}/admin/users/${editedUser._id}`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    firstName: editedUser.firstName,
+                    lastName: editedUser.lastName,
+                    email: editedUser.email,
+                    role: editedUser.role
+                })
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Failed to update user");
+            }
+
+            Alert.alert("Success", "User updated successfully");
+            setEditModalVisible(false);
+            fetchUsers(); // Refresh the list after update
+        } catch (error: any) {
+            console.error("Error updating user:", error);
+            Alert.alert("Error", error.message || "Failed to update user. Please try again.");
+        }
+    };
+
     const renderItem = ({ item }: { item: User }) => (
         <View style={styles.userCard}>
             <View style={styles.userInfo}>
@@ -248,16 +318,12 @@ export default function AdminUsersScreen() {
                 >
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
-                            <TouchableOpacity style={styles.modalButton}>
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={() => handleEditUser(item._id)}
+                            >
                                 <Text style={styles.modalButtonText}>Edit</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={[styles.modalButton, styles.deleteBtn]}
-                                onPress={handleDeleteUser}
-                            >
-                                <Text style={styles.modalButtonText}>Delete</Text>
-                            </TouchableOpacity>
-
                             <TouchableOpacity
                                 style={styles.modalButton}
                                 onPress={() => {
@@ -267,6 +333,13 @@ export default function AdminUsersScreen() {
                             >
                                 <Text style={styles.modalButtonText}>Send Message</Text>
                             </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.deleteBtn]}
+                                onPress={handleDeleteUser}
+                            >
+                                <Text style={styles.modalButtonText}>Delete User</Text>
+                            </TouchableOpacity>
+
                             <TouchableOpacity
                                 style={[styles.modalButton, styles.cancelBtn]}
                                 onPress={() => setMenuVisible(false)}
@@ -281,17 +354,39 @@ export default function AdminUsersScreen() {
         </View>
     );
 
+    // Add a NoResults component to display when search has no matches
+    const NoResults = () => (
+        <View style={styles.noResultsContainer}>
+            <MaterialIcons name="search-off" size={48} color="#d2b48c" />
+            <Text style={styles.noResultsText}>No users found</Text>
+            <Text style={styles.noResultsSubText}>
+                Try a different search term or check spelling
+            </Text>
+        </View>
+    );
+
     return (
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Admin User Management</Text>
 
-            <TextInput
-                style={styles.searchInput}
-                placeholder="Search by name"
-                placeholderTextColor="#a58c6f"
-                value={searchQuery}
-                onChangeText={setSearchQuery}
-            />
+            <View style={styles.searchWrapper}>
+                <MaterialIcons name="search" size={20} color="#a58c6f" style={styles.searchIcon} />
+                <TextInput
+                    style={styles.searchInput}
+                    placeholder="Search by name"
+                    placeholderTextColor="#a58c6f"
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                />
+                {searchQuery.length > 0 && (
+                    <TouchableOpacity
+                        style={styles.clearButton}
+                        onPress={() => setSearchQuery('')}
+                    >
+                        <MaterialIcons name="close" size={18} color="#a58c6f" />
+                    </TouchableOpacity>
+                )}
+            </View>
 
             {loading ? (
                 <ActivityIndicator size="large" color="#6b4226" />
@@ -300,7 +395,11 @@ export default function AdminUsersScreen() {
                     data={filteredUsers}
                     keyExtractor={(item) => item._id}
                     renderItem={renderItem}
-                    contentContainerStyle={{ paddingBottom: 40 }}
+                    contentContainerStyle={{
+                        paddingBottom: 40,
+                        ...(filteredUsers.length === 0 && { flex: 1 })
+                    }}
+                    ListEmptyComponent={<NoResults />}
                 />
             )}
             <Modal transparent={true} visible={emailModalVisible} animationType="slide">
@@ -325,6 +424,113 @@ export default function AdminUsersScreen() {
                     </View>
                 </View>
             </Modal>
+            <Modal transparent={true} visible={editModalVisible} animationType="slide">
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}
+                    keyboardVerticalOffset={-150}
+                >
+                    <View style={styles.modalOverlay} pointerEvents="box-none">
+                        <View style={styles.editModalContent}>
+                            <View style={styles.modalHeader}>
+                                <Text style={styles.modalTitle}>Edit User</Text>
+                                <TouchableOpacity
+                                    style={styles.closeModalIcon}
+                                    onPress={() => setEditModalVisible(false)}
+                                >
+                                    <MaterialIcons name="close" size={24} color="#6b4226" />
+                                </TouchableOpacity>
+                            </View>
+
+                            <ScrollView
+                                style={styles.modalScrollView}
+                                showsVerticalScrollIndicator={false}
+                                contentContainerStyle={styles.scrollContent}
+                            >
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>First Name</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedUser.firstName}
+                                        onChangeText={(text) => setEditedUser({ ...editedUser, firstName: text })}
+                                        placeholder="First Name"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Last Name</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedUser.lastName}
+                                        onChangeText={(text) => setEditedUser({ ...editedUser, lastName: text })}
+                                        placeholder="Last Name"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Email</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedUser.email}
+                                        onChangeText={(text) => setEditedUser({ ...editedUser, email: text })}
+                                        placeholder="Email"
+                                        keyboardType="email-address"
+                                    />
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Role</Text>
+                                    <View style={styles.roleSelector}>
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.roleButton,
+                                                editedUser.role === 'user' && styles.selectedRoleButton
+                                            ]}
+                                            onPress={() => setEditedUser({ ...editedUser, role: 'user' })}
+                                        >
+                                            <Text style={[
+                                                styles.roleButtonText,
+                                                editedUser.role === 'user' && styles.selectedRoleText
+                                            ]}>User</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            style={[
+                                                styles.roleButton,
+                                                editedUser.role === 'admin' && styles.selectedRoleButton
+                                            ]}
+                                            onPress={() => setEditedUser({ ...editedUser, role: 'admin' })}
+                                        >
+                                            <Text style={[
+                                                styles.roleButtonText,
+                                                editedUser.role === 'admin' && styles.selectedRoleText
+                                            ]}>Admin</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                <View style={{ height: 20 }} />
+                            </ScrollView>
+
+                            <View style={styles.editButtonsContainer}>
+                                <TouchableOpacity
+                                    style={[styles.editActionButton, styles.saveButton]}
+                                    onPress={saveUserChanges}
+                                >
+                                    <Text style={styles.actionButtonText}>Save</Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={[styles.editActionButton, styles.cancelButton]}
+                                    onPress={() => setEditModalVisible(false)}
+                                >
+                                    <Text style={styles.actionButtonText}>Cancel</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </SafeAreaView>
 
     );
@@ -343,15 +549,28 @@ const styles = StyleSheet.create({
         textAlign: "center",
         marginBottom: 20,
     },
-    searchInput: {
-        height: 40,
+    searchWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        height: 44,
         borderColor: "#d2b48c",
         borderWidth: 1,
         borderRadius: 8,
-        paddingHorizontal: 10,
-        marginBottom: 20,
         backgroundColor: "#fff",
+        marginBottom: 20,
+        paddingHorizontal: 10,
+    },
+    searchIcon: {
+        marginRight: 8,
+    },
+    searchInput: {
+        flex: 1,
+        height: '100%',
         color: "#6b4226",
+        fontSize: 16,
+    },
+    clearButton: {
+        padding: 6,
     },
     userCard: {
         backgroundColor: "#fff",
@@ -406,6 +625,7 @@ const styles = StyleSheet.create({
         backgroundColor: "rgba(0,0,0,0.5)",
         justifyContent: "center",
         alignItems: "center",
+        width: '100%',
     },
     modalContent: {
         backgroundColor: "#fff",
@@ -443,7 +663,6 @@ const styles = StyleSheet.create({
     sendBtn: {
         backgroundColor: "#6b4226",
     },
-    // modalTitle: { fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 10 },
     modalSubTitle: { fontSize: 16, color: "#6b4226", marginBottom: 10 },
     input: {
         width: "100%",
@@ -485,4 +704,121 @@ const styles = StyleSheet.create({
         elevation: 3,
     },
     closeButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+    editModalContent: {
+        backgroundColor: "#fff",
+        borderRadius: 12,
+        width: "90%",
+        maxHeight: 420,
+        overflow: "hidden",
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 3 },
+        shadowOpacity: 0.2,
+        shadowRadius: 5,
+        elevation: 5,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 15,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0e6d6",
+        position: "relative",
+    },
+    closeModalIcon: {
+        position: "absolute",
+        right: 15,
+        padding: 5,
+    },
+    modalScrollView: {
+        maxHeight: 280,
+    },
+    scrollContent: {
+        padding: 20,
+    },
+    inputContainer: {
+        width: "100%",
+        marginBottom: 15,
+    },
+    inputLabel: {
+        fontSize: 14,
+        fontWeight: "600",
+        color: "#6b4226",
+        marginBottom: 5,
+    },
+    editInput: {
+        borderWidth: 1,
+        borderColor: "#d2b48c",
+        borderRadius: 6,
+        padding: 10,
+        backgroundColor: "#faf6f0",
+        color: "#6b4226",
+    },
+    roleSelector: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+    },
+    roleButton: {
+        flex: 1,
+        padding: 10,
+        borderWidth: 1,
+        borderColor: "#d2b48c",
+        borderRadius: 6,
+        alignItems: "center",
+        marginHorizontal: 5,
+    },
+    selectedRoleButton: {
+        backgroundColor: "#6b4226",
+        borderColor: "#6b4226",
+    },
+    roleButtonText: {
+        color: "#6b4226",
+        fontWeight: "500",
+    },
+    selectedRoleText: {
+        color: "#fff",
+    },
+    editButtonsContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        padding: 15,
+        borderTopWidth: 1,
+        borderTopColor: "#f0e6d6",
+    },
+    editActionButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 6,
+        alignItems: "center",
+        marginHorizontal: 5,
+    },
+    saveButton: {
+        backgroundColor: "#6b4226",
+    },
+    cancelButton: {
+        backgroundColor: "#d9534f",
+    },
+    actionButtonText: {
+        color: "#fff",
+        fontWeight: "bold",
+    },
+    noResultsContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    noResultsText: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#6b4226',
+        marginTop: 15,
+    },
+    noResultsSubText: {
+        fontSize: 14,
+        color: '#a58c6f',
+        textAlign: 'center',
+        marginTop: 8,
+        maxWidth: '80%',
+    },
 });
