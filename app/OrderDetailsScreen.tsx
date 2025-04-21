@@ -10,7 +10,8 @@ import {
     Alert,
     Modal,
     Image,
-    TextInput
+    TextInput,
+    Dimensions
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -86,8 +87,14 @@ export default function OrderDetailsScreen() {
     };
 
     // פונקציה לשליחת מייל ביקורת – מופעלת פעם אחת
-    const sendReviewEmail = async (orderId: string, customerEmail: string) => {
+    const sendReviewEmail = async (orderId: string | undefined, customerEmail: string | undefined) => {
         try {
+            // Check if orderId and customerEmail are valid
+            if (!orderId || !customerEmail) {
+                console.error("❌ Cannot send review email: Missing orderId or customerEmail");
+                return;
+            }
+
             console.log("Sending review email...");
             const token = await AsyncStorage.getItem("accessToken");
             if (!token) {
@@ -114,19 +121,28 @@ export default function OrderDetailsScreen() {
         }
     };
 
+    // פונקציה לעדכון סטטוס הזמנה
     const updateOrderStatus = async () => {
         if (!selectedStatus) {
             Alert.alert("Error", "Please select a status.");
             return;
         }
+
+        if (!order || !order._id) {
+            Alert.alert("Error", "Order data is unavailable");
+            return;
+        }
+
         const newStatus = selectedStatus as "pending" | "confirmed" | "delivered" | "cancelled";
         const token = await AsyncStorage.getItem("accessToken");
         if (!token) {
             Alert.alert("Error", "Authorization token is required");
             return;
         }
+
         try {
-            const response = await fetch(`${config.BASE_URL}/order/${orderId}/status`, {
+            setLoading(true);
+            const response = await fetch(`${config.BASE_URL}/order/${order._id}/status`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -134,71 +150,62 @@ export default function OrderDetailsScreen() {
                 },
                 body: JSON.stringify({ status: newStatus }),
             });
+
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
+
             Alert.alert("Success", "Order status updated successfully.");
             setOrder((prevOrder) => prevOrder ? { ...prevOrder, status: newStatus } : prevOrder);
             setModalVisible(false);
 
             // כאשר הסטטוס מתעדכן ל-delivered – נשלח מייל ביקורת
-            if (newStatus === "delivered" && order) {
+            if (newStatus === "delivered" && order && order.user?.email) {
                 await sendReviewEmail(order._id, order.user.email);
             }
-        } catch (error) {
-            console.error("❌ Error updating order:", error);
+        } catch (error: any) {
+            console.error("❌ Error updating order:", error.message);
             Alert.alert("Error", "Failed to update order status.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const sendOrderEmail = async (isManagerMsg: boolean) => {
-        if (!order) {
-            Alert.alert("Error", "Order details are missing.");
-            return;
-        }
-        if (!order.user.email) {
-            Alert.alert("Error", "Customer email is missing.");
-            return;
-        }
-        if (!order.status) {
-            Alert.alert("Error", "Order status is missing.");
-            return;
-        }
-        const token = await AsyncStorage.getItem("accessToken");
-        if (!token) {
-            Alert.alert("Error", "Authorization token is required");
-            return;
-        }
-        console.log("📩 Sending email with data:");
-        console.log("Email:", order.user.email);
-        console.log("Order ID:", order._id);
-        console.log("Status:", order.status);
-        try {
-            const response = await fetch(`${config.BASE_URL}/order/${order._id}/send-email`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    customerEmail: order.user.email,
-                    orderStatus: order.status,
-                    isManagerMsg
-                }),
-            });
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || "Failed to send email");
-            }
-            Alert.alert("Success", "Email sent successfully to the customer!");
-        } catch (error: any) {
-            console.error("❌ Error sending email:", error);
-            Alert.alert("Error", error.message || "Failed to send email. Please try again.");
-        }
-    };
 
     if (loading) {
-        return <ActivityIndicator size="large" color="#6b4226" style={{ marginTop: 50 }} />;
+        return (
+            <SafeAreaView style={styles.loadingContainer}>
+                <View style={styles.loadingHeader}>
+                    <View style={styles.skeletonTitle} />
+                    <View style={styles.skeletonSubtitle} />
+                    <View style={styles.skeletonSubtitle} />
+                </View>
+
+                <ScrollView contentContainerStyle={styles.loadingScrollView}>
+                    {[1, 2, 3].map((item) => (
+                        <View key={item} style={styles.skeletonItem}>
+                            <View style={styles.skeletonImage} />
+                            <View style={styles.skeletonDetails}>
+                                <View style={styles.skeletonText} />
+                                <View style={styles.skeletonTextShort} />
+                            </View>
+                        </View>
+                    ))}
+                </ScrollView>
+
+                <View style={styles.loadingFooter}>
+                    <View style={styles.skeletonPrice} />
+                    <View style={styles.skeletonButton} />
+                    <View style={styles.skeletonButton} />
+                    <View style={[styles.skeletonButton, { backgroundColor: '#D2B48C50' }]} />
+                </View>
+
+                <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#6b4226" />
+                    <Text style={styles.loadingText}>Loading order details...</Text>
+                </View>
+            </SafeAreaView>
+        );
     }
     if (!order) {
         return <Text style={styles.errorText}>Order not found.</Text>;
@@ -227,7 +234,7 @@ export default function OrderDetailsScreen() {
                             <Text style={{ color: "#999" }}>No image available</Text>
                         )}
                         <View style={styles.itemDetails}>
-                            <Text style={styles.itemName}>{item.cake.name}</Text>
+                            <Text style={styles.itemName}>{item.cake?.name || "Unknown Cake"}</Text>
                             <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
                         </View>
                     </View>
@@ -303,12 +310,12 @@ export default function OrderDetailsScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Customer Contact Details</Text>
-                        <Text style={styles.contactInfo}>{order.address.fullName}</Text>
-                        <Text style={styles.contactInfo}>Phone: {order.address.phone}</Text>
+                        <Text style={styles.contactInfo}>{order.address?.fullName || "N/A"}</Text>
+                        <Text style={styles.contactInfo}>Phone: {order.address?.phone || "N/A"}</Text>
                         <Text style={styles.contactInfo}>
-                            Address: {order.address.street}, {order.address.city}, {order.address.zipCode}, {order.address.country}
+                            Address: {order.address?.street || "N/A"}, {order.address?.city || "N/A"}, {order.address?.zipCode || "N/A"}, {order.address?.country || "N/A"}
                         </Text>
-                        <Text style={styles.contactInfo}>Email: {order.user.email}</Text>
+                        <Text style={styles.contactInfo}>Email: {order.user?.email || "N/A"}</Text>
                         <TouchableOpacity
                             style={styles.modalButtonClose}
                             onPress={() => setContactModalVisible(false)}
@@ -348,14 +355,20 @@ export default function OrderDetailsScreen() {
                                     return;
                                 }
                                 try {
-                                    const response = await fetch(`${config.BASE_URL}/sendEmail/${order.user.email}/message`, {
+                                    const customerEmail = order.user?.email;
+                                    if (!customerEmail) {
+                                        Alert.alert("Error", "Customer email not found");
+                                        return;
+                                    }
+
+                                    const response = await fetch(`${config.BASE_URL}/sendEmail/${customerEmail}/message`, {
                                         method: "POST",
                                         headers: {
                                             Authorization: `Bearer ${token}`,
                                             "Content-Type": "application/json",
                                         },
                                         body: JSON.stringify({
-                                            customerEmail: order.user.email,
+                                            customerEmail,
                                             managerMessage,
                                             isManagerMsg: true,
                                         }),
@@ -474,5 +487,103 @@ const styles = StyleSheet.create({
     modalButtonClose: { padding: 12, backgroundColor: "#d9534f", marginTop: 10, width: "100%", alignItems: "center", borderRadius: 8 },
     modalButtonConfirm: { padding: 12, backgroundColor: "#6b4226", marginTop: 10, width: "100%", alignItems: "center", borderRadius: 8 },
     errorText: { fontSize: 18, color: "red", textAlign: "center", marginTop: 20 },
-    contactInfo: { fontSize: 18, textAlign: "center", marginVertical: 10, color: "#6b4226" }
+    contactInfo: { fontSize: 18, textAlign: "center", marginVertical: 10, color: "#6b4226" },
+
+    // Loading screen styles
+    loadingContainer: {
+        flex: 1,
+        padding: 20,
+        backgroundColor: "#f9f3ea"
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(249, 243, 234, 0.7)'
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 16,
+        color: '#6b4226',
+        fontWeight: '600'
+    },
+    loadingHeader: {
+        alignItems: 'center',
+        marginBottom: 15
+    },
+    loadingScrollView: {
+        paddingBottom: 20
+    },
+    loadingFooter: {
+        alignItems: 'center',
+        marginTop: 10
+    },
+    skeletonTitle: {
+        width: 200,
+        height: 30,
+        borderRadius: 4,
+        backgroundColor: '#D2B48C50',
+        marginBottom: 10
+    },
+    skeletonSubtitle: {
+        width: 180,
+        height: 22,
+        borderRadius: 4,
+        backgroundColor: '#D2B48C40',
+        marginBottom: 8
+    },
+    skeletonItem: {
+        flexDirection: 'row',
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        padding: 10,
+        marginBottom: 10,
+        shadowColor: '#00000015',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 3,
+        elevation: 2
+    },
+    skeletonImage: {
+        width: 80,
+        height: 80,
+        borderRadius: 8,
+        backgroundColor: '#D2B48C30',
+        marginRight: 15
+    },
+    skeletonDetails: {
+        flex: 1,
+        justifyContent: 'center'
+    },
+    skeletonText: {
+        width: '100%',
+        height: 18,
+        borderRadius: 4,
+        backgroundColor: '#D2B48C40',
+        marginBottom: 10
+    },
+    skeletonTextShort: {
+        width: '60%',
+        height: 14,
+        borderRadius: 4,
+        backgroundColor: '#D2B48C30'
+    },
+    skeletonPrice: {
+        width: 120,
+        height: 26,
+        borderRadius: 4,
+        backgroundColor: '#D2B48C60',
+        marginVertical: 15
+    },
+    skeletonButton: {
+        width: '100%',
+        height: 48,
+        borderRadius: 8,
+        backgroundColor: '#6b422650',
+        marginBottom: 10
+    },
 });

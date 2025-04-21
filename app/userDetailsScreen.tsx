@@ -145,7 +145,7 @@ export default function UserDetailsScreen() {
                         renderItem={({ item }) => (
                             <View style={styles.orderCard}>
                                 <Text style={styles.orderText}>Order ID: {item._id}</Text>
-                                <Text style={styles.orderText}>Total: ₪{item.totalPrice}</Text>
+                                <Text style={styles.orderText}>Total: ${item.totalPrice}</Text>
                                 <Text style={styles.orderText}>
                                     Date: {new Date(item.createdAt).toLocaleString()}
                                 </Text>

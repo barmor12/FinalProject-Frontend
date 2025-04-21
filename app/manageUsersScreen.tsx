@@ -42,6 +42,9 @@ export default function AdminUsersScreen() {
     const [emailModalVisible, setEmailModalVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [editedUser, setEditedUser] = useState<Partial<User>>({});
+    const [newPassword, setNewPassword] = useState<string>("");
+    const [showPassword, setShowPassword] = useState<boolean>(false);
+    const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
@@ -62,8 +65,14 @@ export default function AdminUsersScreen() {
     );
 
     useEffect(() => {
-        fetchUsers();
+        getCurrentUser();
     }, []);
+
+    useEffect(() => {
+        if (currentUserId) {
+            fetchUsers();
+        }
+    }, [currentUserId]);
 
     useEffect(() => {
         if (searchQuery) {
@@ -78,6 +87,41 @@ export default function AdminUsersScreen() {
             setFilteredUsers(users);
         }
     }, [searchQuery, users]);
+
+    const getCurrentUser = async () => {
+        try {
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                console.warn("No access token found.");
+                return;
+            }
+
+            const response = await fetch(`${config.BASE_URL}/user/profile`, {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                console.error("Failed to fetch user data:", response.status);
+                return;
+            }
+
+            const userData = await response.json();
+
+            if (!userData || !userData._id) {
+                console.warn("Invalid user data received.");
+                return;
+            }
+
+            console.log("Current user ID:", userData._id);
+            setCurrentUserId(userData._id);
+        } catch (error) {
+            console.error("Error getting current user:", error);
+        }
+    };
 
     const fetchUsers = async () => {
         try {
@@ -99,8 +143,23 @@ export default function AdminUsersScreen() {
             }
 
             const data = await response.json();
-            setUsers(data);
-            setFilteredUsers(data);
+
+            // Make sure we definitely have currentUserId before filtering
+            if (!currentUserId) {
+                console.warn("Current user ID not available for filtering");
+                setUsers(data);
+                setFilteredUsers(data);
+                return;
+            }
+
+            // Filter out the current admin user from the list
+            console.log("Filtering out current user:", currentUserId);
+            const filteredData = data.filter((user: User) => user._id !== currentUserId);
+
+            // Log the difference to verify filtering worked
+            console.log(`Filtered out ${data.length - filteredData.length} users`);
+            setUsers(filteredData);
+            setFilteredUsers(filteredData);
         } catch (error) {
             console.error("Error fetching users:", error);
             alert("Failed to fetch users.");
@@ -253,18 +312,26 @@ export default function AdminUsersScreen() {
                 return;
             }
 
+            // Create payload with optional password
+            const payload: any = {
+                firstName: editedUser.firstName,
+                lastName: editedUser.lastName,
+                email: editedUser.email,
+                role: editedUser.role
+            };
+
+            // Only include password in payload if it's provided
+            if (newPassword.trim().length > 0) {
+                payload.password = newPassword;
+            }
+
             const response = await fetch(`${config.BASE_URL}/admin/users/${editedUser._id}`, {
                 method: "PUT",
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    firstName: editedUser.firstName,
-                    lastName: editedUser.lastName,
-                    email: editedUser.email,
-                    role: editedUser.role
-                })
+                body: JSON.stringify(payload)
             });
 
             const data = await response.json();
@@ -275,6 +342,8 @@ export default function AdminUsersScreen() {
 
             Alert.alert("Success", "User updated successfully");
             setEditModalVisible(false);
+            setNewPassword(""); // Reset password field
+            setShowPassword(false); // Reset password visibility
             fetchUsers(); // Refresh the list after update
         } catch (error: any) {
             console.error("Error updating user:", error);
@@ -505,6 +574,29 @@ export default function AdminUsersScreen() {
                                                 styles.roleButtonText,
                                                 editedUser.role === 'admin' && styles.selectedRoleText
                                             ]}>Admin</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>New Password (leave blank to keep unchanged)</Text>
+                                    <View style={styles.passwordContainer}>
+                                        <TextInput
+                                            style={styles.passwordInput}
+                                            value={newPassword}
+                                            onChangeText={setNewPassword}
+                                            placeholder="New Password"
+                                            secureTextEntry={!showPassword}
+                                        />
+                                        <TouchableOpacity
+                                            style={styles.eyeIcon}
+                                            onPress={() => setShowPassword(!showPassword)}
+                                        >
+                                            <MaterialIcons
+                                                name={showPassword ? "visibility" : "visibility-off"}
+                                                size={22}
+                                                color="#a58c6f"
+                                            />
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -820,5 +912,21 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginTop: 8,
         maxWidth: '80%',
+    },
+    passwordContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: "#d2b48c",
+        borderRadius: 6,
+        backgroundColor: "#faf6f0",
+    },
+    passwordInput: {
+        flex: 1,
+        padding: 10,
+        color: "#6b4226",
+    },
+    eyeIcon: {
+        padding: 10,
     },
 });

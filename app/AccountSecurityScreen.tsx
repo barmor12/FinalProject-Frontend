@@ -23,7 +23,6 @@ export default function AccountSecurityScreen() {
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [verifyPassword, setVerifyPassword] = useState("");
-  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [isTwoFAEnabled, setIsTwoFAEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -210,60 +209,6 @@ export default function AccountSecurityScreen() {
     }
   };
 
-  const handleUpdateRecoveryEmail = async () => {
-    if (!recoveryEmail.trim()) {
-      Alert.alert("Error", "Please provide a valid recovery email.");
-      return;
-    }
-
-    try {
-      setLoading(true);
-      const token = await AsyncStorage.getItem("accessToken");
-      if (!token) {
-        Alert.alert(
-          "Error",
-          "You must be logged in to update your recovery email."
-        );
-        return;
-      }
-
-      const response = await fetch(
-        `${config.BASE_URL}/user/update-recovery-email`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            recoveryEmail,
-          }),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.status === 400) {
-        Alert.alert("Error", data.message || "Bad Request");
-        return;
-      }
-
-      if (!response.ok) {
-        Alert.alert(
-          "Error",
-          data.message || "Failed to update recovery email."
-        );
-        return;
-      }
-
-      Alert.alert("Success", "Recovery email updated successfully!");
-    } catch (error) {
-      console.error("❌ Error updating recovery email:", error);
-      Alert.alert("Error", "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleDeleteAccount = async () => {
     Alert.alert(
@@ -371,26 +316,6 @@ export default function AccountSecurityScreen() {
                 disabled={loading}
               />
             </View>
-
-            <Text style={styles.sectionTitle}>Change Recovery Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Recovery Email"
-              value={recoveryEmail}
-              onChangeText={setRecoveryEmail}
-            />
-
-            <TouchableOpacity
-              onPress={handleUpdateRecoveryEmail}
-              style={styles.button}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Update Recovery Email</Text>
-              )}
-            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={handleDeleteAccount}

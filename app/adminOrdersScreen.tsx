@@ -18,6 +18,7 @@ import config from "../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "./_layout";
 import { useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function AdminOrdersScreen() {
     const [orders, setOrders] = useState<Order[]>([]);
@@ -40,7 +41,13 @@ export default function AdminOrdersScreen() {
         `${order.user.firstName} ${order.user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+    // Sort by priority first, then by date
     const sortedOrders = [...searchedOrders].sort((a, b) => {
+        // First sort by priority
+        if (a.isPriority && !b.isPriority) return -1;
+        if (!a.isPriority && b.isPriority) return 1;
+
+        // Then sort by date
         return sortOrder === "asc"
             ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -54,6 +61,7 @@ export default function AdminOrdersScreen() {
         items: { cake: string; quantity: number }[];
         totalPrice: number;
         createdAt: string;
+        isPriority?: boolean;
     }
     type AdminOrdersScreenRouteProp = RouteProp<{ AdminOrdersScreen: { shouldRefresh?: boolean } }, "AdminOrdersScreen">;
     const route = useRoute<AdminOrdersScreenRouteProp>();
@@ -281,6 +289,54 @@ export default function AdminOrdersScreen() {
         }
     };
 
+    const togglePriority = async (orderId: string, currentPriority: boolean = false) => {
+        try {
+            const token = await AsyncStorage.getItem("accessToken");
+            if (!token) {
+                Alert.alert("Error", "Authorization token is required");
+                return;
+            }
+
+            // Update locally first for immediate UI feedback
+            setOrders(prevOrders =>
+                prevOrders.map(order =>
+                    order._id === orderId
+                        ? { ...order, isPriority: !currentPriority }
+                        : order
+                )
+            );
+
+            // Then save to backend
+            const response = await fetch(`${config.BASE_URL}/admin/orders/${orderId}/priority`, {
+                method: "PUT",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ isPriority: !currentPriority }),
+            });
+
+            if (!response.ok) {
+                // Revert if the server update fails
+                setOrders(prevOrders =>
+                    prevOrders.map(order =>
+                        order._id === orderId
+                            ? { ...order, isPriority: currentPriority }
+                            : order
+                    )
+                );
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            // Only show feedback on successful priority change
+            if (!currentPriority) {
+                Alert.alert("Priority Set", "Order has been marked as priority");
+            }
+        } catch (error) {
+            console.error("❌ Error updating order priority:", error);
+            Alert.alert("Error", "Failed to update order priority");
+        }
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -321,11 +377,12 @@ export default function AdminOrdersScreen() {
 
             {/* 🛒 טבלת כותרות */}
             <View style={styles.tableHeader}>
-                <Text style={styles.headerCell}>מס הזמנה</Text>
-                <Text style={styles.headerCell}>תאריך הזמנה</Text>
-                <Text style={styles.statusHeaderCell}>סטטוס</Text>
-                <Text style={styles.nameHeaderCell}>שם לקוח</Text>
-                <Text style={styles.headerCell}></Text>
+                <Text style={styles.priorityHeaderCell}></Text>
+                <Text style={styles.headerCell}>Order ID</Text>
+                <Text style={styles.headerCell}>Order Date</Text>
+                <Text style={styles.statusHeaderCell}>Status</Text>
+                <Text style={styles.nameHeaderCell}>Customer Name</Text>
+
             </View>
 
             {/* 📜 רשימת הזמנות */}
@@ -340,9 +397,19 @@ export default function AdminOrdersScreen() {
                     {sortedOrders.map((order) => (
                         <TouchableOpacity
                             key={order._id}
-                            style={styles.row}
+                            style={[styles.row, order.isPriority && styles.priorityRow]}
                             onPress={() => navigation.navigate("OrderDetailsScreen", { orderId: order._id })}
                         >
+                            <TouchableOpacity
+                                style={styles.priorityButton}
+                                onPress={() => togglePriority(order._id, order.isPriority)}
+                            >
+                                <Ionicons
+                                    name={order.isPriority ? "star" : "star-outline"}
+                                    size={20}
+                                    color={order.isPriority ? "#FFD700" : "#6b4226"}
+                                />
+                            </TouchableOpacity>
                             <Text style={styles.cell}>{order._id.slice(-6)}</Text>
                             <Text style={styles.cell}>{new Date(order.createdAt).toLocaleDateString()}</Text>
                             <Text style={[styles.cell, styles[order.status]]}>{order.status}</Text>
@@ -364,6 +431,15 @@ export default function AdminOrdersScreen() {
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
                             <Text style={styles.modalTitle}>Order Actions</Text>
+                            <TouchableOpacity
+                                style={styles.modalButton}
+                                onPress={() => {
+                                    togglePriority(selectedOrder._id, selectedOrder.isPriority);
+                                    setModalVisible(false);
+                                }}
+                            >
+                                <Text>{selectedOrder.isPriority ? "Remove Priority" : "Mark as Priority"}</Text>
+                            </TouchableOpacity>
                             <TouchableOpacity
                                 style={styles.modalButton}
                                 onPress={() => {
@@ -611,6 +687,22 @@ const styles = StyleSheet.create({
     sortButtonText: {
         color: "#fff",
         fontWeight: "bold",
+    },
+    priorityHeaderCell: {
+        width: 10,
+        color: "#fff",
+        fontWeight: "bold",
+        textAlign: "center",
+    },
+    priorityButton: {
+        width: 34,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    priorityRow: {
+        backgroundColor: "#fff9e6",
+        borderLeftWidth: 4,
+        borderLeftColor: "#FFD700",
     },
 
 });
