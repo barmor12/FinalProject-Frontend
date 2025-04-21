@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     View,
     Text,
@@ -11,7 +11,7 @@ import {
     Image,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import config from "../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -40,7 +40,11 @@ export default function AdminRecipesScreen() {
     useEffect(() => {
         fetchRecipes();
     }, []);
-
+    useFocusEffect(
+        useCallback(() => {
+            fetchRecipes();
+        }, [])
+    );
     const fetchRecipes = async () => {
         try {
             const token = await AsyncStorage.getItem("accessToken");
@@ -77,9 +81,10 @@ export default function AdminRecipesScreen() {
     };
 
     const handleEdit = (recipe: Recipe) => {
-        setSelectedRecipe(recipe);
-        setEditedRecipe(recipe);
-        setIsEditing(true);
+        router.push({
+            pathname: "/AdminRecipeEdit",
+            params: { recipeId: recipe._id }
+        });
     };
 
     const handleSave = async () => {
@@ -225,129 +230,6 @@ export default function AdminRecipesScreen() {
                     ))}
                 </View>
             </ScrollView>
-
-            {isEditing && selectedRecipe && (
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <TouchableOpacity
-                            style={styles.closeButton}
-                            onPress={() => {
-                                setIsEditing(false);
-                                setSelectedRecipe(null);
-                            }}
-                        >
-                            <Ionicons name="close" size={24} color="#6b4226" />
-                        </TouchableOpacity>
-                        <ScrollView style={styles.modalScrollView}>
-                            <Text style={styles.modalTitle}>Edit Recipe</Text>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Name</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedRecipe.name}
-                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, name: text })}
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Description</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    value={editedRecipe.description}
-                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, description: text })}
-                                    multiline
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Servings</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedRecipe.servings?.toString()}
-                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, servings: parseInt(text) })}
-                                    keyboardType="numeric"
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Ingredients (one per line)</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    value={Object.values(editedRecipe.ingredients || {}).join("\n")}
-                                    onChangeText={(text) => {
-                                        const lines = text.split("\n");
-                                        const ingredients: { [key: string]: string } = {};
-                                        lines.forEach((line, index) => {
-                                            if (line.trim()) {
-                                                ingredients[`ingredient${index + 1}`] = line.trim();
-                                            }
-                                        });
-                                        setEditedRecipe({ ...editedRecipe, ingredients });
-                                    }}
-                                    multiline
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>instructions (one per line)</Text>
-                                <TextInput
-                                    style={[styles.input, styles.textArea]}
-                                    value={Object.values(editedRecipe.instructions || {}).join("\n")}
-                                    onChangeText={(text) => {
-                                        const lines = text.split("\n");
-                                        const instructions: { [key: string]: string } = {};
-                                        lines.forEach((line, index) => {
-                                            if (line.trim()) {
-                                                instructions[`step${index + 1}`] = line.trim();
-                                            }
-                                        });
-                                        setEditedRecipe({ ...editedRecipe, instructions });
-                                    }}
-                                    multiline
-                                />
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Difficulty</Text>
-                                <View style={styles.difficultyButtons}>
-                                    {["Easy", "Medium", "Hard"].map((level) => (
-                                        <TouchableOpacity
-                                            key={level}
-                                            style={[
-                                                styles.difficultyButton,
-                                                editedRecipe.difficulty === level && styles.selectedDifficulty,
-                                            ]}
-                                            onPress={() => setEditedRecipe({ ...editedRecipe, difficulty: level as "Easy" | "Medium" | "Hard" })}
-                                        >
-                                            <Text style={[
-                                                styles.difficultyText,
-                                                editedRecipe.difficulty === level && styles.selectedDifficultyText,
-                                            ]}>
-                                                {level}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-                            </View>
-
-                            <View style={styles.inputGroup}>
-                                <Text style={styles.label}>Making Time</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedRecipe.makingTime}
-                                    onChangeText={(text) => setEditedRecipe({ ...editedRecipe, makingTime: text })}
-                                    placeholder="e.g., 30m, 1h 30m"
-                                />
-                            </View>
-
-                            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                                <Text style={styles.saveButtonText}>Save Changes</Text>
-                            </TouchableOpacity>
-                        </ScrollView>
-                    </View>
-                </View>
-            )}
         </SafeAreaView>
     );
 }
@@ -444,99 +326,6 @@ const styles = StyleSheet.create({
         width: 30,
         height: 30,
         borderRadius: 15,
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalOverlay: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.5)",
-        justifyContent: "center",
-        alignItems: "center",
-    },
-    modalContent: {
-        width: "90%",
-        backgroundColor: "#fff",
-        borderRadius: 20,
-        maxHeight: "90%",
-        padding: 20,
-    },
-    modalScrollView: {
-        flex: 1,
-    },
-    modalTitle: {
-        fontSize: 24,
-        fontWeight: "bold",
-        color: "#6b4226",
-        marginBottom: 20,
-        textAlign: "center",
-    },
-    inputGroup: {
-        marginBottom: 15,
-    },
-    label: {
-        fontSize: 16,
-        fontWeight: "600",
-        color: "#6b4226",
-        marginBottom: 5,
-    },
-    input: {
-        backgroundColor: "#f9f3ea",
-        borderRadius: 8,
-        padding: 12,
-        fontSize: 16,
-        color: "#6b4226",
-    },
-    textArea: {
-        height: 100,
-        textAlignVertical: "top",
-    },
-    difficultyButtons: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        marginTop: 5,
-    },
-    difficultyButton: {
-        flex: 1,
-        padding: 10,
-        borderRadius: 8,
-        backgroundColor: "#f9f3ea",
-        marginHorizontal: 5,
-        alignItems: "center",
-    },
-    selectedDifficulty: {
-        backgroundColor: "#6b4226",
-    },
-    difficultyText: {
-        color: "#6b4226",
-        fontWeight: "600",
-    },
-    selectedDifficultyText: {
-        color: "#fff",
-    },
-    saveButton: {
-        backgroundColor: "#6b4226",
-        padding: 15,
-        borderRadius: 8,
-        alignItems: "center",
-        marginTop: 20,
-    },
-    saveButtonText: {
-        color: "#fff",
-        fontSize: 16,
-        fontWeight: "600",
-    },
-    closeButton: {
-        position: "absolute",
-        top: 10,
-        right: 10,
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: "rgba(255, 255, 255, 0.9)",
         justifyContent: "center",
         alignItems: "center",
     },
