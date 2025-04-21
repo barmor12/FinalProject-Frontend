@@ -161,66 +161,68 @@ export default function CartScreen() {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
-      // For unavailable products, we'll use the item ID as the cake ID
-      const finalCakeId = cakeId || itemId;
-
-      if (!finalCakeId) {
+      // Always use the itemId for removing products
+      if (!itemId) {
         Alert.alert("Error", "Could not identify the product to remove");
         return;
       }
 
+      // Log attempt to remove item
+      console.log(`🔍 Attempting to remove item - using itemId: ${itemId}`);
+
+      // Based on backend error "Item ID is required", we need to use the correct parameter name
       const response = await fetch(`${config.BASE_URL}/cart/remove`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ cakeId: finalCakeId }),
+        body: JSON.stringify({ itemId: itemId }), // Send as 'itemId' as required by backend
       });
 
-      // Even if the server responds with an error (product not found),
-      // we should still remove it from the local cart
-      const updatedCart = cartItems.filter((item) => {
-        if (itemId && item._id === itemId) return false;
-        if (cakeId && item.cake && item.cake._id === cakeId) return false;
-        return true;
-      });
+      // Log response status and request body for debugging
+      console.log(`📋 Server response status for removeItem: ${response.status}`);
+      console.log(`📋 Request body sent: ${JSON.stringify({ itemId: itemId })}`);
 
-      setCartItems(updatedCart);
+      // Only update local state if server request was successful
+      if (response.ok) {
+        console.log(`✅ Server confirmed item removal - updating local state`);
+        const updatedCart = cartItems.filter((item) => item._id !== itemId);
+        setCartItems(updatedCart);
 
-      // Try to parse the response but don't fail if it's not JSON
-      try {
-        const data = await response.json();
-        if (!response.ok) {
-          console.log(`Server responded with error: ${data.error || 'Unknown error'}`);
+        // Try to parse the response but don't fail if it's not JSON
+        try {
+          const data = await response.json();
+          console.log(`Server response: ${JSON.stringify(data)}`);
+        } catch (e) {
+          console.log("Could not parse server response for remove item");
         }
-      } catch (e) {
-        console.log("Could not parse server response for remove item");
+      } else {
+        // If server responds with error, show the error message
+        try {
+          const data = await response.json();
+          console.error(`❌ Server error removing item - itemId: ${itemId}: ${data.error || 'Unknown error'}`);
+          Alert.alert("Error", `Failed to remove item: ${data.error || "Unknown error"}`);
+        } catch (e) {
+          console.error("Could not parse server error response");
+          Alert.alert("Error", "Failed to remove item due to server error");
+        }
       }
     } catch (error) {
-      console.error("Error removing item:", error);
-
-      // Still remove from local cart even if server request fails
-      if (itemId || cakeId) {
-        const updatedCart = cartItems.filter((item) => {
-          if (itemId && item._id === itemId) return false;
-          if (cakeId && item.cake && item.cake._id === cakeId) return false;
-          return true;
-        });
-
-        setCartItems(updatedCart);
-        Alert.alert("Warning", "Item removed from cart locally. Changes may not be saved on server.");
-      } else {
-        Alert.alert("Error", "Failed to remove item");
-      }
+      console.error("❌ Error removing item:", error);
+      Alert.alert("Error", "Failed to connect to server. Please check your connection and try again.");
     }
   };
 
   const openProductModal = (product: CartItem) => {
-    // Always open the modal, even for invalid products
-    // This allows users to see details about unavailable products
-    setSelectedProduct(product);
-    setModalVisible(true);
+    // Only open modal for valid products with cake data
+    if (product.cake && product.cake.name && product.cake._id) {
+      setSelectedProduct(product);
+      setModalVisible(true);
+    } else {
+      // For unavailable products, just log and do nothing
+      console.log("Attempted to open modal for unavailable product - ignoring");
+    }
   };
 
   const closeProductModal = () => {
@@ -232,12 +234,47 @@ export default function CartScreen() {
     setImageErrors(prev => ({ ...prev, [itemId]: true }));
   };
 
-  const removeUnavailableProduct = (itemId: string) => {
-    // Remove locally without server call for unavailable products
-    if (itemId) {
-      const updatedCart = cartItems.filter(item => item._id !== itemId);
-      setCartItems(updatedCart);
-      Alert.alert("Success", "Unavailable product removed from cart");
+  const removeUnavailableProduct = async (itemId: string) => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      // For unavailable products, we'll use the item ID as the cake ID
+      if (!itemId) {
+        Alert.alert("Error", "Could not identify the product to remove");
+        return;
+      }
+
+      // Log the itemId being used as cakeId for debugging
+      console.log(`🔍 Attempting to remove unavailable product - using itemId as cakeId: ${itemId}`);
+
+      // Make server call first to remove from database
+      const response = await fetch(`${config.BASE_URL}/cart/remove`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ itemId: itemId }),
+      });
+
+      // Log response status
+      console.log(`📋 Server response status: ${response.status}`);
+
+      if (response.ok) {
+        console.log(`✅ Successfully removed item with ID: ${itemId} from the database`);
+        // Do NOT remove locally - just let the user know it was removed from database
+        // Optionally refresh the cart to get the updated items
+        fetchCartItems();
+      } else {
+        // If API call fails, show the error
+        const data = await response.json();
+        console.error(`❌ Server error removing item ${itemId}: ${data.error || 'Unknown error'}`);
+        Alert.alert("Error", "Failed to remove product from database. Please try refreshing your cart.");
+      }
+    } catch (error) {
+      console.error("❌ Error removing unavailable item:", error);
+      Alert.alert("Error", "Failed to connect to server. Please check your connection and try again.");
     }
   };
 
@@ -246,7 +283,7 @@ export default function CartScreen() {
     if (!item.cake || !item.cake.name || !item.cake._id) {
       return (
         <View style={styles.cartItem}>
-          <TouchableOpacity onPress={() => openProductModal(item)} style={styles.cartItemContent}>
+          <View style={styles.cartItemContent}>
             <View style={[styles.itemImage, styles.placeholderImage]}>
               <Text style={styles.placeholderText}>!</Text>
             </View>
@@ -255,7 +292,7 @@ export default function CartScreen() {
               <Text style={styles.errorText}>This product may have been deleted from our database</Text>
               <Text style={styles.itemQuantity}>Quantity: {item.quantity || 1}</Text>
             </View>
-          </TouchableOpacity>
+          </View>
           <TouchableOpacity
             style={styles.removeButton}
             onPress={() => removeUnavailableProduct(item._id)}
@@ -329,7 +366,7 @@ export default function CartScreen() {
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            {selectedProduct && selectedProduct.cake && selectedProduct.cake.name ? (
+            {selectedProduct && selectedProduct.cake && (
               <>
                 {imageErrors[selectedProduct._id] || !selectedProduct.cake.image?.url ? (
                   <View style={[styles.modalImage, styles.placeholderImage]}>
@@ -350,35 +387,6 @@ export default function CartScreen() {
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
-            ) : (
-              <View style={styles.unavailableProductContainer}>
-                <View style={[styles.modalImage, styles.placeholderImage]}>
-                  <Text style={styles.placeholderText}>!</Text>
-                </View>
-                <Text style={styles.modalTitle}>Product Unavailable</Text>
-                <Text style={styles.errorText}>
-                  This product is no longer available in our database. It may have been deleted or temporarily removed.
-                </Text>
-                <Text style={styles.modalDescription}>
-                  We recommend removing this product from your cart and choosing another item.
-                </Text>
-                <View style={styles.modalButtonsContainer}>
-                  <TouchableOpacity
-                    style={styles.modalRemoveButton}
-                    onPress={() => {
-                      if (selectedProduct) {
-                        removeUnavailableProduct(selectedProduct._id);
-                        closeProductModal();
-                      }
-                    }}
-                  >
-                    <Text style={styles.removeButtonText}>Remove from Cart</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
-                    <Text style={styles.closeButtonText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             )}
           </View>
         </View>
@@ -506,4 +514,10 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   cartItemContent: { flexDirection: "row", alignItems: "center", flex: 1 },
+  tapToRemove: {
+    color: "#6b4226",
+    fontSize: 14,
+    textAlign: "center",
+    marginTop: 5,
+  },
 });
