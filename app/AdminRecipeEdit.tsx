@@ -48,6 +48,8 @@ export default function AdminRecipeEdit() {
     const [uploading, setUploading] = useState(false);
     const [newImage, setNewImage] = useState<string | null>(null);
     const [isEditMode, setIsEditMode] = useState(false);
+    const [hours, setHours] = useState<string>('');
+    const [minutes, setMinutes] = useState<string>('');
 
     useEffect(() => {
         if (recipeId) {
@@ -88,6 +90,14 @@ export default function AdminRecipeEdit() {
                 }).join('\n')
                 : '';
 
+            // Parse making time into hours and minutes
+            const makingTime = recipe.makingTime || '';
+            const hoursMatch = makingTime.match(/(\d+)\s*[hH]/);
+            const minutesMatch = makingTime.match(/(\d+)\s*[mM]/);
+
+            setHours(hoursMatch ? hoursMatch[1] : '');
+            setMinutes(minutesMatch ? minutesMatch[1] : '');
+
             setEditedRecipe({
                 ...recipe,
                 _rawIngredientsText: ingredientsText,
@@ -121,8 +131,7 @@ export default function AdminRecipeEdit() {
             }
 
             const data = await response.json();
-            console.log("Recipe data:", data);
-            console.log("Ingredients:", data.ingredients);
+
             setRecipe(data);
             setEditedRecipe(data);
         } catch (error) {
@@ -153,6 +162,16 @@ export default function AdminRecipeEdit() {
 
     const handleSave = async () => {
         if (!recipe) return;
+
+        // Validate making time
+        const hoursNum = parseInt(hours);
+        const minutesNum = parseInt(minutes);
+        if ((hours && isNaN(hoursNum)) || (minutes && isNaN(minutesNum)) ||
+            (hoursNum < 0) || (minutesNum < 0) || (minutesNum > 59)) {
+            Alert.alert("Error", "Invalid time format. Hours must be positive, minutes must be between 0-59.");
+            return;
+        }
+
         setUploading(true);
 
         try {
@@ -162,8 +181,11 @@ export default function AdminRecipeEdit() {
                 return;
             }
 
+            // Format making time
+            const makingTime = `${hours ? `${hours}H` : ''} ${minutes ? `${minutes}M` : ''}`.trim();
+
             // Process any pending raw text inputs before saving
-            let finalRecipe = { ...editedRecipe };
+            let finalRecipe = { ...editedRecipe, makingTime };
 
             // Process raw ingredients text if it exists
             if (editedRecipe._rawIngredientsText !== undefined) {
@@ -582,12 +604,22 @@ export default function AdminRecipeEdit() {
 
                         <View style={styles.inputGroup}>
                             <Text style={styles.label}>Making Time</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={editedRecipe.makingTime}
-                                onChangeText={(text) => setEditedRecipe({ ...editedRecipe, makingTime: text })}
-                                placeholder="e.g., 30m, 1h 30m"
-                            />
+                            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <TextInput
+                                    style={[styles.input, { width: '45%' }]}
+                                    value={hours}
+                                    onChangeText={setHours}
+                                    placeholder="Hours"
+                                    keyboardType="numeric"
+                                />
+                                <TextInput
+                                    style={[styles.input, { width: '45%' }]}
+                                    value={minutes}
+                                    onChangeText={setMinutes}
+                                    placeholder="Minutes"
+                                    keyboardType="numeric"
+                                />
+                            </View>
                         </View>
 
                         <TouchableOpacity
