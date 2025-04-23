@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import config from '../config';
-import useNotifications from '../hooks/useNotifications';
+// import useNotifications from '../hooks/useNotifications';
 
 export default function AdminNotificationsScreen() {
     const [title, setTitle] = useState('');
@@ -32,7 +32,7 @@ export default function AdminNotificationsScreen() {
     }>>([]);
 
     // Get the notification functions
-    const { sendTestNotification } = useNotifications();
+    // const { sendTestNotification } = useNotifications();
 
     React.useEffect(() => {
         fetchRecentNotifications();
@@ -205,7 +205,7 @@ export default function AdminNotificationsScreen() {
                         <TouchableOpacity
                             style={styles.testButton}
                             onPress={() => {
-                                sendTestNotification();
+                                // sendTestNotification();
                                 Alert.alert('Test Notification', 'A test notification has been sent to this device.');
                             }}
                         >
