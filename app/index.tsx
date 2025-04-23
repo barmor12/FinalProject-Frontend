@@ -16,7 +16,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google"; // Import the Google auth hook
 // שימוש בייבוא require אם אין esModuleInterop
-const { default: jwtDecode } = require("jwt-decode");
+import { jwtDecode } from 'jwt-decode';
 import styles from "./styles/LoginStyles";
 import config from "../config";
 import { FontAwesome } from '@expo/vector-icons';
@@ -75,7 +75,7 @@ export default function LoginScreen() {
       try {
         const decoded = jwtDecode(accessToken);
         // בדיקה אם הטוקן פג תוקף
-        if (decoded.exp * 1000 < Date.now()) {
+        if (decoded.exp! * 1000 < Date.now()) {
           console.log("🔄 Token expired, refreshing...");
           const refreshed = await refreshAccessToken();
           if (!refreshed) return;

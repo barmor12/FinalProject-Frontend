@@ -36,7 +36,7 @@ interface Address {
 interface Order {
     _id: string;
     status: "pending" | "confirmed" | "delivered" | "cancelled";
-    user: { firstName: string; lastName: string; email: string };
+    user?: { firstName: string; lastName: string; email: string };
     address: Address;
     items: { cake: Cake; quantity: number }[];
     totalPrice: number;
@@ -215,7 +215,7 @@ export default function OrderDetailsScreen() {
         <SafeAreaView style={styles.container}>
             <Text style={styles.title}>Order #{order._id.slice(-6)}</Text>
             <Text style={styles.subTitle}>
-                Customer: {order.user.firstName} {order.user.lastName}
+                Customer: {order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Deleted User'}
             </Text>
             <Text style={styles.subTitle}>
                 Status: <Text style={[styles.status, styles[order.status]]}>{order.status}</Text>
@@ -243,19 +243,24 @@ export default function OrderDetailsScreen() {
 
             <Text style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
 
-            <TouchableOpacity
-                style={styles.updateStatusButton}
-                onPress={() => setModalVisible(true)}
-            >
-                <Text style={styles.updateStatusText}>Update Status</Text>
-            </TouchableOpacity>
+            {/* Only show update status and send message if user exists */}
+            {order.user && (
+                <>
+                    <TouchableOpacity
+                        style={styles.updateStatusButton}
+                        onPress={() => setModalVisible(true)}
+                    >
+                        <Text style={styles.updateStatusText}>Update Status</Text>
+                    </TouchableOpacity>
 
-            <TouchableOpacity
-                style={styles.updateStatusButton}
-                onPress={() => setMessageModalVisible(true)}
-            >
-                <Text style={styles.updateStatusText}>Send Message</Text>
-            </TouchableOpacity>
+                    <TouchableOpacity
+                        style={styles.updateStatusButton}
+                        onPress={() => setMessageModalVisible(true)}
+                    >
+                        <Text style={styles.updateStatusText}>Send Message</Text>
+                    </TouchableOpacity>
+                </>
+            )}
 
             <TouchableOpacity
                 style={styles.contactButton}

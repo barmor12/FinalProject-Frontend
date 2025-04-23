@@ -37,9 +37,16 @@ export default function AdminOrdersScreen() {
 
     // ניצור מערך הזמנות מסוננות לפי פילטר
     const filteredOrders = filterStatus === "all" ? orders : orders.filter((order) => order.status === filterStatus);
-    const searchedOrders = filteredOrders.filter(order =>
-        `${order.user.firstName} ${order.user.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    const searchedOrders = filteredOrders.filter(order => {
+        // If search is empty, show all orders including those with deleted users
+        if (!searchQuery.trim()) return true;
+
+        // If user is deleted and we're searching, don't include in results
+        if (!order.user) return false;
+
+        // Search in user name
+        return `${order.user.firstName || 'Unknown'} ${order.user.lastName || 'User'}`.toLowerCase().includes(searchQuery.toLowerCase());
+    });
 
     // Sort by priority first, then by date
     const sortedOrders = [...searchedOrders].sort((a, b) => {
@@ -57,7 +64,7 @@ export default function AdminOrdersScreen() {
     interface Order {
         _id: string;
         status: "pending" | "confirmed" | "delivered" | "cancelled";
-        user: { _id: string; firstName: string; lastName: string; email: string };
+        user?: { _id: string; firstName: string; lastName: string; email: string };
         items: { cake: string; quantity: number }[];
         totalPrice: number;
         createdAt: string;
@@ -205,7 +212,7 @@ export default function AdminOrdersScreen() {
             setModalVisible(false);
 
             // אם הסטטוס החדש הוא delivered – שליחת מייל לבקשת ביקורת
-            if (newStatus === "delivered") {
+            if (newStatus === "delivered" && selectedOrder.user?.email) {
                 console.log("sending review email....");
                 const reviewResponse = await fetch(`${config.BASE_URL}/sendEmail/${selectedOrder._id}/send-review-email`, {
                     method: "POST",
@@ -238,7 +245,7 @@ export default function AdminOrdersScreen() {
             return;
         }
 
-        if (!selectedOrder.user.email) {
+        if (!selectedOrder.user?.email) {
             Alert.alert("Error", "Customer email is missing.");
             return;
         }
@@ -414,7 +421,7 @@ export default function AdminOrdersScreen() {
                             <Text style={styles.cell}>{new Date(order.createdAt).toLocaleDateString()}</Text>
                             <Text style={[styles.cell, styles[order.status]]}>{order.status}</Text>
                             <Text style={styles.cell}>
-                                {order.user.firstName} {order.user.lastName}
+                                {order.user ? `${order.user.firstName || 'Unknown'} ${order.user.lastName || 'User'}` : 'Deleted User'}
                             </Text>
                             {/* כפתור תפריט 3 נקודות */}
                             <TouchableOpacity onPress={() => openOrderMenu(order)} style={styles.menuButton}>
@@ -440,15 +447,20 @@ export default function AdminOrdersScreen() {
                             >
                                 <Text>{selectedOrder.isPriority ? "Remove Priority" : "Mark as Priority"}</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={() => {
-                                    setStatusModalVisible(true);
-                                    setModalVisible(false);
-                                }}
-                            >
-                                <Text>Update Status</Text>
-                            </TouchableOpacity>
+
+                            {/* Only show update status if user exists */}
+                            {selectedOrder.user && (
+                                <TouchableOpacity
+                                    style={styles.modalButton}
+                                    onPress={() => {
+                                        setStatusModalVisible(true);
+                                        setModalVisible(false);
+                                    }}
+                                >
+                                    <Text>Update Status</Text>
+                                </TouchableOpacity>
+                            )}
+
                             <TouchableOpacity
                                 style={styles.modalButton}
                                 onPress={() => {
@@ -458,15 +470,20 @@ export default function AdminOrdersScreen() {
                             >
                                 <Text>Delete Order</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity
-                                style={styles.modalButton}
-                                onPress={() => {
-                                    setModalVisible(false);
-                                    setTimeout(() => setEmailModalVisible(true), 300);
-                                }}
-                            >
-                                <Text>Send Message</Text>
-                            </TouchableOpacity>
+
+                            {/* Only show send message if user exists */}
+                            {selectedOrder.user && (
+                                <TouchableOpacity
+                                    style={styles.modalButton}
+                                    onPress={() => {
+                                        setModalVisible(false);
+                                        setTimeout(() => setEmailModalVisible(true), 300);
+                                    }}
+                                >
+                                    <Text>Send Message</Text>
+                                </TouchableOpacity>
+                            )}
+
                             <TouchableOpacity style={styles.modalButtonClose} onPress={() => setModalVisible(false)}>
                                 <Text>Close</Text>
                             </TouchableOpacity>
@@ -504,8 +521,8 @@ export default function AdminOrdersScreen() {
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalContent}>
                         <Text style={styles.modalTitle}>Send Email to Customer</Text>
-                        <Text style={styles.modalSubTitle}>Customer Email: {selectedOrder?.user.email}</Text>
-                        <Text style={styles.modalSubTitle}>Order Status: {selectedOrder?.status}</Text>
+                        <Text style={styles.modalSubTitle}>Customer Email: {selectedOrder?.user?.email || 'N/A'}</Text>
+                        <Text style={styles.modalSubTitle}>Order Status: {selectedOrder?.status || 'N/A'}</Text>
                         <TextInput
                             style={styles.input}
                             placeholder="Enter your message..."
@@ -513,7 +530,10 @@ export default function AdminOrdersScreen() {
                             value={managerMessage}
                             onChangeText={setManagerMessage}
                         />
-                        <TouchableOpacity style={styles.sendButton} onPress={() => sendOrderEmail(managerMessage, true)}>
+                        <TouchableOpacity
+                            style={styles.sendButton}
+                            onPress={() => selectedOrder?.user?.email ? sendOrderEmail(managerMessage, true) : Alert.alert("Error", "Cannot send email to deleted user")}
+                        >
                             <Text style={styles.sendButtonText}>Send Email</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.closeButton} onPress={() => setEmailModalVisible(false)}>
