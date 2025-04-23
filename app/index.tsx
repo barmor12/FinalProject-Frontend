@@ -16,10 +16,10 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google"; // Import the Google auth hook
 // שימוש בייבוא require אם אין esModuleInterop
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 import styles from "./styles/LoginStyles";
 import config from "../config";
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -28,8 +28,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [tempTokens, setTempTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
-  const [tempUserData, setTempUserData] = useState<{ userID: string; role: string } | null>(null);
+  const [tempTokens, setTempTokens] = useState<{
+    accessToken: string;
+    refreshToken: string;
+  } | null>(null);
+  const [tempUserData, setTempUserData] = useState<{
+    userID: string;
+    role: string;
+  } | null>(null);
 
   // פונקציה לרענון ה-Access Token
   const refreshAccessToken = async () => {
@@ -128,7 +134,11 @@ export default function LoginScreen() {
 
       if (response.ok) {
         // Check if the response has the expected structure
-        if (!data.tokens || !data.tokens.accessToken || !data.tokens.refreshToken) {
+        if (
+          !data.tokens ||
+          !data.tokens.accessToken ||
+          !data.tokens.refreshToken
+        ) {
           throw new Error("Invalid response format from server");
         }
 
@@ -136,13 +146,20 @@ export default function LoginScreen() {
           // Store temporary tokens and user data
           setTempTokens(data.tokens);
           setTempUserData({
-            userID: data.userID || "",
-            role: data.role || "user"
+            userID: data.userId || "",
+            role: data.role || "user",
           });
           setShow2FAModal(true);
         } else {
           // No 2FA required, proceed with normal login
-          await completeLogin(data.tokens, data.userID || "", data.role || "user");
+          await completeLogin(
+            {
+              accessToken: data.tokens.accessToken,
+              refreshToken: data.tokens.refreshToken,
+            },
+            data.userId || "",
+            data.role || "user"
+          );
         }
       } else {
         console.warn("⚠️ Login failed:", data?.error || "Unknown error");
@@ -150,7 +167,12 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error("❌ Error during login process:", error);
-      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -168,7 +190,7 @@ export default function LoginScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tempTokens?.accessToken}`
+          Authorization: `Bearer ${tempTokens?.accessToken}`,
         },
         body: JSON.stringify({ code: verificationCode }),
       });
@@ -178,7 +200,11 @@ export default function LoginScreen() {
       if (response.ok) {
         // 2FA verification successful, complete login
         if (tempTokens && tempUserData) {
-          await completeLogin(tempTokens, tempUserData.userID, tempUserData.role);
+          await completeLogin(
+            tempTokens,
+            tempUserData.userID,
+            tempUserData.role
+          );
         }
       } else {
         Alert.alert("Error", data?.error || "Invalid verification code");
@@ -191,10 +217,14 @@ export default function LoginScreen() {
     }
   };
 
-  const completeLogin = async (tokens: { accessToken: string; refreshToken: string }, userID: string, role: string) => {
+  const completeLogin = async (
+    tokens: { accessToken: string; refreshToken: string },
+    userID: string,
+    role: string
+  ) => {
     await AsyncStorage.setItem("accessToken", tokens.accessToken);
     await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
-    await AsyncStorage.setItem("userID", userID);
+    await AsyncStorage.setItem("userId", userID);
     await AsyncStorage.setItem("role", role);
 
     Alert.alert("Success", "Logged in successfully!");
@@ -246,7 +276,7 @@ export default function LoginScreen() {
           if (data.accessToken && data.refreshToken) {
             AsyncStorage.setItem("accessToken", data.accessToken);
             AsyncStorage.setItem("refreshToken", data.refreshToken);
-            AsyncStorage.setItem("userID", data.userID || "");
+            AsyncStorage.setItem("userId", data.userId || "");
             router.replace("/(tabs)/DashboardScreen");
           } else {
             throw new Error("Missing tokens in response");
@@ -270,7 +300,9 @@ export default function LoginScreen() {
       >
         <View style={styles.container}>
           <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Making your celebrations sweeter {"\n"}one cake at a time!</Text>
+          <Text style={styles.subtitle}>
+            Making your celebrations sweeter {"\n"}one cake at a time!
+          </Text>
 
           <View style={styles.inputContainer}>
             <TextInput
