@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Image,
-  Alert
+  Alert,
 } from "react-native";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -49,18 +49,24 @@ export default function OrdersScreen() {
     try {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
-      const userID = await AsyncStorage.getItem("userID");
+      const userId = await AsyncStorage.getItem("userId");
 
-      if (!token || !userID) {
-        console.error("[ERROR] Missing access token or user ID.");
+      if (!token || !userId) {
+        Alert.alert("Error", "Missing access token or user ID.");
+        setLoading(false);
+        setRefreshing(false);
         return;
       }
 
-      const response = await axios.get(`${config.BASE_URL}/order/user/${userID}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `${config.BASE_URL}/order/user/${userId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-      console.log("[DEBUG] Fetched items (expanded):", JSON.stringify(response.data, null, 2));
+      console.log(
+        "[DEBUG] Fetched items (expanded):",
+        JSON.stringify(response.data, null, 2)
+      );
 
       setOrders(response.data);
       setFilteredOrders(response.data);
@@ -128,28 +134,35 @@ export default function OrdersScreen() {
     }
   };
 
-
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Your Orders</Text>
 
       {/* כפתורי סינון סטטוס בתוך גלילה אופקית */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterScroll}>
-        {["all", "pending", "confirmed", "completed", "cancelled"].map((status) => (
-          <TouchableOpacity
-            key={status}
-            style={[
-              styles.filterButton,
-              selectedFilter === status ||
-                (status === "all" && !selectedFilter) ? styles.activeFilter : null,
-            ]}
-            onPress={() => filterOrders(status === "all" ? null : status)}
-          >
-            <Text style={styles.filterText}>
-              {status.charAt(0).toUpperCase() + status.slice(1)}
-            </Text>
-          </TouchableOpacity>
-        ))}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.filterScroll}
+      >
+        {["all", "pending", "confirmed", "completed", "cancelled"].map(
+          (status) => (
+            <TouchableOpacity
+              key={status}
+              style={[
+                styles.filterButton,
+                selectedFilter === status ||
+                (status === "all" && !selectedFilter)
+                  ? styles.activeFilter
+                  : null,
+              ]}
+              onPress={() => filterOrders(status === "all" ? null : status)}
+            >
+              <Text style={styles.filterText}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          )
+        )}
       </ScrollView>
 
       {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
@@ -189,7 +202,9 @@ export default function OrdersScreen() {
                           resizeMode="cover"
                         />
                       ) : (
-                        <Text style={{ color: "#999" }}>No image available</Text>
+                        <Text style={{ color: "#999" }}>
+                          No image available
+                        </Text>
                       )}
                       <Text style={styles.orderText}>
                         🍰 {item.cake?.name || "Unknown"}
@@ -204,7 +219,10 @@ export default function OrdersScreen() {
                   </Text>
                 </View>
                 {/* כפתור להזמנה מחדש */}
-                <TouchableOpacity style={styles.reorderButton} onPress={() => handleReorder(order)}>
+                <TouchableOpacity
+                  style={styles.reorderButton}
+                  onPress={() => handleReorder(order)}
+                >
                   <Text style={styles.reorderButtonText}>Re-Order</Text>
                 </TouchableOpacity>
               </View>
@@ -242,8 +260,8 @@ const styles: { [key: string]: any } = StyleSheet.create({
     flexShrink: 0,
     minWidth: 90,
     justifyContent: "center", // ממרכז אנכית את תוכן הכפתור
-    alignItems: "center",      // ממרכז אופקית את התוכן
-    marginBottom: 10
+    alignItems: "center", // ממרכז אופקית את התוכן
+    marginBottom: 10,
   },
   filterText: {
     color: "#fff",
@@ -252,7 +270,7 @@ const styles: { [key: string]: any } = StyleSheet.create({
     lineHeight: 45, // מקביל לגובה הכפתור, כך שהטקסט יתמרכז
     textAlign: "center",
     textAlignVertical: "center", // עוזר בהמרת הטקסט גם באנדרואיד
-    includeFontPadding: false,  // יכול לעזור במקרים מסוימים
+    includeFontPadding: false, // יכול לעזור במקרים מסוימים
   },
   activeFilter: {
     backgroundColor: "#6b4226",
