@@ -33,8 +33,8 @@ export default function AdminTabLayout() {
         headerShown: false,
         tabBarShowLabel: true,
         tabBarStyle: Platform.select({
-          ios: { position: "absolute", backgroundColor: "white" },
-          default: { backgroundColor: "white" },
+          ios: { position: "absolute", backgroundColor: "white", height: 75 },
+          default: { backgroundColor: "white", height: 75 },
         }),
       }}
     >

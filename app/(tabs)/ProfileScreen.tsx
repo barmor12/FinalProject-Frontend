@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  SafeAreaView,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -152,81 +153,124 @@ export default function ProfileScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#d49a6a" />
-        <Text style={styles.loadingText}>Loading Profile...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={[styles.container, styles.loadingContainer]}>
+          <View style={styles.profileImagePlaceholder} />
+          <View style={styles.userNamePlaceholder} />
+          <View style={styles.titlePlaceholder} />
+          <ActivityIndicator size="large" color="#d49a6a" style={styles.loader} />
+          <Text style={styles.loadingText}>Loading Profile...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity onPress={pickImage}>
-        {user.profilePic ? (
-          <Image
-            source={
-              typeof user.profilePic === "string"
-                ? { uri: user.profilePic }
-                : user.profilePic
-            }
-            style={styles.profileImage}
-          />
-        ) : (
-          <Ionicons name="person-circle" size={100} color="black" />
-        )}
-      </TouchableOpacity>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <TouchableOpacity onPress={pickImage}>
+          {user.profilePic ? (
+            <Image
+              source={
+                typeof user.profilePic === "string"
+                  ? { uri: user.profilePic }
+                  : user.profilePic
+              }
+              style={styles.profileImage}
+            />
+          ) : (
+            <Ionicons name="person-circle" size={100} color="black" />
+          )}
+        </TouchableOpacity>
 
-      <Text style={styles.userName}>{user.name || "User"} {user.lastName || ""}</Text>
-      <Text style={styles.title}>Profile</Text>
+        <Text style={styles.userName}>{user.name || "User"} {user.lastName || ""}</Text>
+        <Text style={styles.title}>Profile</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/EditProfileScreen")}
-      >
-        <MaterialIcons name="edit" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Edit Profile</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/EditProfileScreen")}
+        >
+          <MaterialIcons name="edit" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Edit Profile</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/OrdersScreen")}
-      >
-        <MaterialIcons name="receipt-long" size={20} color="#fff" />
-        <Text style={styles.buttonText}>My Orders</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/manageAddressScreen")}
-      >
-        <MaterialIcons name="receipt-long" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Manage Addresses</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/OrdersScreen")}
+        >
+          <MaterialIcons name="receipt-long" size={20} color="#fff" />
+          <Text style={styles.buttonText}>My Orders</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/manageAddressScreen")}
+        >
+          <MaterialIcons name="receipt-long" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Manage Addresses</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/AccountSecurityScreen")}
-      >
-        <MaterialIcons name="security" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Account Security</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/AccountSecurityScreen")}
+        >
+          <MaterialIcons name="security" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Account Security</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.logoutButton]}
-        onPress={handleLogout}
-      >
-        <MaterialIcons name="logout" size={20} color="#fff" />
-        <Text style={styles.buttonText}>Log Out</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity
+          style={[styles.button, styles.logoutButton]}
+          onPress={handleLogout}
+        >
+          <MaterialIcons name="logout" size={20} color="#fff" />
+          <Text style={styles.buttonText}>Log Out</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f9f3ea",
+  },
   container: {
     flexGrow: 1,
     alignItems: "center",
     backgroundColor: "#f9f3ea",
     paddingVertical: 100,
+  },
+  loadingContainer: {
+    justifyContent: 'center',
+  },
+  profileImagePlaceholder: {
+    width: 150,
+    height: 150,
+    borderRadius: 80,
+    backgroundColor: '#e0e0e0',
+    marginBottom: 40,
+  },
+  userNamePlaceholder: {
+    width: 150,
+    height: 24,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 10,
+  },
+  titlePlaceholder: {
+    width: 80,
+    height: 18,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 20,
+  },
+  loader: {
+    marginVertical: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#6b4226",
+    marginTop: 10,
   },
   profileImage: {
     width: 150,
@@ -262,16 +306,5 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginLeft: 10,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f9f3ea",
-  },
-  loadingText: {
-    fontSize: 18,
-    color: "#6b4226",
-    marginTop: 10,
   },
 });

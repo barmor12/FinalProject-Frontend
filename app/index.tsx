@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  Keyboard,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -30,6 +31,7 @@ export default function LoginScreen() {
   const [verificationCode, setVerificationCode] = useState("");
   const [tempTokens, setTempTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
   const [tempUserData, setTempUserData] = useState<{ userID: string; role: string } | null>(null);
+  const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
   // פונקציה לרענון ה-Access Token
   const refreshAccessToken = async () => {
@@ -120,7 +122,10 @@ export default function LoginScreen() {
       const response = await fetch(`${config.BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          password
+        }),
       });
 
       const data = await response.json();
@@ -225,6 +230,35 @@ export default function LoginScreen() {
     scopes: ["profile", "email"],
   });
 
+  // Add a safe method to handle Google authentication
+  const handleGoogleAuth = async () => {
+    // Prevent multiple auth sessions
+    if (isAuthInProgress) {
+      console.log("Auth already in progress, skipping...");
+      return;
+    }
+
+    try {
+      // Set auth in progress flag
+      setIsAuthInProgress(true);
+
+      // Clear keyboard and any existing auth sessions
+      Keyboard.dismiss();
+
+      // Add a small delay to ensure any existing auth context is cleared
+      await new Promise(resolve => setTimeout(resolve, 300));
+
+      // Start Google auth
+      await promptAsync();
+    } catch (error) {
+      console.error("Google auth error:", error);
+      Alert.alert("Error", "Failed to start Google authentication. Please try again.");
+    } finally {
+      // Reset auth flag after a delay
+      setTimeout(() => setIsAuthInProgress(false), 1000);
+    }
+  };
+
   useEffect(() => {
     if (response?.type === "success") {
       const { id_token } = response.params;
@@ -247,7 +281,16 @@ export default function LoginScreen() {
             AsyncStorage.setItem("accessToken", data.accessToken);
             AsyncStorage.setItem("refreshToken", data.refreshToken);
             AsyncStorage.setItem("userID", data.userID || "");
-            router.replace("/(tabs)/DashboardScreen");
+
+            // Store and check role for proper redirection
+            const role = data.role || "user";
+            AsyncStorage.setItem("role", role);
+
+            if (role === "admin") {
+              router.replace("/(admintabs)/AdminDashboardScreen");
+            } else {
+              router.replace("/(tabs)/DashboardScreen");
+            }
           } else {
             throw new Error("Missing tokens in response");
           }
@@ -280,6 +323,8 @@ export default function LoginScreen() {
               keyboardType="email-address"
               value={email}
               onChangeText={setEmail}
+              textContentType="username"
+              autoComplete="email"
             />
 
             <TextInput
@@ -289,6 +334,9 @@ export default function LoginScreen() {
               secureTextEntry
               value={password}
               onChangeText={setPassword}
+              textContentType="password"
+              autoComplete="password"
+              onSubmitEditing={handleLogin}
             />
 
             <TouchableOpacity
@@ -306,7 +354,10 @@ export default function LoginScreen() {
             {/* Google Sign In Button */}
             <TouchableOpacity
               style={styles.googleButton}
-              onPress={() => promptAsync()}
+              onPress={handleGoogleAuth}
+              onPressIn={() => {
+                Keyboard.dismiss();
+              }}
             >
               <FontAwesome name="google" size={22} color="#DB4437" />
               <Text style={styles.googleButtonText}>Sign in with Google</Text>

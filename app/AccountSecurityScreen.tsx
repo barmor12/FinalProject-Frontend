@@ -232,7 +232,7 @@ export default function AccountSecurityScreen() {
                 return;
               }
 
-              const response = await fetch(`${config.BASE_URL}/user/delete`, {
+              const response = await fetch(`${config.BASE_URL}/user/delete-profile`, {
                 method: "DELETE",
                 headers: {
                   Authorization: `Bearer ${token}`,

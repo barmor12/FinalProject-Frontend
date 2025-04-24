@@ -19,7 +19,7 @@ export default function ForgotPasswordScreen() {
   // 📌 פונקציה לשליחת בקשת שחזור סיסמה
   const handleForgotPassword = async () => {
     if (!email) {
-      Alert.alert("Error", "Please enter your email.");
+      Alert.alert("Error", "Please enter your email address.");
       return;
     }
 
@@ -28,7 +28,7 @@ export default function ForgotPasswordScreen() {
       const response = await fetch(`${config.BASE_URL}/auth/forgot-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email: email.toLowerCase().trim() }),
       });
 
       const text = await response.text(); // קרא את התגובה כטקסט כדי לבדוק אותה

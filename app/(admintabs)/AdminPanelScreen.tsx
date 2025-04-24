@@ -7,6 +7,7 @@ import {
   Alert,
   ActivityIndicator,
   Image,
+  SafeAreaView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -80,80 +81,121 @@ export default function AdminPanelScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#6b4226" />
-        <Text style={styles.loadingText}>Loading Admin Panel...</Text>
-      </View>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.loadingContainer}>
+          <View style={styles.profileImagePlaceholder} />
+          <View style={styles.userNamePlaceholder} />
+          <View style={styles.titlePlaceholder} />
+          <ActivityIndicator size="large" color="#6b4226" style={styles.loader} />
+          <Text style={styles.loadingText}>Loading Admin Panel...</Text>
+        </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
-      {/* תמונת פרופיל ושם משתמש */}
-      <Image
-        source={
-          user.profilePic
-            ? { uri: user.profilePic }
-            : require("../../assets/images/userIcon.png")
-        }
-        style={styles.profileImage}
-      />
-      <Text style={styles.userName}>{user.name}</Text>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        {/* תמונת פרופיל ושם משתמש */}
+        <Image
+          source={
+            user.profilePic
+              ? { uri: user.profilePic }
+              : require("../../assets/images/userIcon.png")
+          }
+          style={styles.profileImage}
+        />
+        <Text style={styles.userName}>{user.name}</Text>
 
-      <Text style={styles.title}>Admin Panel</Text>
+        <Text style={styles.title}>Admin Panel</Text>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/adminOrdersScreen")}
-      >
-        <Text style={styles.buttonText}>Manage Orders</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/adminOrdersScreen")}
+        >
+          <Text style={styles.buttonText}>Manage Orders</Text>
+        </TouchableOpacity>
 
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/adminDiscountCodesScreen")}
-      >
-        <Text style={styles.buttonText}>Manage Discount Codes</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/manageUsersScreen")}
-      >
-        <Text style={styles.buttonText}>Manage Users</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/adminDiscountCodesScreen")}
+        >
+          <Text style={styles.buttonText}>Manage Discount Codes</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/manageUsersScreen")}
+        >
+          <Text style={styles.buttonText}>Manage Users</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/AdminRecipesScreen")}
-      >
-        <Text style={styles.buttonText}>Manage Recipes</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/AdminRecipesScreen")}
+        >
+          <Text style={styles.buttonText}>Manage Recipes</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => router.push("/AdminNotificationsScreen")}
-      >
-        <Text style={styles.buttonText}>Send Notifications</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/AdminNotificationsScreen")}
+        >
+          <Text style={styles.buttonText}>Send Notifications</Text>
+        </TouchableOpacity>
 
-      {/* כפתור התנתקות */}
-      <TouchableOpacity
-        style={[styles.button, styles.logoutButton]}
-        onPress={handleLogout}
-      >
-        <Text style={styles.logoutText}>Log Out</Text>
-      </TouchableOpacity>
-    </View>
+        {/* כפתור התנתקות */}
+        <TouchableOpacity
+          style={[styles.button, styles.logoutButton]}
+          onPress={handleLogout}
+        >
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f9f3ea",
+  },
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f9f3ea",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f9f3ea",
+  },
+  profileImagePlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: '#e0e0e0',
+    marginBottom: 10,
+  },
+  userNamePlaceholder: {
+    width: 150,
+    height: 22,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 5,
+  },
+  titlePlaceholder: {
+    width: 120,
+    height: 18,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 4,
+    marginBottom: 20,
+  },
+  loader: {
+    marginVertical: 20,
   },
   profileImage: {
     width: 100,
@@ -191,15 +233,9 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#f9f9f9",
-  },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: "#888",
+    color: "#6b4226",
   },
 });
