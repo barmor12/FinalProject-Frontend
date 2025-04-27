@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import * as ImageManipulator from "expo-image-manipulator";
 import {
   View,
   Text,
@@ -47,7 +48,9 @@ export default function ProfileScreen() {
       const userData = await fetchUserData();
       console.log("🔄 Fetched user data:", userData);
 
-      let profilePicUri: string | number = require("../../assets/images/userIcon.png");
+      let profilePicUri:
+        | string
+        | number = require("../../assets/images/userIcon.png");
 
       if (userData.profilePic && userData.profilePic.url) {
         profilePicUri = userData.profilePic.url;
@@ -75,7 +78,8 @@ export default function ProfileScreen() {
 
   const pickImage = async () => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Permission Denied", "You need to allow access to photos.");
         return;
@@ -93,8 +97,16 @@ export default function ProfileScreen() {
         return;
       }
 
-      setUser({ ...user, profilePic: result.assets[0].uri });
-      await uploadImage(result.assets[0].uri);
+      // Compress and resize image before setting and uploading
+      const originalUri = result.assets[0].uri;
+      // First resize to width 600, then compress to 0.5 quality
+      const manipResult = await ImageManipulator.manipulateAsync(
+        originalUri,
+        [{ resize: { width: 600 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      setUser({ ...user, profilePic: manipResult.uri });
+      await uploadImage(manipResult.uri);
     } catch (error) {
       Alert.alert("Error", "Something went wrong.");
     }
@@ -118,13 +130,16 @@ export default function ProfileScreen() {
         name: "profile_pic.jpg",
       } as any);
 
-      const response = await fetch(`${config.BASE_URL}/user/update-profile-pic`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${config.BASE_URL}/user/update-profile-pic`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
       console.log("Server response:", data);
@@ -158,7 +173,11 @@ export default function ProfileScreen() {
           <View style={styles.profileImagePlaceholder} />
           <View style={styles.userNamePlaceholder} />
           <View style={styles.titlePlaceholder} />
-          <ActivityIndicator size="large" color="#d49a6a" style={styles.loader} />
+          <ActivityIndicator
+            size="large"
+            color="#d49a6a"
+            style={styles.loader}
+          />
           <Text style={styles.loadingText}>Loading Profile...</Text>
         </View>
       </SafeAreaView>
@@ -183,7 +202,9 @@ export default function ProfileScreen() {
           )}
         </TouchableOpacity>
 
-        <Text style={styles.userName}>{user.name || "User"} {user.lastName || ""}</Text>
+        <Text style={styles.userName}>
+          {user.name || "User"} {user.lastName || ""}
+        </Text>
         <Text style={styles.title}>Profile</Text>
 
         <TouchableOpacity
@@ -241,26 +262,26 @@ const styles = StyleSheet.create({
     paddingVertical: 100,
   },
   loadingContainer: {
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   profileImagePlaceholder: {
     width: 150,
     height: 150,
     borderRadius: 80,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     marginBottom: 40,
   },
   userNamePlaceholder: {
     width: 150,
     height: 24,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     marginBottom: 10,
   },
   titlePlaceholder: {
     width: 80,
     height: 18,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     marginBottom: 20,
   },
