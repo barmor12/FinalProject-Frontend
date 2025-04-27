@@ -49,8 +49,9 @@ export default function OrdersScreen() {
     try {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
-      const userId = await AsyncStorage.getItem("userId");
-
+      const userId = await AsyncStorage.getItem("userID");
+      console.log("userId", userId);
+      console.log("token", token);
       if (!token || !userId) {
         Alert.alert("Error", "Missing access token or user ID.");
         setLoading(false);
@@ -105,13 +106,25 @@ export default function OrdersScreen() {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
-      // יצירת מערך פריטים להוספה לעגלה
-      const itemsToAdd = order.items.map((item) => ({
+      // Filter out items where the cake is null or undefined
+      const validItems = order.items.filter(item => item.cake && item.cake._id);
+
+      if (validItems.length === 0) {
+        Alert.alert(
+          "Cannot Reorder",
+          "All products in this order are no longer available.",
+          [{ text: "OK" }]
+        );
+        return;
+      }
+
+      // Create array of items to add to cart
+      const itemsToAdd = validItems.map((item) => ({
         cakeId: item.cake._id,
         quantity: item.quantity,
       }));
 
-      // קריאה ל־API להוספת כל הפריטים לעגלה בבת אחת
+      // Call API to add items to cart
       const response = await fetch(`${config.BASE_URL}/order/duplicate`, {
         method: "POST",
         headers: {
@@ -126,8 +139,17 @@ export default function OrdersScreen() {
         throw new Error(result.error || "Failed to add items to cart");
       }
 
-      // מעבר לעמוד הקופה
-      router.push("/CartScreen");
+      // Show success message with information about unavailable items
+      if (validItems.length < order.items.length) {
+        Alert.alert(
+          "Partial Reorder",
+          `${validItems.length} out of ${order.items.length} items were added to your cart. Some items are no longer available.`,
+          [{ text: "OK", onPress: () => router.push("/CartScreen") }]
+        );
+      } else {
+        // Navigate to cart screen
+        router.push("/CartScreen");
+      }
     } catch (error: any) {
       console.error("Error in reorder:", error.message);
       Alert.alert("Error", "Failed to reorder, please try again.");
@@ -151,7 +173,7 @@ export default function OrdersScreen() {
               style={[
                 styles.filterButton,
                 selectedFilter === status ||
-                (status === "all" && !selectedFilter)
+                  (status === "all" && !selectedFilter)
                   ? styles.activeFilter
                   : null,
               ]}

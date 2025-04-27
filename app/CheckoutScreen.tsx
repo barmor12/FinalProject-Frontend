@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface CartItem {
   _id: string;
@@ -67,7 +68,17 @@ export default function CheckoutScreen() {
     city: "",
   });
 
+  const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+
   const router = useRouter();
+
+  const formatDate = (date: Date) => {
+    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day}/${month}/${year}`;
+  };
 
   const fetchAddresses = async () => {
     try {
@@ -151,8 +162,6 @@ export default function CheckoutScreen() {
     return discounted.toFixed(2);
   };
 
-
-
   const renderCartItem = ({ item }: { item: CartItem }) => (
     <View style={styles.cartItem}>
       <Image
@@ -174,10 +183,24 @@ export default function CheckoutScreen() {
         Alert.alert("Error", "Please select a delivery address.");
         return;
       }
+      if (!deliveryDate) {
+        Alert.alert("Error", "Please select a delivery date.");
+        return;
+      }
 
       setLoading(true);
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
+
+      // Create a new date object and set it to start of day
+      const deliveryDateTime = new Date(deliveryDate);
+      deliveryDateTime.setHours(0, 0, 0, 0);
+
+      // Format the date as YYYY-MM-DD
+      const year = deliveryDateTime.getFullYear();
+      const month = String(deliveryDateTime.getMonth() + 1).padStart(2, '0');
+      const day = String(deliveryDateTime.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
 
       const response = await fetch(`${config.BASE_URL}/order/create`, {
         method: "POST",
@@ -191,7 +214,8 @@ export default function CheckoutScreen() {
             quantity: item.quantity,
           })),
           paymentMethod: "cash",
-          address: selectedAddress, // ✅ נשלחת הכתובת שנבחרה
+          address: selectedAddress,
+          deliveryDate: formattedDate, // Send as YYYY-MM-DD string
         }),
       });
 
@@ -283,6 +307,22 @@ export default function CheckoutScreen() {
     }
   };
 
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      // Set the year to current year for all dates
+      const currentYearDate = new Date(selectedDate);
+      currentYearDate.setFullYear(new Date().getFullYear());
+      setDeliveryDate(currentYearDate);
+    }
+  };
+
+  const toggleDatePicker = () => {
+    setShowDatePicker(!showDatePicker);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
@@ -290,256 +330,292 @@ export default function CheckoutScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
-
-        <Text style={styles.title}>Checkout</Text>
-        {loading ? (
-          <ActivityIndicator
-            size="large"
-            color="#6b4226"
-            style={styles.loading}
-          />
-        ) : cartItems.length === 0 ? (
-          <Text style={styles.emptyMessage}>Your cart is empty.</Text>
-        ) : (
-          <>
-            <FlatList
-              data={cartItems}
-              keyExtractor={(item) => item._id}
-              renderItem={renderCartItem}
-              contentContainerStyle={styles.cartList}
+        <ScrollView style={styles.scrollView}>
+          <Text style={styles.title}>Checkout</Text>
+          {loading ? (
+            <ActivityIndicator
+              size="large"
+              color="#6b4226"
+              style={styles.loading}
             />
-            {/* Delivery Details Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Delivery Details</Text>
-              <TouchableOpacity
-                style={styles.deliveryDetailsBox}
-                onPress={() => setDeliveryDetailsVisible(true)}
-              >
-                <View>
-                  {selectedAddress ? (
-                    <>
-                      <Text style={styles.deliveryName}>
-                        <Text style={{ fontWeight: "bold" }}>{selectedAddress.fullName}</Text> ({selectedAddress.phone})
-                      </Text>
-                      <Text style={styles.deliveryAddress}>
-                        {selectedAddress.street}, {selectedAddress.city}
-                      </Text>
-                    </>
-                  ) : (
-                    <Text style={styles.deliveryAddress}>No address selected</Text>
-                  )}
-                </View>
-                <Ionicons name="chevron-forward" size={20} color="#1D4ED8" />
-              </TouchableOpacity>
-            </View>
-
-            <Modal transparent={true} visible={deliveryDetailsVisible} animationType="slide">
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Select a Delivery Address</Text>
-
-                  {addresses.length === 0 ? (
-                    // אם אין כתובות שמורות
-                    <View style={styles.noAddressContainer}>
-                      <Text style={styles.noAddressText}>No addresses found</Text>
-                      <TouchableOpacity
-                        style={styles.addAddressButton}
-                        onPress={() => {
-                          setDeliveryDetailsVisible(false);
-                          setShowAddAddress(true); // הצגת מסך הוספת כתובת
-                        }}
-                      >
-                        <Text style={styles.addAddressText}>Add New Address</Text>
-                      </TouchableOpacity>
-                    </View>
-                  ) : (
-                    <FlatList
-                      data={addresses}
-                      keyExtractor={(item) => item._id}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          style={[
-                            styles.addressItem,
-                            selectedAddress?._id === item._id && styles.selectedAddress
-                          ]}
-                          onPress={() => {
-                            setSelectedAddress(item);
-                            setDeliveryDetailsVisible(false);
-                          }}
-                        >
-                          <Text style={styles.modalText}>
-                            <Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})
-                          </Text>
-                          <Text style={styles.modalText}>{item.street}, {item.city}</Text>
-                        </TouchableOpacity>
-                      )}
+          ) : cartItems.length === 0 ? (
+            <Text style={styles.emptyMessage}>Your cart is empty.</Text>
+          ) : (
+            <>
+              {/* Products Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Your Order</Text>
+                {cartItems.map((item) => (
+                  <View key={item._id} style={styles.cartItem}>
+                    <Image
+                      source={{ uri: item.cake.image.url }}
+                      style={styles.itemImage}
+                      resizeMode="cover"
                     />
-                  )}
+                    <View style={styles.itemDetails}>
+                      <Text style={styles.itemName}>{item.cake.name}</Text>
+                      <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
+                      <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
 
-                  <TouchableOpacity
-                    style={styles.modalCloseButton}
-                    onPress={() => setDeliveryDetailsVisible(false)}
-                  >
-                    <Text style={styles.modalCloseText}>Close</Text>
-                  </TouchableOpacity>
+              {/* Delivery Details Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Delivery Details</Text>
+                <TouchableOpacity
+                  style={styles.deliveryDetailsBox}
+                  onPress={() => setDeliveryDetailsVisible(true)}
+                >
+                  <View>
+                    {selectedAddress ? (
+                      <>
+                        <Text style={styles.deliveryName}>
+                          <Text style={{ fontWeight: "bold" }}>{selectedAddress.fullName}</Text> ({selectedAddress.phone})
+                        </Text>
+                        <Text style={styles.deliveryAddress}>
+                          {selectedAddress.street}, {selectedAddress.city}
+                        </Text>
+                      </>
+                    ) : (
+                      <Text style={styles.deliveryAddress}>No address selected</Text>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#1D4ED8" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Delivery Date Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Delivery Date</Text>
+                <TouchableOpacity
+                  style={styles.deliveryDateBox}
+                  onPress={toggleDatePicker}
+                >
+                  <View>
+                    <Text style={styles.deliveryDateText}>
+                      {deliveryDate ? formatDate(deliveryDate) : "Select delivery date"}
+                    </Text>
+                  </View>
+                  <Ionicons name="calendar-outline" size={24} color="#6b4226" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Shipping Method Section */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Shipping Method</Text>
+                <TouchableOpacity
+                  style={styles.shippingOption}
+                  onPress={() => setShippingModalVisible(true)}
+                >
+                  <Text style={styles.shippingText}>{shippingMethod}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#6b4226" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Promo Code Section */}
+              <View style={styles.promoContainer}>
+                <TextInput
+                  style={styles.promoInput}
+                  placeholder={appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"}
+                  value={promoCode}
+                  onChangeText={setPromoCode}
+                  editable={!appliedCode}
+                />
+                <TouchableOpacity style={styles.applyButton} onPress={applyPromoCode}>
+                  <Text style={styles.applyButtonText}>
+                    {appliedCode ? "Remove" : "Apply"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Payment Method Section */}
+              <View style={styles.paymentContainer}>
+                <Text style={styles.paymentTitle}>Payment Method</Text>
+                <View style={styles.cashPayment}>
+                  <Ionicons name="cash-outline" size={24} color="#6b4226" />
+                  <Text style={styles.paymentText}>Cash</Text>
                 </View>
               </View>
-            </Modal>
 
+              {/* Checkout Button Section */}
+              <View style={styles.checkoutContainer}>
+                <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
+                <TouchableOpacity
+                  style={styles.checkoutButton}
+                  onPress={handlePlaceOrder}
+                >
+                  <Text style={styles.checkoutButtonText}>Place Order</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </ScrollView>
 
+        <Modal transparent={true} visible={deliveryDetailsVisible} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Select a Delivery Address</Text>
 
+              {addresses.length === 0 ? (
+                // אם אין כתובות שמורות
+                <View style={styles.noAddressContainer}>
+                  <Text style={styles.noAddressText}>No addresses found</Text>
+                  <TouchableOpacity
+                    style={styles.addAddressButton}
+                    onPress={() => {
+                      setDeliveryDetailsVisible(false);
+                      setShowAddAddress(true); // הצגת מסך הוספת כתובת
+                    }}
+                  >
+                    <Text style={styles.addAddressText}>Add New Address</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <FlatList
+                  data={addresses}
+                  keyExtractor={(item) => item._id}
+                  renderItem={({ item }) => (
+                    <TouchableOpacity
+                      style={[
+                        styles.addressItem,
+                        selectedAddress?._id === item._id && styles.selectedAddress
+                      ]}
+                      onPress={() => {
+                        setSelectedAddress(item);
+                        setDeliveryDetailsVisible(false);
+                      }}
+                    >
+                      <Text style={styles.modalText}>
+                        <Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})
+                      </Text>
+                      <Text style={styles.modalText}>{item.street}, {item.city}</Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
 
-
-            {/* Shipping Method Section */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Shipping Method</Text>
               <TouchableOpacity
-                style={styles.shippingOption}
-                onPress={() => setShippingModalVisible(true)}
+                style={styles.modalCloseButton}
+                onPress={() => setDeliveryDetailsVisible(false)}
               >
-                <Text style={styles.shippingText}>{shippingMethod}</Text>
-                <Ionicons name="chevron-forward" size={20} color="#6b4226" />
+                <Text style={styles.modalCloseText}>Close</Text>
               </TouchableOpacity>
             </View>
-            <Modal transparent={true} visible={shippingModalVisible} animationType="slide">
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Choose Shipping Method</Text>
+          </View>
+        </Modal>
 
-                  {/* אפשרות למשלוח */}
-                  <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOption,
-                    ]}
-                    onPress={() => {
-                      setShippingMethod("Standard Delivery (2-3 days)");
-                      setShippingModalVisible(false);
-                    }}
-                  >
-                    <Ionicons name="bicycle" size={24} color="#6b4226" />
-                    <Text style={styles.modalText}>Standard Delivery (2-3 days)</Text>
-                  </TouchableOpacity>
+        <Modal transparent={true} visible={shippingModalVisible} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Choose Shipping Method</Text>
 
-                  {/* אפשרות לאיסוף עצמי */}
-                  <TouchableOpacity
-                    style={[
-                      styles.modalButton,
-                      shippingMethod === "Self Pickup" && styles.selectedOption,
-                    ]}
-                    onPress={() => {
-                      setShippingMethod("Self Pickup");
-                      setShippingModalVisible(false);
-                    }}
-                  >
-                    <Ionicons name="storefront-outline" size={24} color="#6b4226" />
-                    <Text style={styles.modalText}>Self Pickup</Text>
-                  </TouchableOpacity>
+              {/* אפשרות למשלוח */}
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  setShippingMethod("Standard Delivery (2-3 days)");
+                  setShippingModalVisible(false);
+                }}
+              >
+                <Ionicons name="bicycle" size={24} color="#6b4226" />
+                <Text style={styles.modalText}>Standard Delivery (2-3 days)</Text>
+              </TouchableOpacity>
 
-                  {/* כפתור סגירה */}
-                  <TouchableOpacity
-                    style={styles.modalCloseButton}
-                    onPress={() => setShippingModalVisible(false)}
-                  >
-                    <Text style={styles.modalCloseText}>Close</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-            <Modal transparent={true} visible={ShowAddAddress} animationType="slide">
-              <View style={styles.modalOverlay}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalTitle}>Add New Address</Text>
+              {/* אפשרות לאיסוף עצמי */}
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  shippingMethod === "Self Pickup" && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  setShippingMethod("Self Pickup");
+                  setShippingModalVisible(false);
+                }}
+              >
+                <Ionicons name="storefront-outline" size={24} color="#6b4226" />
+                <Text style={styles.modalText}>Self Pickup</Text>
+              </TouchableOpacity>
 
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Full Name"
-                    value={newAddress.fullName}
-                    onChangeText={(text) => setNewAddress({ ...newAddress, fullName: text })}
-                  />
-
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Phone"
-                    value={newAddress.phone}
-                    onChangeText={(text) => setNewAddress({ ...newAddress, phone: text })}
-                    keyboardType="phone-pad"
-                  />
-
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Street"
-                    value={newAddress.street}
-                    onChangeText={(text) => setNewAddress({ ...newAddress, street: text })}
-                  />
-
-                  <TextInput
-                    style={styles.input}
-                    placeholder="City"
-                    value={newAddress.city}
-                    onChangeText={(text) => setNewAddress({ ...newAddress, city: text })}
-                  />
-
-                  <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
-                    <Text style={styles.addButtonText}>Save Address</Text>
-
-                  </TouchableOpacity>
-
-
-                  <TouchableOpacity
-                    style={styles.modalCloseButton}
-                    onPress={() => setShowAddAddress(false)}
-                  >
-                    <Text style={styles.modalCloseText}>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </Modal>
-
-
-            {/* Promo Code Section */}
-            <View style={styles.promoContainer}>
+              {/* כפתור סגירה */}
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShippingModalVisible(false)}
+              >
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+        <Modal transparent={true} visible={ShowAddAddress} animationType="slide">
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Add New Address</Text>
 
               <TextInput
-                style={styles.promoInput}
-                placeholder={appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"}
-                value={promoCode}
-                onChangeText={setPromoCode}
-                editable={!appliedCode} // נעול אם קופון כבר הוזן
+                style={styles.input}
+                placeholder="Full Name"
+                value={newAddress.fullName}
+                onChangeText={(text) => setNewAddress({ ...newAddress, fullName: text })}
               />
 
-              <TouchableOpacity style={styles.applyButton} onPress={applyPromoCode}>
-                <Text style={styles.applyButtonText}>
-                  {appliedCode ? "Remove" : "Apply"}
-                </Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Phone"
+                value={newAddress.phone}
+                onChangeText={(text) => setNewAddress({ ...newAddress, phone: text })}
+                keyboardType="phone-pad"
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="Street"
+                value={newAddress.street}
+                onChangeText={(text) => setNewAddress({ ...newAddress, street: text })}
+              />
+
+              <TextInput
+                style={styles.input}
+                placeholder="City"
+                value={newAddress.city}
+                onChangeText={(text) => setNewAddress({ ...newAddress, city: text })}
+              />
+
+              <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+                <Text style={styles.addButtonText}>Save Address</Text>
+
               </TouchableOpacity>
-            </View>
 
 
-            <View style={styles.paymentContainer}>
-              <Text style={styles.paymentTitle}>Payment Method</Text>
-              <View style={styles.cashPayment}>
-                <Ionicons name="cash-outline" size={24} color="#6b4226" />
-                <Text style={styles.paymentText}>Cash</Text>
-              </View>
-            </View>
-            <View style={styles.checkoutContainer}>
-              <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
               <TouchableOpacity
-                style={styles.checkoutButton}
-                onPress={handlePlaceOrder}
+                style={styles.modalCloseButton}
+                onPress={() => setShowAddAddress(false)}
               >
-                <Text style={styles.checkoutButtonText}>Place Order</Text>
+                <Text style={styles.modalCloseText}>Cancel</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
+          </View>
+        </Modal>
 
+        {showDatePicker && (
+          <DateTimePicker
+            value={deliveryDate || new Date()}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={handleDateChange}
+            minimumDate={new Date()}
+            maximumDate={new Date(new Date().getFullYear(), 11, 31)} // December 31 of current year
+            locale="en-GB" // This will use DD/MM format
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
-
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -554,35 +630,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 10,
   },
-  cartList: { paddingBottom: 16 },
-
-  // 🎂 עיצוב המוצרים בעגלה
-  cartItem: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.15,
-    elevation: 3,
+  scrollView: {
+    flex: 1,
+    padding: 16,
   },
-  itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
-  itemDetails: { flex: 1 },
-  itemName: { fontSize: 16, fontWeight: "bold", color: "#5A3827" },
-  itemPrice: { fontSize: 14, color: "#5A3827", fontWeight: "500" },
-  itemQuantity: { fontSize: 14, color: "#7B6D63" },
-
-  // 📦 אזור המידע
   sectionContainer: {
     borderWidth: 1.5,
     borderColor: "#E5D3C2",
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: "#FFF",
-    padding: 9,
-    marginTop: 15,
+    padding: 16,
+    marginTop: 16,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -594,8 +653,56 @@ const styles = StyleSheet.create({
     color: "#5A3827",
     marginBottom: 10,
   },
-
-  // 📍 כתובת למשלוח
+  cartItem: {
+    flexDirection: "row",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: "#E5D3C2",
+  },
+  itemImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 12,
+    marginRight: 16,
+    borderWidth: 1,
+    borderColor: "#E5D3C2",
+  },
+  itemDetails: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingVertical: 4,
+  },
+  itemName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#5A3827",
+    marginBottom: 8,
+  },
+  itemPrice: {
+    fontSize: 18,
+    color: "#5A3827",
+    fontWeight: "600",
+    marginBottom: 6,
+  },
+  itemQuantity: {
+    fontSize: 16,
+    color: "#7B6D63",
+    backgroundColor: "#F8F1E7",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    alignSelf: "flex-start",
+    borderWidth: 1,
+    borderColor: "#E5D3C2",
+  },
   deliveryDetailsBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -612,8 +719,6 @@ const styles = StyleSheet.create({
   },
   deliveryName: { fontSize: 16, color: "#5A3827", fontWeight: "bold" },
   deliveryAddress: { fontSize: 14, color: "#7B6D63", lineHeight: 20 },
-
-  // 🚚 בחירת סוג משלוח
   shippingOption: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -623,8 +728,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   shippingText: { fontSize: 14, color: "#5A3827", fontWeight: "bold" },
-
-  // 🎟️ קופון הנחה
   promoContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -640,7 +743,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     elevation: 3,
   },
-
   promoInput: {
     flex: 1,
     padding: 12,
@@ -659,8 +761,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
-
-  // 💵 שיטת תשלום
   paymentContainer: {
     marginTop: 20,
     padding: 16,
@@ -686,8 +786,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#F8F1E7",
   },
   paymentText: { fontSize: 16, color: "#5A3827", marginLeft: 10 },
-
-  // 🛒 כפתור Checkout
   checkoutContainer: { marginTop: 20, alignItems: "center" },
   totalText: { fontSize: 20, fontWeight: "bold", color: "#5A3827" },
   checkoutButton: {
@@ -703,8 +801,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-
-  // 📌 מודלים
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
@@ -747,8 +843,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-
-  // 📍 עיצוב אופציות במודל
   modalButton: {
     flexDirection: "row",
     alignItems: "center",
@@ -766,8 +860,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#5A3827",
     borderColor: "#5A3827",
   },
-
-  // 📍 עיצוב כתובת במודל
   addressItem: {
     padding: 12,
     borderBottomWidth: 1,
@@ -837,7 +929,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-
-
-
+  deliveryDateBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#F8F1E7",
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#E5D3C2",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 3,
+  },
+  deliveryDateText: {
+    fontSize: 16,
+    color: "#5A3827",
+    fontWeight: "bold",
+  },
 });
