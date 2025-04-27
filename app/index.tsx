@@ -17,10 +17,10 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google"; // Import the Google auth hook
 // שימוש בייבוא require אם אין esModuleInterop
-import { jwtDecode } from 'jwt-decode';
+import { jwtDecode } from "jwt-decode";
 import styles from "./styles/LoginStyles";
 import config from "../config";
-import { FontAwesome } from '@expo/vector-icons';
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -29,8 +29,14 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
-  const [tempTokens, setTempTokens] = useState<{ accessToken: string; refreshToken: string } | null>(null);
-  const [tempUserData, setTempUserData] = useState<{ userID: string; role: string } | null>(null);
+  const [tempTokens, setTempTokens] = useState<{
+    accessToken: string;
+    refreshToken: string;
+  } | null>(null);
+  const [tempUserData, setTempUserData] = useState<{
+    userID: string;
+    role: string;
+  } | null>(null);
   const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
   // פונקציה לרענון ה-Access Token
@@ -124,7 +130,7 @@ export default function LoginScreen() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: email.toLowerCase().trim(),
-          password
+          password,
         }),
       });
 
@@ -133,7 +139,11 @@ export default function LoginScreen() {
 
       if (response.ok) {
         // Check if the response has the expected structure
-        if (!data.tokens || !data.tokens.accessToken || !data.tokens.refreshToken) {
+        if (
+          !data.tokens ||
+          !data.tokens.accessToken ||
+          !data.tokens.refreshToken
+        ) {
           throw new Error("Invalid response format from server");
         }
 
@@ -142,12 +152,16 @@ export default function LoginScreen() {
           setTempTokens(data.tokens);
           setTempUserData({
             userID: data.userID || "",
-            role: data.role || "user"
+            role: data.role || "user",
           });
           setShow2FAModal(true);
         } else {
           // No 2FA required, proceed with normal login
-          await completeLogin(data.tokens, data.userID || "", data.role || "user");
+          await completeLogin(
+            data.tokens,
+            data.userID || "",
+            data.role || "user"
+          );
         }
       } else {
         console.warn("⚠️ Login failed:", data?.error || "Unknown error");
@@ -155,7 +169,12 @@ export default function LoginScreen() {
       }
     } catch (error) {
       console.error("❌ Error during login process:", error);
-      Alert.alert("Error", error instanceof Error ? error.message : "Something went wrong. Please try again.");
+      Alert.alert(
+        "Error",
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -173,7 +192,7 @@ export default function LoginScreen() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${tempTokens?.accessToken}`
+          Authorization: `Bearer ${tempTokens?.accessToken}`,
         },
         body: JSON.stringify({ code: verificationCode }),
       });
@@ -183,7 +202,11 @@ export default function LoginScreen() {
       if (response.ok) {
         // 2FA verification successful, complete login
         if (tempTokens && tempUserData) {
-          await completeLogin(tempTokens, tempUserData.userID, tempUserData.role);
+          await completeLogin(
+            tempTokens,
+            tempUserData.userID,
+            tempUserData.role
+          );
         }
       } else {
         Alert.alert("Error", data?.error || "Invalid verification code");
@@ -196,7 +219,11 @@ export default function LoginScreen() {
     }
   };
 
-  const completeLogin = async (tokens: { accessToken: string; refreshToken: string }, userID: string, role: string) => {
+  const completeLogin = async (
+    tokens: { accessToken: string; refreshToken: string },
+    userID: string,
+    role: string
+  ) => {
     await AsyncStorage.setItem("accessToken", tokens.accessToken);
     await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
     await AsyncStorage.setItem("userID", userID);
@@ -246,13 +273,16 @@ export default function LoginScreen() {
       Keyboard.dismiss();
 
       // Add a small delay to ensure any existing auth context is cleared
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300));
 
       // Start Google auth
       await promptAsync();
     } catch (error) {
       console.error("Google auth error:", error);
-      Alert.alert("Error", "Failed to start Google authentication. Please try again.");
+      Alert.alert(
+        "Error",
+        "Failed to start Google authentication. Please try again."
+      );
     } finally {
       // Reset auth flag after a delay
       setTimeout(() => setIsAuthInProgress(false), 1000);
@@ -262,7 +292,6 @@ export default function LoginScreen() {
   useEffect(() => {
     if (response?.type === "success") {
       const { id_token } = response.params;
-      // שלח את הטוקן לשרת שלך לבדוק את ה־ID token
       console.log("🔹 Google login success, token:", id_token);
 
       fetch(`${config.BASE_URL}/auth/google/callback`, {
@@ -277,16 +306,24 @@ export default function LoginScreen() {
           return res.json();
         })
         .then((data) => {
-          if (data.accessToken && data.refreshToken) {
+          console.log("🔹 Google login server response:", data);
+
+          if (data.requires2FA) {
+            // 2FA required - save temporary tokens and show modal
+            setTempTokens(data.tokens);
+            setTempUserData({
+              userID: data.userId || "",
+              role: data.role || "user",
+            });
+            setShow2FAModal(true);
+          } else if (data.accessToken && data.refreshToken) {
+            // Normal login flow
             AsyncStorage.setItem("accessToken", data.accessToken);
             AsyncStorage.setItem("refreshToken", data.refreshToken);
-            AsyncStorage.setItem("userID", data.userID || "");
+            AsyncStorage.setItem("userID", data.userId || "");
+            AsyncStorage.setItem("role", data.role || "user");
 
-            // Store and check role for proper redirection
-            const role = data.role || "user";
-            AsyncStorage.setItem("role", role);
-
-            if (role === "admin") {
+            if (data.role === "admin") {
               router.replace("/(admintabs)/AdminDashboardScreen");
             } else {
               router.replace("/(tabs)/DashboardScreen");
@@ -313,7 +350,9 @@ export default function LoginScreen() {
       >
         <View style={styles.container}>
           <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>Making your celebrations sweeter {"\n"}one cake at a time!</Text>
+          <Text style={styles.subtitle}>
+            Making your celebrations sweeter {"\n"}one cake at a time!
+          </Text>
 
           <View style={styles.inputContainer}>
             <TextInput
