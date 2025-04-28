@@ -46,7 +46,14 @@ export default function ForgotPasswordScreen() {
 
       if (response.ok) {
         Alert.alert("Success", "A reset code has been sent to your email.", [
-          { text: "OK", onPress: () => router.push("/ResetPasswordScreen") },
+          {
+            text: "OK",
+            onPress: () =>
+              router.push({
+                pathname: "/ResetPasswordScreen",
+                params: { email: email.toLowerCase().trim() },
+              }),
+          },
         ]);
       } else {
         Alert.alert("Error", data.error || "Failed to send reset email.");

@@ -7,21 +7,28 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import styles from "./styles/LoginStyles";
 import config from "../config";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const params = useLocalSearchParams<{ email?: string }>();
+  const initialEmail = params.email;
+  const [email, setEmail] = useState(initialEmail || "");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   // 📌 פונקציה לאיפוס סיסמה
   const handleResetPassword = async () => {
-    if (!email || !code || !newPassword) {
+    if (!email || !code || !newPassword || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
       return;
     }
 
@@ -79,6 +86,14 @@ export default function ResetPasswordScreen() {
         secureTextEntry
         value={newPassword}
         onChangeText={setNewPassword}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        placeholderTextColor="#000"
+        secureTextEntry
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
       />
 
       <TouchableOpacity
