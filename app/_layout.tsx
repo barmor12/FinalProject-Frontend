@@ -54,7 +54,7 @@ export default function RootLayout() {
           />
           <Stack.Screen name="adminOrdersScreen" />
           <Stack.Screen name="OrderDetailsScreen" />
-
+          <Stack.Screen name="AdminExpenesesScreen" />
           {/* הטאבים נטענים תמיד */}
           <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
           <Stack.Screen

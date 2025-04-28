@@ -143,7 +143,12 @@ export default function AdminPanelScreen() {
         >
           <Text style={styles.buttonText}>Send Notifications</Text>
         </TouchableOpacity>
-
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => router.push("/AdminExpenesesScreen")}
+        >
+          <Text style={styles.buttonText}>Manage Expenses</Text>
+        </TouchableOpacity>
         {/* כפתור התנתקות */}
         <TouchableOpacity
           style={[styles.button, styles.logoutButton]}

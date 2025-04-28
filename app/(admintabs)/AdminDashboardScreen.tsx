@@ -288,9 +288,17 @@ export default function AdminDashboardScreen() {
         {/* Selected Date Orders */}
         {selectedDate && (
           <View style={styles.selectedDateContainer}>
-            <Text style={styles.selectedDateTitle}>
-              Orders for {new Date(selectedDate).toLocaleDateString()}
-            </Text>
+            <View style={styles.selectedDateHeader}>
+              <Text style={styles.selectedDateTitle}>
+                Orders for {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setSelectedDate("")}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
             <ScrollView style={styles.selectedDateOrders}>
               {orders.length > 0 ? (
                 orders.map(order => (
@@ -400,12 +408,30 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  selectedDateHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
   selectedDateTitle: {
     fontSize: 20,
     fontWeight: 'bold',
     color: '#6b4226',
-    marginBottom: 15,
-    textAlign: 'center',
+    flex: 1,
+  },
+  closeButton: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f0f0f0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: 'bold',
   },
   selectedDateOrders: {
     maxHeight: 400,
