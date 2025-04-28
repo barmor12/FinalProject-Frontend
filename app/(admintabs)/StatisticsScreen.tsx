@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import { LineChart, PieChart } from "react-native-chart-kit";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -80,6 +80,42 @@ const StatisticsScreen = () => {
     }, [fetchStatistics])
   );
 
+  const generateFinancialReport = async () => {
+    try {
+      setIsLoading(true);
+      const token = await AsyncStorage.getItem("accessToken");
+
+      if (!token) {
+        Alert.alert("Error", "No access token found");
+        return;
+      }
+
+      const response = await fetch(`${config.BASE_URL}/statistics/financial-report`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert(
+          "Success",
+          "Financial report has been sent to your email address.",
+          [{ text: "OK" }]
+        );
+      } else {
+        Alert.alert("Error", data.message || "Failed to generate financial report");
+      }
+    } catch (error) {
+      console.error('Error generating financial report:', error);
+      Alert.alert("Error", "Failed to generate financial report");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const chartConfig = {
     backgroundGradientFrom: '#ffffff',
@@ -122,6 +158,13 @@ const StatisticsScreen = () => {
       <ScrollView style={styles.container}>
         <View style={styles.header}>
           <Text style={styles.title}>Statistics</Text>
+          <TouchableOpacity
+            style={styles.reportButton}
+            onPress={generateFinancialReport}
+            disabled={isLoading}
+          >
+            <Text style={styles.reportButtonText}>Generate Financial Report</Text>
+          </TouchableOpacity>
         </View>
 
         {isLoading ? (
@@ -226,6 +269,9 @@ const styles = StyleSheet.create({
   header: {
     padding: 20,
     backgroundColor: "#fdf6f0",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   title: {
     fontSize: 24,
@@ -333,6 +379,22 @@ const styles = StyleSheet.create({
   cakeStat: {
     fontSize: 14,
     color: '#666',
+  },
+  reportButton: {
+    backgroundColor: "#6b4226",
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 8,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  reportButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
 
