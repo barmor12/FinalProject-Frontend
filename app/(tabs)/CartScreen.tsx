@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Modal,
+  ImageSourcePropType,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
@@ -36,7 +37,7 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -231,7 +232,10 @@ export default function CartScreen() {
   };
 
   const handleImageError = (itemId: string) => {
-    setImageErrors(prev => ({ ...prev, [itemId]: true }));
+    setImageErrors(prev => ({
+      ...prev,
+      [itemId]: true
+    }));
   };
 
   const removeUnavailableProduct = async (itemId: string) => {
@@ -278,6 +282,25 @@ export default function CartScreen() {
     }
   };
 
+  const isValidImageUrl = (url: string | undefined): boolean => {
+    if (!url || url.trim() === '') return false;
+    try {
+      // Check if URL is properly formatted
+      const parsedUrl = new URL(url);
+      // Check if URL has a valid protocol (http or https)
+      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  const getImageSource = (url: string | undefined): ImageSourcePropType | undefined => {
+    if (!url || url.trim() === '' || !isValidImageUrl(url)) {
+      return undefined;
+    }
+    return { uri: url.trim() };
+  };
+
   const renderCartItem = ({ item }: { item: CartItem }) => {
     // Safety check - if cake data is invalid, show placeholder with removal option
     if (!item.cake || !item.cake.name || !item.cake._id) {
@@ -303,16 +326,20 @@ export default function CartScreen() {
       );
     }
 
+    const imageUrl = item.cake.image?.url?.trim();
+    const imageSource = getImageSource(imageUrl);
+    const shouldShowPlaceholder = imageErrors[item._id] || !imageSource;
+
     return (
       <View style={styles.cartItem}>
         <TouchableOpacity onPress={() => openProductModal(item)} style={styles.cartItemContent}>
-          {imageErrors[item._id] || !item.cake.image?.url ? (
+          {shouldShowPlaceholder ? (
             <View style={[styles.itemImage, styles.placeholderImage]}>
-              <Text style={styles.placeholderText}>No Image</Text>
+              <Text style={styles.placeholderText}>Image Unavailable</Text>
             </View>
           ) : (
             <Image
-              source={{ uri: item.cake.image.url || 'https://via.placeholder.com/80' }}
+              source={imageSource}
               style={styles.itemImage}
               resizeMode="cover"
               onError={() => handleImageError(item._id)}
@@ -320,7 +347,7 @@ export default function CartScreen() {
           )}
           <View style={styles.itemDetails}>
             <Text style={styles.itemName}>{item.cake.name}</Text>
-            <Text style={styles.itemPrice}>${(item.cake.price || 0).toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
             <View style={styles.quantityContainer}>
               <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)}>
                 <Ionicons name="remove-circle-outline" size={26} color="#6b4226" />
@@ -368,13 +395,13 @@ export default function CartScreen() {
           <View style={styles.modalContent}>
             {selectedProduct && selectedProduct.cake && (
               <>
-                {imageErrors[selectedProduct._id] || !selectedProduct.cake.image?.url ? (
+                {imageErrors[selectedProduct._id] || !getImageSource(selectedProduct.cake.image?.url?.trim()) ? (
                   <View style={[styles.modalImage, styles.placeholderImage]}>
-                    <Text style={styles.placeholderText}>No Image Available</Text>
+                    <Text style={styles.placeholderText}>Image Unavailable</Text>
                   </View>
                 ) : (
                   <Image
-                    source={{ uri: selectedProduct.cake.image.url || 'https://via.placeholder.com/200' }}
+                    source={getImageSource(selectedProduct.cake.image?.url?.trim())}
                     style={styles.modalImage}
                     resizeMode="cover"
                     onError={() => handleImageError(selectedProduct._id)}
@@ -382,7 +409,7 @@ export default function CartScreen() {
                 )}
                 <Text style={styles.modalTitle}>{selectedProduct.cake.name}</Text>
                 <Text style={styles.modalDescription}>{selectedProduct.cake.description || 'No description available'}</Text>
-                <Text style={styles.modalPrice}>${(selectedProduct.cake.price || 0).toFixed(2)}</Text>
+                <Text style={styles.modalPrice}>${selectedProduct.cake.price.toFixed(2)}</Text>
                 <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
@@ -434,14 +461,17 @@ const styles = StyleSheet.create({
   itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
   modalImage: { width: 200, height: 200, borderRadius: 8, marginBottom: 15 },
   placeholderImage: {
-    backgroundColor: "#e0e0e0",
-    justifyContent: "center",
-    alignItems: "center",
+    backgroundColor: '#F8F1E7',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5D3C2',
   },
   placeholderText: {
-    color: "#666",
+    color: '#7B6D63',
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
+    padding: 5,
   },
   errorText: {
     color: "#ff4444",

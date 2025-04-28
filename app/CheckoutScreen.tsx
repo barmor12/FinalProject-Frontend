@@ -439,9 +439,45 @@ export default function CheckoutScreen() {
                 </View>
               </View>
 
+              {/* Order Summary Section */}
+              <View style={styles.summaryContainer}>
+                <Text style={styles.summaryTitle}>Order Summary</Text>
+
+                {/* Subtotal */}
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Subtotal</Text>
+                  <Text style={styles.summaryValue}>
+                    ${cartItems.reduce((sum, item) => sum + item.cake.price * item.quantity, 0).toFixed(2)}
+                  </Text>
+                </View>
+
+                {/* Shipping */}
+                <View style={styles.summaryRow}>
+                  <Text style={styles.summaryLabel}>Shipping</Text>
+                  <Text style={styles.summaryValue}>$10.00</Text>
+                </View>
+
+                {/* Discount if applied */}
+                {discountAmount > 0 && (
+                  <View style={styles.summaryRow}>
+                    <Text style={styles.summaryLabel}>Discount ({discountAmount}%)</Text>
+                    <Text style={[styles.summaryValue, styles.discountValue]}>
+                      -${(cartItems.reduce((sum, item) => sum + item.cake.price * item.quantity, 0) * (discountAmount / 100)).toFixed(2)}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Total */}
+                <View style={[styles.summaryRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>
+                    ${(parseFloat(calculateTotal()) + 10).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
               {/* Checkout Button Section */}
               <View style={styles.checkoutContainer}>
-                <Text style={styles.totalText}>Total: ${calculateTotal()}</Text>
                 <TouchableOpacity
                   style={styles.checkoutButton}
                   onPress={handlePlaceOrder}
@@ -947,5 +983,58 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#5A3827",
     fontWeight: "bold",
+  },
+  summaryContainer: {
+    marginTop: 20,
+    padding: 16,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 3,
+  },
+  summaryTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#5A3827",
+    marginBottom: 15,
+  },
+  summaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5D3C2",
+  },
+  summaryLabel: {
+    fontSize: 16,
+    color: "#7B6D63",
+  },
+  summaryValue: {
+    fontSize: 16,
+    color: "#5A3827",
+    fontWeight: "500",
+  },
+  discountValue: {
+    color: "#28a745",
+  },
+  totalRow: {
+    borderBottomWidth: 0,
+    marginTop: 10,
+    paddingTop: 10,
+    borderTopWidth: 2,
+    borderTopColor: "#E5D3C2",
+  },
+  totalLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#5A3827",
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#5A3827",
   },
 });
