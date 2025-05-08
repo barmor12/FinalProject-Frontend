@@ -7,6 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
+    "sdkVersion": "53.0.0",
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.avielandbar.cakebusinessapp",
