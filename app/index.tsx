@@ -88,9 +88,8 @@ export default function LoginScreen() {
     if (accessToken) {
       try {
         const decoded = decodeJwt(accessToken);
-        // Save userId from token if not already stored
-        const existingUserId = await AsyncStorage.getItem("userId");
-        if (!existingUserId && decoded.userId) {
+        // Always update userId in storage from token
+        if (decoded.userId) {
           await AsyncStorage.setItem("userId", decoded.userId);
         }
         // בדיקה אם הטוקן פג תוקף
@@ -162,7 +161,7 @@ export default function LoginScreen() {
           // Store temporary tokens and user data
           setTempTokens(data.tokens);
           setTempUserData({
-            userID: data.userID || "",
+            userID: data.userId || "",
             role: data.role || "user",
           });
           setShow2FAModal(true);
@@ -170,7 +169,7 @@ export default function LoginScreen() {
           // No 2FA required, proceed with normal login
           await completeLogin(
             data.tokens,
-            data.userID || "",
+            data.userId || "",
             data.role || "user"
           );
         }
@@ -331,7 +330,7 @@ export default function LoginScreen() {
             // Normal login flow
             AsyncStorage.setItem("accessToken", data.accessToken);
             AsyncStorage.setItem("refreshToken", data.refreshToken);
-            AsyncStorage.setItem("userID", data.userId || "");
+            AsyncStorage.setItem("userId", data.userId || "");
             AsyncStorage.setItem("role", data.role || "user");
 
             if (data.role === "admin") {

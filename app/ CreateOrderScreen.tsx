@@ -56,13 +56,21 @@ export default function CreateOrderScreen() {
 
       if (!token) {
         Alert.alert("Error", "User not authenticated.");
+        setLoading(false);
+        return;
+      }
+
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) {
+        Alert.alert("Error", "User not authenticated.");
+        setLoading(false);
         return;
       }
 
       const response = await axios.post(
         `${config.BASE_URL}/order/create`,
         {
-          userId: "USER_ID_FROM_AUTH", // יש לעדכן עם ה-User ID הנכון
+          userId,
           cakeId: selectedCake._id,
           quantity,
         },
