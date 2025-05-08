@@ -1,4 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { Buffer } from "buffer";
+
+// Utility to decode JWT payload without external library
+function decodeJwt(token: string): any {
+  const payload = token.split(".")[1];
+  const decoded = Buffer.from(payload, "base64").toString("utf-8");
+  return JSON.parse(decoded);
+}
 import {
   View,
   Text,
@@ -16,8 +24,6 @@ import {
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Google from "expo-auth-session/providers/google"; // Import the Google auth hook
-// שימוש בייבוא require אם אין esModuleInterop
-import { jwtDecode } from "jwt-decode";
 import styles from "./styles/LoginStyles";
 import config from "../config";
 import { FontAwesome } from "@expo/vector-icons";
@@ -81,7 +87,12 @@ export default function LoginScreen() {
 
     if (accessToken) {
       try {
-        const decoded = jwtDecode(accessToken);
+        const decoded = decodeJwt(accessToken);
+        // Save userId from token if not already stored
+        const existingUserId = await AsyncStorage.getItem("userId");
+        if (!existingUserId && decoded.userId) {
+          await AsyncStorage.setItem("userId", decoded.userId);
+        }
         // בדיקה אם הטוקן פג תוקף
         if (decoded.exp! * 1000 < Date.now()) {
           console.log("🔄 Token expired, refreshing...");
@@ -226,7 +237,7 @@ export default function LoginScreen() {
   ) => {
     await AsyncStorage.setItem("accessToken", tokens.accessToken);
     await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
-    await AsyncStorage.setItem("userID", userID);
+    await AsyncStorage.setItem("userId", userID);
     await AsyncStorage.setItem("role", role);
 
     Alert.alert("Success", "Logged in successfully!");

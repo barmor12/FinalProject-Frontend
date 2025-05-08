@@ -49,7 +49,7 @@ export default function OrdersScreen() {
     try {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
-      const userId = await AsyncStorage.getItem("userID");
+      const userId = await AsyncStorage.getItem("userId");
       console.log("userId", userId);
       console.log("token", token);
       if (!token || !userId) {
@@ -107,7 +107,9 @@ export default function OrdersScreen() {
       if (!token) return;
 
       // Filter out items where the cake is null or undefined
-      const validItems = order.items.filter(item => item.cake && item.cake._id);
+      const validItems = order.items.filter(
+        (item) => item.cake && item.cake._id
+      );
 
       if (validItems.length === 0) {
         Alert.alert(
@@ -173,7 +175,7 @@ export default function OrdersScreen() {
               style={[
                 styles.filterButton,
                 selectedFilter === status ||
-                  (status === "all" && !selectedFilter)
+                (status === "all" && !selectedFilter)
                   ? styles.activeFilter
                   : null,
               ]}
