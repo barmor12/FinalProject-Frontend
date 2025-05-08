@@ -1,3 +1,11 @@
+import * as Notifications from "expo-notifications";
+/**
+ * מגדיר את ה־notification handler (קובע כיצד תוצג כל הודעה).
+ */
+export function registerNotifications() {
+  // כבר קבענו את ה־handler בהגדרה העליונה
+}
+import { Subscription } from "expo-notifications";
 import { Tabs } from "expo-router";
 import React, { useState, useEffect } from "react";
 import { View, Text, Platform, StyleSheet } from "react-native";
@@ -5,6 +13,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
 import config from "@/config";
+import {
+  registerPushToken,
+  scheduleTestNotification,
+  setupNotificationListeners,
+} from "../utils/notifications";
 
 export default function TabLayout() {
   const [role, setRole] = useState<string | null>(null);
@@ -59,6 +72,14 @@ export default function TabLayout() {
     // ✅ מאזין לשינויים ומעדכן כל 2 שניות
     const interval = setInterval(fetchCartItems, 2000);
     return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    registerNotifications();
+    registerPushToken();
+    scheduleTestNotification();
+    const cleanup = setupNotificationListeners();
+    return cleanup;
   }, []);
 
   // ✅ מאזין למעבר לטאב ומרענן את מספר הפריטים
@@ -133,7 +154,6 @@ export default function TabLayout() {
           ),
         }}
       />
-
     </Tabs>
   );
 }
