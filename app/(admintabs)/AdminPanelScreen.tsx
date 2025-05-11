@@ -96,15 +96,13 @@ export default function AdminPanelScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        {/* תמונת פרופיל ושם משתמש */}
+        {/* Admin Icon */}
         <Image
-          source={
-            user.profilePic
-              ? { uri: user.profilePic }
-              : require("../../assets/images/userIcon.png")
-          }
-          style={styles.profileImage}
+          source={require("../../assets/images/adminIcon.png")}
+          style={styles.adminIcon}
         />
+
+
         <Text style={styles.userName}>{user.name}</Text>
 
         <Text style={styles.title}>Admin Panel</Text>
@@ -197,12 +195,6 @@ const styles = StyleSheet.create({
   loader: {
     marginVertical: 20,
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-  },
   userName: {
     fontSize: 20,
     fontWeight: "bold",
@@ -228,6 +220,7 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: "#b22222", // אדום להתנתקות
+    marginBottom: 100
   },
   logoutText: {
     color: "#fff",
@@ -237,5 +230,14 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: "#6b4226",
+  },
+  adminIcon: {
+    width: 150,
+    height: 150,
+    borderRadius: 90,
+    borderColor: "#6b4226",
+    borderWidth: 1,
+    marginBottom: 60,
+    marginTop: 100
   },
 });

@@ -27,6 +27,8 @@ export default function AdminDashboardScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<any[]>([]);
+  const [allOrders, setAllOrders] = useState<any[]>([]);
+  const [displayedOrders, setDisplayedOrders] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [showCalendar] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)); // Format: YYYY-MM
@@ -71,7 +73,10 @@ export default function AdminDashboardScreen() {
         }
       );
 
-      setOrders(ordersResponse.data);
+      const fetchedOrders = ordersResponse.data;
+      setOrders(fetchedOrders);
+      setAllOrders(fetchedOrders);
+      setDisplayedOrders(fetchedOrders);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -109,7 +114,10 @@ export default function AdminDashboardScreen() {
         }
       );
 
-      setOrders(response.data);
+      const fetchedOrders = response.data;
+      setOrders(fetchedOrders);
+      setAllOrders(fetchedOrders);
+      setDisplayedOrders(fetchedOrders);
     } catch (error) {
       console.error("Failed to fetch orders by month:", error);
     }
@@ -130,8 +138,8 @@ export default function AdminDashboardScreen() {
         }
       );
 
-      console.log('Orders for date:', response.data);
-      setOrders(response.data);
+      // Only update displayed orders, keep allOrders for dots
+      setDisplayedOrders(response.data);
     } catch (error) {
       console.error("Failed to fetch orders by date:", error);
     }
@@ -141,8 +149,8 @@ export default function AdminDashboardScreen() {
   const getMarkedDates = () => {
     const markedDates: { [key: string]: any } = {};
 
-    // Add dots for days with orders
-    orders.forEach(order => {
+    // Add dots for days with orders - use allOrders instead of orders
+    allOrders.forEach(order => {
       if (order.deliveryDate) {
         try {
           const date = new Date(order.deliveryDate);
@@ -161,8 +169,10 @@ export default function AdminDashboardScreen() {
 
     // Add selected date styling if a date is selected
     if (selectedDate) {
+      // Create a proper merge of the existing dots with the selection
+      const existingProps = markedDates[selectedDate] || {};
       markedDates[selectedDate] = {
-        ...markedDates[selectedDate],
+        ...existingProps,
         selected: true,
         selectedColor: '#6b4226'
       };
@@ -248,40 +258,9 @@ export default function AdminDashboardScreen() {
               selectedDotColor: '#fff',
               arrowColor: '#6b4226',
               monthTextColor: '#6b4226',
-              textMonthFontWeight: 'bold',
-              textDayFontSize: 16,
-              textMonthFontSize: 16,
-              textDayHeaderFontSize: 14,
-              dotStyle: {
-                width: 8,
-                height: 8,
-                borderRadius: 4,
-                marginTop: 2
-              },
-              'stylesheet.calendar.header': {
-                dayTextAtIndex0: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex1: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex2: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex3: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex4: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex5: {
-                  color: '#5A3827'
-                },
-                dayTextAtIndex6: {
-                  color: '#5A3827'
-                }
-              }
+              indicatorColor: '#6b4226'
             }}
+            firstDay={0}
           />
         </View>
 
@@ -292,8 +271,8 @@ export default function AdminDashboardScreen() {
               Orders for {new Date(selectedDate).toLocaleDateString()}
             </Text>
             <ScrollView style={styles.selectedDateOrders}>
-              {orders.length > 0 ? (
-                orders.map(order => (
+              {displayedOrders.length > 0 ? (
+                displayedOrders.map(order => (
                   <TouchableOpacity
                     key={order._id}
                     style={[styles.orderCard, { borderLeftColor: getStatusColor(order.status) }]}
