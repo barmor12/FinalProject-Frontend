@@ -80,8 +80,8 @@ export default function LoginScreen() {
     }
   };
 
-  // פונקציה לבדיקה אוטומטית של התחברות
-  const checkLoginStatus = async () => {
+  // פונקציה לאתחול האפליקציה: בודקת התחברות, מוודאת טעינת role, ומבצעת ניווט בטוח
+  const initializeApp = async () => {
     let accessToken = await AsyncStorage.getItem("accessToken");
     const role = await AsyncStorage.getItem("role");
 
@@ -93,7 +93,7 @@ export default function LoginScreen() {
           await AsyncStorage.setItem("userId", decoded.userId);
         }
         // בדיקה אם הטוקן פג תוקף
-        if (decoded.exp! * 1000 < Date.now()) {
+        if (decoded.exp * 1000 < Date.now()) {
           console.log("🔄 Token expired, refreshing...");
           const refreshed = await refreshAccessToken();
           if (!refreshed) return;
@@ -110,17 +110,22 @@ export default function LoginScreen() {
       if (!refreshed) return;
     }
 
-    console.log("🔄 User is logged in, navigating...");
-    if (role === "admin") {
-      router.replace("/(admintabs)/AdminDashboardScreen");
-    } else {
-      router.replace("/(tabs)/DashboardScreen");
+    // Only navigate if both accessToken and role exist
+    const finalAccessToken = await AsyncStorage.getItem("accessToken");
+    const finalRole = await AsyncStorage.getItem("role");
+    if (finalAccessToken && finalRole) {
+      console.log("🔄 User is logged in, navigating...");
+      if (finalRole === "admin") {
+        router.replace("/(admintabs)/AdminDashboardScreen");
+      } else {
+        router.replace("/(tabs)/DashboardScreen");
+      }
     }
   };
 
-  // נריץ את הבדיקה פעם אחת כשהמסך נטען
+  // נריץ את אתחול האפליקציה פעם אחת כשהמסך נטען
   useEffect(() => {
-    checkLoginStatus();
+    initializeApp();
   }, []);
 
   // פונקציה להתחברות

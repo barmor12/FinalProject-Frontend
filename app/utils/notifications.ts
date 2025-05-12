@@ -1,7 +1,7 @@
 // app/utils/notifications.ts
 import * as Notifications from "expo-notifications";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "@/config";
+import config from "../../config";
 
 /**
  * מגדיר את ה־notification handler (קובע כיצד תוצג כל הודעה).

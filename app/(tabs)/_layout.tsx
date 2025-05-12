@@ -1,9 +1,9 @@
 import * as Notifications from "expo-notifications";
 /**
- * מגדיר את ה־notification handler (קובע כיצד תוצג כל הודעה).
+ * Defines the notification handler (determines how each notification is displayed).
  */
 export function registerNotifications() {
-  // כבר קבענו את ה־handler בהגדרה העליונה
+  // Already set the handler in the top-level configuration
 }
 import { Subscription } from "expo-notifications";
 import { Tabs } from "expo-router";
@@ -12,7 +12,7 @@ import { View, Text, Platform, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { useFocusEffect } from "expo-router";
-import config from "@/config";
+import config from "../../config";
 import {
   registerPushToken,
   scheduleTestNotification,
@@ -20,28 +20,32 @@ import {
 } from "../utils/notifications";
 
 export default function TabLayout() {
+  console.log("🚀 TabLayout mounted");
   const [role, setRole] = useState<string | null>(null);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // ✅ פונקציה להבאת תפקיד המשתמש מה-AsyncStorage
+  // Fetch user role from AsyncStorage
   const fetchRole = async () => {
     try {
       const storedRole = await AsyncStorage.getItem("role");
+      console.log("📌 Retrieved role from AsyncStorage:", storedRole);
       setRole(storedRole || "user");
-      console.log("🔹 User role loaded:", storedRole);
+      console.log("User role loaded:", storedRole);
     } catch (error) {
-      console.error("⚠️ Error fetching role:", error);
+      console.error("Error fetching role:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ פונקציה להבאת מספר המוצרים בעגלה מהשרת
+  // Fetch cart item count from backend
   const fetchCartItems = async () => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
-      if (!token) return;
+      if (!token) {
+        return;
+      }
 
       const response = await fetch(`${config.BASE_URL}/cart`, {
         method: "GET",
@@ -59,9 +63,9 @@ export default function TabLayout() {
       );
 
       setCartItemCount(totalItems);
-      await AsyncStorage.setItem("cartItemCount", totalItems.toString()); // ✅ שמירה ב-AsyncStorage
+      await AsyncStorage.setItem("cartItemCount", totalItems.toString());
     } catch (error) {
-      console.error("⚠️ Error fetching cart items:", error);
+      console.error("Error fetching cart items:", error);
     }
   };
 
@@ -69,27 +73,40 @@ export default function TabLayout() {
     fetchRole();
     fetchCartItems();
 
-    // ✅ מאזין לשינויים ומעדכן כל 2 שניות
+    // Poll cart item count every 2 seconds
     const interval = setInterval(fetchCartItems, 2000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
     registerNotifications();
-    registerPushToken();
-    scheduleTestNotification();
+
+    const setup = async () => {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (token) {
+        console.log("📲 Registering push token");
+        await registerPushToken();
+      } else {
+        console.warn(
+          "⚠️ No access token found, skipping push token registration"
+        );
+      }
+    };
+
+    setup();
+
     const cleanup = setupNotificationListeners();
     return cleanup;
   }, []);
 
-  // ✅ מאזין למעבר לטאב ומרענן את מספר הפריטים
+  // Refresh cart item count when tab gains focus
   useFocusEffect(
     React.useCallback(() => {
       fetchCartItems();
     }, [])
   );
 
-  if (loading) return null; // מחכה לטעינת הנתונים
+  if (loading) return null; // Wait for initial data load
 
   return (
     <Tabs
@@ -158,7 +175,6 @@ export default function TabLayout() {
   );
 }
 
-// ✅ סגנון מתוקן ללא שגיאות TypeScript
 const styles = StyleSheet.create({
   cartBadge: {
     position: "absolute",
@@ -174,6 +190,6 @@ const styles = StyleSheet.create({
   cartBadgeText: {
     color: "white",
     fontSize: 12,
-    fontWeight: "bold", // ✅ החלפת "700" ל-"bold"
+    fontWeight: "bold",
   },
 });

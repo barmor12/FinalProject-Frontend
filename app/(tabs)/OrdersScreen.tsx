@@ -44,7 +44,7 @@ export default function OrdersScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<null | string>(null);
 
-  // **שליפת הזמנות מהשרת**
+  // Fetch user orders from the backend API
   const fetchOrders = async () => {
     try {
       setRefreshing(true);
@@ -83,12 +83,12 @@ export default function OrdersScreen() {
     fetchOrders();
   }, []);
 
-  // **משיכת מסך לרענון**
+  // Refresh the orders list when pulled down
   const onRefresh = useCallback(() => {
     fetchOrders();
   }, []);
 
-  // **סינון ההזמנות לפי סטטוס**
+  // Filter the orders list by selected status
   const filterOrders = (status: string | null) => {
     setSelectedFilter(status);
     if (!status) {
@@ -101,6 +101,7 @@ export default function OrdersScreen() {
     }
   };
 
+  // Duplicate a previous order and add items to the cart
   const handleReorder = async (order: Order) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -162,7 +163,7 @@ export default function OrdersScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Your Orders</Text>
 
-      {/* כפתורי סינון סטטוס בתוך גלילה אופקית */}
+      {/* Render horizontal filter buttons for order statuses */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -189,7 +190,7 @@ export default function OrdersScreen() {
         )}
       </ScrollView>
 
-      {/* **רשימת ההזמנות עם אפשרות למשוך לרענון** */}
+      {/* Render the list of filtered orders */}
       {loading ? (
         <ActivityIndicator size="large" color="#6b4226" />
       ) : (
@@ -242,7 +243,7 @@ export default function OrdersScreen() {
                     💰 Total: ${order.totalPrice.toFixed(2)}
                   </Text>
                 </View>
-                {/* כפתור להזמנה מחדש */}
+                {/* Trigger reordering of selected order */}
                 <TouchableOpacity
                   style={styles.reorderButton}
                   onPress={() => handleReorder(order)}
@@ -276,25 +277,25 @@ const styles: { [key: string]: any } = StyleSheet.create({
     marginBottom: 10,
   },
   filterButton: {
-    height: 45, // קובע גובה קבוע לכפתור
+    height: 45,
     paddingHorizontal: 20,
     borderRadius: 20,
     backgroundColor: "#ddd",
     marginRight: 10,
     flexShrink: 0,
     minWidth: 90,
-    justifyContent: "center", // ממרכז אנכית את תוכן הכפתור
-    alignItems: "center", // ממרכז אופקית את התוכן
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 10,
   },
   filterText: {
     color: "#fff",
     fontWeight: "bold",
     fontSize: 15,
-    lineHeight: 45, // מקביל לגובה הכפתור, כך שהטקסט יתמרכז
+    lineHeight: 45,
     textAlign: "center",
-    textAlignVertical: "center", // עוזר בהמרת הטקסט גם באנדרואיד
-    includeFontPadding: false, // יכול לעזור במקרים מסוימים
+    textAlignVertical: "center",
+    includeFontPadding: false,
   },
   activeFilter: {
     backgroundColor: "#6b4226",

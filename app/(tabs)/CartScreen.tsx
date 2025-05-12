@@ -37,7 +37,9 @@ export default function CartScreen() {
   const [loading, setLoading] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<CartItem | null>(null);
   const [isModalVisible, setModalVisible] = useState(false);
-  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>({});
+  const [imageErrors, setImageErrors] = useState<{ [key: string]: boolean }>(
+    {}
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -71,16 +73,23 @@ export default function CartScreen() {
 
       const data = await response.json();
 
-      // Instead of filtering out invalid items, keep them all
+      // Store all cart items, including those with incomplete or invalid data
       setCartItems(data.items);
 
-      // Log if there are any items with missing data
-      const missingDataItems = data.items.filter((item: CartItem) =>
-        !item || !item.cake || !item.cake._id || !item.cake.name || item.cake.price === undefined
+      // Log the number of items with incomplete data that are still displayed
+      const missingDataItems = data.items.filter(
+        (item: CartItem) =>
+          !item ||
+          !item.cake ||
+          !item.cake._id ||
+          !item.cake.name ||
+          item.cake.price === undefined
       );
 
       if (missingDataItems.length > 0) {
-        console.log(`${missingDataItems.length} items have missing data but will be displayed as unavailable`);
+        console.log(
+          `${missingDataItems.length} items have missing data but will be displayed as unavailable`
+        );
       }
     } catch (error: any) {
       console.error("Error fetching cart items:", error.message || error);
@@ -90,7 +99,7 @@ export default function CartScreen() {
     }
   };
 
-  // פונקציה לניקוי כל הפריטים בעגלה
+  // Function to clear all items from the shopping cart
   const clearCart = async () => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -116,6 +125,7 @@ export default function CartScreen() {
     }
   };
 
+  // Calculate the total price of all items in the cart
   const calculateTotalPrice = () => {
     return cartItems
       .reduce((sum, item) => {
@@ -125,6 +135,7 @@ export default function CartScreen() {
       .toFixed(2);
   };
 
+  // Update the quantity of a specific item in the cart on the server and locally
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
     try {
@@ -151,27 +162,31 @@ export default function CartScreen() {
       setCartItems(updatedCart);
     } catch (error) {
       console.error("❌ Error updating quantity:", error);
-      Alert.alert("Error", "Failed to update quantity. The product might have been deleted.");
+      Alert.alert(
+        "Error",
+        "Failed to update quantity. The product might have been deleted."
+      );
       // Refresh cart items to get the latest state
       fetchCartItems();
     }
   };
 
+  // Remove a specific item from the cart using its item ID
   const removeItem = async (cakeId: string, itemId?: string) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
-      // Always use the itemId for removing products
+      // Always use the itemId for removing products from the cart
       if (!itemId) {
         Alert.alert("Error", "Could not identify the product to remove");
         return;
       }
 
-      // Log attempt to remove item
+      // Log the attempt to remove an item for debugging purposes
       console.log(`🔍 Attempting to remove item - using itemId: ${itemId}`);
 
-      // Based on backend error "Item ID is required", we need to use the correct parameter name
+      // Use the backend-required parameter name 'itemId'
       const response = await fetch(`${config.BASE_URL}/cart/remove`, {
         method: "DELETE",
         headers: {
@@ -181,17 +196,21 @@ export default function CartScreen() {
         body: JSON.stringify({ itemId: itemId }), // Send as 'itemId' as required by backend
       });
 
-      // Log response status and request body for debugging
-      console.log(`📋 Server response status for removeItem: ${response.status}`);
-      console.log(`📋 Request body sent: ${JSON.stringify({ itemId: itemId })}`);
+      // Log server response status and request body for debugging purposes
+      console.log(
+        `📋 Server response status for removeItem: ${response.status}`
+      );
+      console.log(
+        `📋 Request body sent: ${JSON.stringify({ itemId: itemId })}`
+      );
 
-      // Only update local state if server request was successful
+      // Only update local state if the server confirms successful removal
       if (response.ok) {
         console.log(`✅ Server confirmed item removal - updating local state`);
         const updatedCart = cartItems.filter((item) => item._id !== itemId);
         setCartItems(updatedCart);
 
-        // Try to parse the response but don't fail if it's not JSON
+        // Try to parse the server's response; ignore if not JSON
         try {
           const data = await response.json();
           console.log(`Server response: ${JSON.stringify(data)}`);
@@ -199,11 +218,16 @@ export default function CartScreen() {
           console.log("Could not parse server response for remove item");
         }
       } else {
-        // If server responds with error, show the error message
+        // If the server responds with an error, show the error message to the user
         try {
           const data = await response.json();
-          console.error(`❌ Server error removing item - itemId: ${itemId}: ${data.error || 'Unknown error'}`);
-          Alert.alert("Error", `Failed to remove item: ${data.error || "Unknown error"}`);
+          console.error(
+            `❌ Server error removing item - itemId: ${itemId}: ${data.error || "Unknown error"}`
+          );
+          Alert.alert(
+            "Error",
+            `Failed to remove item: ${data.error || "Unknown error"}`
+          );
         } catch (e) {
           console.error("Could not parse server error response");
           Alert.alert("Error", "Failed to remove item due to server error");
@@ -211,48 +235,56 @@ export default function CartScreen() {
       }
     } catch (error) {
       console.error("❌ Error removing item:", error);
-      Alert.alert("Error", "Failed to connect to server. Please check your connection and try again.");
+      Alert.alert(
+        "Error",
+        "Failed to connect to server. Please check your connection and try again."
+      );
     }
   };
 
+  // Open the product details modal only for valid products with cake data
   const openProductModal = (product: CartItem) => {
-    // Only open modal for valid products with cake data
     if (product.cake && product.cake.name && product.cake._id) {
       setSelectedProduct(product);
       setModalVisible(true);
     } else {
-      // For unavailable products, just log and do nothing
+      // If product is unavailable, log and do not open modal
       console.log("Attempted to open modal for unavailable product - ignoring");
     }
   };
 
+  // Close the product details modal and clear the selected product
   const closeProductModal = () => {
     setSelectedProduct(null);
     setModalVisible(false);
   };
 
+  // Handle image loading error by marking the image as failed for a specific item
   const handleImageError = (itemId: string) => {
-    setImageErrors(prev => ({
+    setImageErrors((prev) => ({
       ...prev,
-      [itemId]: true
+      [itemId]: true,
     }));
   };
 
+  // Remove an unavailable product (with missing or invalid data) from the cart and database
   const removeUnavailableProduct = async (itemId: string) => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
-      // For unavailable products, we'll use the item ID as the cake ID
+      // For unavailable products, use the item ID as the identifier for removal
       if (!itemId) {
         Alert.alert("Error", "Could not identify the product to remove");
         return;
       }
 
-      // Log the itemId being used as cakeId for debugging
-      console.log(`🔍 Attempting to remove unavailable product - using itemId as cakeId: ${itemId}`);
+      // Log the itemId used for removing unavailable product for debugging
+      console.log(
+        `🔍 Attempting to remove unavailable product - using itemId as cakeId: ${itemId}`
+      );
 
-      // Make server call first to remove from database
+      // Make a server call to remove the item from the database
       const response = await fetch(`${config.BASE_URL}/cart/remove`, {
         method: "DELETE",
         headers: {
@@ -266,43 +298,56 @@ export default function CartScreen() {
       console.log(`📋 Server response status: ${response.status}`);
 
       if (response.ok) {
-        console.log(`✅ Successfully removed item with ID: ${itemId} from the database`);
-        // Do NOT remove locally - just let the user know it was removed from database
-        // Optionally refresh the cart to get the updated items
+        console.log(
+          `✅ Successfully removed item with ID: ${itemId} from the database`
+        );
+        // Do not remove the item locally; refresh the cart to reflect the updated items from the server
         fetchCartItems();
       } else {
-        // If API call fails, show the error
+        // If the API call fails, display an error to the user
         const data = await response.json();
-        console.error(`❌ Server error removing item ${itemId}: ${data.error || 'Unknown error'}`);
-        Alert.alert("Error", "Failed to remove product from database. Please try refreshing your cart.");
+        console.error(
+          `❌ Server error removing item ${itemId}: ${data.error || "Unknown error"}`
+        );
+        Alert.alert(
+          "Error",
+          "Failed to remove product from database. Please try refreshing your cart."
+        );
       }
     } catch (error) {
       console.error("❌ Error removing unavailable item:", error);
-      Alert.alert("Error", "Failed to connect to server. Please check your connection and try again.");
+      Alert.alert(
+        "Error",
+        "Failed to connect to server. Please check your connection and try again."
+      );
     }
   };
 
+  // Validate that the given URL is a properly formatted HTTP or HTTPS image URL
   const isValidImageUrl = (url: string | undefined): boolean => {
-    if (!url || url.trim() === '') return false;
+    if (!url || url.trim() === "") return false;
     try {
       // Check if URL is properly formatted
       const parsedUrl = new URL(url);
       // Check if URL has a valid protocol (http or https)
-      return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
+      return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
     } catch {
       return false;
     }
   };
 
-  const getImageSource = (url: string | undefined): ImageSourcePropType | undefined => {
-    if (!url || url.trim() === '' || !isValidImageUrl(url)) {
+  // Return the image source object for a valid image URL, or undefined if invalid
+  const getImageSource = (
+    url: string | undefined
+  ): ImageSourcePropType | undefined => {
+    if (!url || url.trim() === "" || !isValidImageUrl(url)) {
       return undefined;
     }
     return { uri: url.trim() };
   };
 
+  // Render a cart item row, showing placeholder and removal option if data is invalid
   const renderCartItem = ({ item }: { item: CartItem }) => {
-    // Safety check - if cake data is invalid, show placeholder with removal option
     if (!item.cake || !item.cake.name || !item.cake._id) {
       return (
         <View style={styles.cartItem}>
@@ -312,8 +357,12 @@ export default function CartScreen() {
             </View>
             <View style={styles.itemDetails}>
               <Text style={styles.itemName}>Product Unavailable</Text>
-              <Text style={styles.errorText}>This product may have been deleted from our database</Text>
-              <Text style={styles.itemQuantity}>Quantity: {item.quantity || 1}</Text>
+              <Text style={styles.errorText}>
+                This product may have been deleted from our database
+              </Text>
+              <Text style={styles.itemQuantity}>
+                Quantity: {item.quantity || 1}
+              </Text>
             </View>
           </View>
           <TouchableOpacity
@@ -332,7 +381,10 @@ export default function CartScreen() {
 
     return (
       <View style={styles.cartItem}>
-        <TouchableOpacity onPress={() => openProductModal(item)} style={styles.cartItemContent}>
+        <TouchableOpacity
+          onPress={() => openProductModal(item)}
+          style={styles.cartItemContent}
+        >
           {shouldShowPlaceholder ? (
             <View style={[styles.itemImage, styles.placeholderImage]}>
               <Text style={styles.placeholderText}>Image Unavailable</Text>
@@ -349,17 +401,28 @@ export default function CartScreen() {
             <Text style={styles.itemName}>{item.cake.name}</Text>
             <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
             <View style={styles.quantityContainer}>
-              <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity - 1)}>
-                <Ionicons name="remove-circle-outline" size={26} color="#6b4226" />
+              <TouchableOpacity
+                onPress={() => updateQuantity(item._id, item.quantity - 1)}
+              >
+                <Ionicons
+                  name="remove-circle-outline"
+                  size={26}
+                  color="#6b4226"
+                />
               </TouchableOpacity>
               <Text style={styles.quantityText}>{item.quantity}</Text>
-              <TouchableOpacity onPress={() => updateQuantity(item._id, item.quantity + 1)}>
+              <TouchableOpacity
+                onPress={() => updateQuantity(item._id, item.quantity + 1)}
+              >
                 <Ionicons name="add-circle-outline" size={26} color="#6b4226" />
               </TouchableOpacity>
             </View>
           </View>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.removeButton} onPress={() => removeItem(item.cake._id, item._id)}>
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => removeItem(item.cake._id, item._id)}
+        >
           <MaterialIcons name="delete" size={22} color="white" />
         </TouchableOpacity>
       </View>
@@ -368,7 +431,7 @@ export default function CartScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header עם כפתור לניקוי העגלה בצד ימין */}
+      {/* Header with a button to clear the cart on the right side */}
       <View style={styles.header}>
         <View style={{ width: 28 }} />
         <Text style={styles.headerTitle}>Your Cart</Text>
@@ -378,7 +441,11 @@ export default function CartScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#6b4226" style={styles.loading} />
+        <ActivityIndicator
+          size="large"
+          color="#6b4226"
+          style={styles.loading}
+        />
       ) : cartItems.length === 0 ? (
         <Text style={styles.emptyMessage}>Your cart is empty.</Text>
       ) : (
@@ -389,28 +456,43 @@ export default function CartScreen() {
         />
       )}
 
-      {/* מודל להצגת פרטי מוצר */}
+      {/* Modal for displaying product details */}
       <Modal visible={isModalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             {selectedProduct && selectedProduct.cake && (
               <>
-                {imageErrors[selectedProduct._id] || !getImageSource(selectedProduct.cake.image?.url?.trim()) ? (
+                {imageErrors[selectedProduct._id] ||
+                !getImageSource(selectedProduct.cake.image?.url?.trim()) ? (
                   <View style={[styles.modalImage, styles.placeholderImage]}>
-                    <Text style={styles.placeholderText}>Image Unavailable</Text>
+                    <Text style={styles.placeholderText}>
+                      Image Unavailable
+                    </Text>
                   </View>
                 ) : (
                   <Image
-                    source={getImageSource(selectedProduct.cake.image?.url?.trim())}
+                    source={getImageSource(
+                      selectedProduct.cake.image?.url?.trim()
+                    )}
                     style={styles.modalImage}
                     resizeMode="cover"
                     onError={() => handleImageError(selectedProduct._id)}
                   />
                 )}
-                <Text style={styles.modalTitle}>{selectedProduct.cake.name}</Text>
-                <Text style={styles.modalDescription}>{selectedProduct.cake.description || 'No description available'}</Text>
-                <Text style={styles.modalPrice}>${selectedProduct.cake.price.toFixed(2)}</Text>
-                <TouchableOpacity style={styles.closeButton} onPress={closeProductModal}>
+                <Text style={styles.modalTitle}>
+                  {selectedProduct.cake.name}
+                </Text>
+                <Text style={styles.modalDescription}>
+                  {selectedProduct.cake.description ||
+                    "No description available"}
+                </Text>
+                <Text style={styles.modalPrice}>
+                  ${selectedProduct.cake.price.toFixed(2)}
+                </Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={closeProductModal}
+                >
                   <Text style={styles.closeButtonText}>Close</Text>
                 </TouchableOpacity>
               </>
@@ -422,7 +504,10 @@ export default function CartScreen() {
       {!isModalVisible && cartItems.length > 0 && (
         <View style={styles.checkoutContainer}>
           <Text style={styles.totalText}>Total: ${calculateTotalPrice()}</Text>
-          <TouchableOpacity style={styles.checkoutButton} onPress={() => router.push("/CheckoutScreen")}>
+          <TouchableOpacity
+            style={styles.checkoutButton}
+            onPress={() => router.push("/CheckoutScreen")}
+          >
             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
           </TouchableOpacity>
         </View>
@@ -441,7 +526,7 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 5,
-    marginRight: 5
+    marginRight: 5,
   },
   headerTitle: {
     fontSize: 24,
@@ -461,16 +546,16 @@ const styles = StyleSheet.create({
   itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 10 },
   modalImage: { width: 200, height: 200, borderRadius: 8, marginBottom: 15 },
   placeholderImage: {
-    backgroundColor: '#F8F1E7',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#F8F1E7",
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#E5D3C2',
+    borderColor: "#E5D3C2",
   },
   placeholderText: {
-    color: '#7B6D63',
+    color: "#7B6D63",
     fontSize: 14,
-    textAlign: 'center',
+    textAlign: "center",
     padding: 5,
   },
   errorText: {
@@ -482,11 +567,20 @@ const styles = StyleSheet.create({
   itemDetails: { flex: 1 },
   itemName: { fontSize: 16, fontWeight: "bold", color: "#6b4226" },
   itemPrice: { fontSize: 14, color: "#6b4226" },
-  quantityContainer: { flexDirection: "row", alignItems: "center", marginTop: 5 },
+  quantityContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 5,
+  },
   quantityText: { fontSize: 16, marginHorizontal: 10 },
   removeButton: { backgroundColor: "#ff4444", padding: 8, borderRadius: 30 },
   loading: { marginTop: 20 },
-  emptyMessage: { fontSize: 18, color: "#6b4226", textAlign: "center", marginTop: 20 },
+  emptyMessage: {
+    fontSize: 18,
+    color: "#6b4226",
+    textAlign: "center",
+    marginTop: 20,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -501,21 +595,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 5,
   },
-  modalTitle: { fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 10 },
-  modalDescription: { fontSize: 16, color: "#555", textAlign: "center", marginBottom: 10 },
-  modalPrice: { fontSize: 18, fontWeight: "bold", color: "#d49a6a", marginBottom: 15 },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#6b4226",
+    marginBottom: 10,
+  },
+  modalDescription: {
+    fontSize: 16,
+    color: "#555",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  modalPrice: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#d49a6a",
+    marginBottom: 15,
+  },
   closeButton: {
     backgroundColor: "#6b4226",
     padding: 12,
     borderRadius: 8,
     width: "45%",
-    alignItems: "center"
+    alignItems: "center",
   },
   closeButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
   checkoutContainer: { position: "absolute", bottom: 80, left: 20, right: 20 },
-  totalText: { fontSize: 18, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
+  totalText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#6b4226",
+    textAlign: "center",
+  },
   checkoutButton: { backgroundColor: "#6b4226", padding: 15, borderRadius: 10 },
-  checkoutButtonText: { color: "#fff", fontSize: 18, fontWeight: "bold", textAlign: "center" },
+  checkoutButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
   itemQuantity: { fontSize: 14, color: "#6b4226", marginTop: 5 },
   unavailableProductContainer: {
     flex: 1,
@@ -527,7 +646,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginTop: 20,
-    width: "100%"
+    width: "100%",
   },
   removeButtonText: {
     color: "#fff",
@@ -541,7 +660,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     width: "45%",
     alignItems: "center",
-    marginRight: 10
+    marginRight: 10,
   },
   cartItemContent: { flexDirection: "row", alignItems: "center", flex: 1 },
   tapToRemove: {
