@@ -323,10 +323,18 @@ export default function LoginScreen() {
         .then((data) => {
           console.log("🔹 Google login server response:", data);
 
-          if (data.tokens?.accessToken && data.tokens?.refreshToken) {
+          if (
+            (data.accessToken && data.refreshToken) ||
+            (data.tokens?.accessToken && data.tokens?.refreshToken)
+          ) {
+            const accessToken = data.accessToken || data.tokens.accessToken;
+            const refreshToken = data.refreshToken || data.tokens.refreshToken;
             if (data.requires2FA && data.role !== "admin") {
               // 2FA for non-admin
-              setTempTokens(data.tokens);
+              setTempTokens({
+                accessToken,
+                refreshToken,
+              });
               setTempUserData({
                 userID: data.userId || "",
                 role: data.role || "user",
@@ -334,8 +342,8 @@ export default function LoginScreen() {
               setShow2FAModal(true);
             } else {
               // Normal login
-              AsyncStorage.setItem("accessToken", data.tokens.accessToken);
-              AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
+              AsyncStorage.setItem("accessToken", accessToken);
+              AsyncStorage.setItem("refreshToken", refreshToken);
               AsyncStorage.setItem("userId", data.userId || "");
               AsyncStorage.setItem("role", data.role || "user");
 
