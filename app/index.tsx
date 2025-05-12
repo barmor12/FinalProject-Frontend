@@ -162,7 +162,7 @@ export default function LoginScreen() {
           throw new Error("Invalid response format from server");
         }
 
-        if (data.requires2FA) {
+        if (data.requires2FA && data.role !== "admin") {
           // Store temporary tokens and user data
           setTempTokens(data.tokens);
           setTempUserData({
@@ -323,25 +323,27 @@ export default function LoginScreen() {
         .then((data) => {
           console.log("🔹 Google login server response:", data);
 
-          if (data.requires2FA) {
-            // 2FA required - save temporary tokens and show modal
-            setTempTokens(data.tokens);
-            setTempUserData({
-              userID: data.userId || "",
-              role: data.role || "user",
-            });
-            setShow2FAModal(true);
-          } else if (data.accessToken && data.refreshToken) {
-            // Normal login flow
-            AsyncStorage.setItem("accessToken", data.accessToken);
-            AsyncStorage.setItem("refreshToken", data.refreshToken);
-            AsyncStorage.setItem("userId", data.userId || "");
-            AsyncStorage.setItem("role", data.role || "user");
-
-            if (data.role === "admin") {
-              router.replace("/(admintabs)/AdminDashboardScreen");
+          if (data.tokens?.accessToken && data.tokens?.refreshToken) {
+            if (data.requires2FA && data.role !== "admin") {
+              // 2FA for non-admin
+              setTempTokens(data.tokens);
+              setTempUserData({
+                userID: data.userId || "",
+                role: data.role || "user",
+              });
+              setShow2FAModal(true);
             } else {
-              router.replace("/(tabs)/DashboardScreen");
+              // Normal login
+              AsyncStorage.setItem("accessToken", data.tokens.accessToken);
+              AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
+              AsyncStorage.setItem("userId", data.userId || "");
+              AsyncStorage.setItem("role", data.role || "user");
+
+              if (data.role === "admin") {
+                router.replace("/(admintabs)/AdminDashboardScreen");
+              } else {
+                router.replace("/(tabs)/DashboardScreen");
+              }
             }
           } else {
             throw new Error("Missing tokens in response");
