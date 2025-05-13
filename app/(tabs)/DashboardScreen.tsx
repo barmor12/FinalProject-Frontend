@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import config from "@/config";
+import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
