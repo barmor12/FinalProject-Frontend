@@ -9,6 +9,7 @@ import {
   Alert,
   TextInput,
   RefreshControl,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -234,6 +235,16 @@ export default function DashboardScreen() {
         const updatedLiked = new Set(prevLiked);
         if (isLiked) updatedLiked.delete(cakeId);
         else updatedLiked.add(cakeId);
+
+        if (showOnlyLiked) {
+          setFilteredProducts(
+            (currentProducts) =>
+              Array.from(updatedLiked)
+                .map((id) => products.find((p) => p._id === id))
+                .filter(Boolean) as Product[]
+          );
+        }
+
         return updatedLiked;
       });
     } catch (error) {
@@ -242,56 +253,88 @@ export default function DashboardScreen() {
     }
   };
 
-  // Render horizontal product card
+  // Render horizontal product card as a wide row with favorite button and navigation on press
   const renderProductCardHorizontal = ({ item }: { item: Product }) => {
+    const isFavorite = likedProducts.has(item._id);
     return (
       <TouchableOpacity
-        style={styles.horizontalProductCard}
         onPress={() => {
           if (item.stock > 0) {
             navigateToProduct(item);
           }
         }}
+        style={styles.horizontalProductCard}
       >
-        <Image source={{ uri: item.image }} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        {item.stock <= 0 ? (
-          <Text style={styles.outOfStockText}>Out of Stock</Text>
-        ) : (
-          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-        )}
+        <Image source={{ uri: item.image }} style={styles.wideProductImage} />
+        <View style={styles.wideProductInfo}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
+            <Text style={styles.productName}>{item.name}</Text>
+            <TouchableOpacity
+              onPress={() => handleLike(item._id)}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={24}
+                color={isFavorite ? "#d9534f" : "#ccc"}
+              />
+            </TouchableOpacity>
+          </View>
+          {item.stock <= 0 ? (
+            <Text style={styles.outOfStockText}>Out of Stock</Text>
+          ) : (
+            <Text style={styles.priceTextRight}>${item.price.toFixed(2)}</Text>
+          )}
+        </View>
       </TouchableOpacity>
     );
   };
-  // Render vertical product card with like button
+  // Render vertical product card with like button (modern, favorite highlight)
   const renderProductCardVertical = ({ item }: { item: Product }) => {
+    const isFavorite = likedProducts.has(item._id);
     return (
-      <TouchableOpacity
-        style={styles.productCardHorizon}
-        onPress={() => {
-          if (item.stock > 0) {
-            navigateToProduct(item);
-          }
-        }}
+      <View
+        style={[
+          styles.verticalCardContainer,
+          isFavorite && {
+            backgroundColor: "#fff4f4",
+            borderColor: "#d9534f",
+            borderWidth: 1,
+          },
+        ]}
       >
-        <Image source={{ uri: item.image }} style={styles.productImage} />
-        <Text style={styles.productName}>{item.name}</Text>
-        {item.stock <= 0 ? (
-          <Text style={styles.outOfStockText}>Out of Stock</Text>
-        ) : (
-          <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-        )}
+        <TouchableOpacity
+          style={styles.verticalCardTouchable}
+          onPress={() => {
+            if (item.stock > 0) {
+              navigateToProduct(item);
+            }
+          }}
+        >
+          <Image source={{ uri: item.image }} style={styles.productImage} />
+          <View style={styles.productInfo}>
+            <Text style={styles.productName}>{item.name}</Text>
+            {item.stock <= 0 ? (
+              <Text style={styles.outOfStockLabel}>Out of Stock</Text>
+            ) : (
+              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+            )}
+            {isFavorite && <Text style={styles.favoriteLabel}>❤️ מועדף</Text>}
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity
           onPress={() => handleLike(item._id)}
-          style={styles.favoriteButton}
+          style={styles.favoriteButtonTop}
         >
           <Ionicons
-            name={likedProducts.has(item._id) ? "heart" : "heart-outline"}
-            size={24}
-            color={likedProducts.has(item._id) ? "#d9534f" : "#ccc"}
+            name={isFavorite ? "heart" : "heart-outline"}
+            size={22}
+            color={isFavorite ? "#d9534f" : "#ccc"}
           />
         </TouchableOpacity>
-      </TouchableOpacity>
+      </View>
     );
   };
   return (
@@ -309,16 +352,7 @@ export default function DashboardScreen() {
             <Text style={styles.userName}>{user.name}</Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.centerHeader}>
-          <TouchableOpacity
-            onPress={toggleShowFavorites}
-            style={styles.favoritesHeaderButton}
-          >
-            <Ionicons name="heart" size={20} color="#d9534f" />
-          </TouchableOpacity>
-        </View>
-
+        <View style={styles.centerHeader} />
         <View style={styles.rightHeader}>
           {searchVisible && (
             <TextInput
@@ -339,27 +373,52 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {showHorizontalScroll && (
-        <View style={styles.horizontalScrollContainer}>
-          <Text style={styles.title}>🔥 Hot Cakes</Text>
-          <FlatList
-            data={filteredProducts}
-            keyExtractor={(item) => item._id}
-            renderItem={renderProductCardHorizontal}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.hotCakeList}
-          />
-        </View>
-      )}
-
       <Text style={styles.title}>🍰 Our Cakes</Text>
+      <View style={styles.filtersContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={toggleShowFavorites}
+          >
+            <Text style={styles.filterText}>❤️ Favorites</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => {
+              const sorted = [...filteredProducts].sort(
+                (a, b) => a.price - b.price
+              );
+              setFilteredProducts(sorted);
+            }}
+          >
+            <Text style={styles.filterText}>⬆️ Price Low</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => {
+              const sorted = [...filteredProducts].sort(
+                (a, b) => b.price - a.price
+              );
+              setFilteredProducts(sorted);
+            }}
+          >
+            <Text style={styles.filterText}>⬇️ Price High</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.filterChip}
+            onPress={() => {
+              const filtered = products.filter((p) => p.stock > 0);
+              setFilteredProducts(filtered);
+            }}
+          >
+            <Text style={styles.filterText}>✅ In Stock</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </View>
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item._id}
-        renderItem={renderProductCardVertical}
-        numColumns={2}
-        columnWrapperStyle={styles.row}
+        renderItem={renderProductCardHorizontal}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -422,35 +481,14 @@ const styles = StyleSheet.create({
   favoriteButton: { position: "absolute", bottom: 8, right: 8 },
   hotCakeList: { paddingHorizontal: 8 },
   horizontalScrollContainer: { marginBottom: 8 },
-  productCardHorizon: {
-    backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-    alignItems: "center",
-    justifyContent: "space-between",
-    width: "48%",
-    elevation: 5,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    shadowOffset: { width: 0, height: 2 },
-  },
   horizontalProductCard: {
+    flexDirection: "row",
     backgroundColor: "#fff",
     padding: 10,
-    borderRadius: 8,
+    borderRadius: 12,
     marginBottom: 16,
-    alignItems: "center",
-    width: 150,
     elevation: 2,
-    marginRight: 10,
-  },
-  favoritesHeaderButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: "#fff",
-    marginEnd: 90,
+    alignItems: "center",
   },
   productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
   productName: {
@@ -462,4 +500,84 @@ const styles = StyleSheet.create({
   row: { justifyContent: "space-between" },
   itemPrice: {},
   outOfStockText: { fontSize: 14, color: "#d9534f", fontWeight: "bold" },
+
+  verticalCardContainer: {
+    width: "48%",
+    marginBottom: 16,
+    position: "relative",
+  },
+  verticalCardTouchable: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 10,
+    alignItems: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  favoriteButtonTop: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 4,
+    elevation: 2,
+  },
+  productInfo: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  outOfStockLabel: {
+    fontSize: 13,
+    color: "#fff",
+    backgroundColor: "#d9534f",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  favoriteLabel: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#d9534f",
+    fontWeight: "bold",
+  },
+  filtersContainer: {
+    flexDirection: "row",
+    marginVertical: 10,
+  },
+  filterChip: {
+    backgroundColor: "#fff",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: "#d49a6a",
+  },
+  filterText: {
+    color: "#6b4226",
+    fontWeight: "bold",
+  },
+  wideProductImage: {
+    width: 150,
+    height: 150,
+    borderRadius: 10,
+    marginRight: 16,
+  },
+  wideProductInfo: {
+    flex: 1,
+    justifyContent: "space-between",
+    height: 150,
+    paddingVertical: 8,
+  },
+  priceTextRight: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#6b4226",
+    textAlign: "right",
+  },
 });
