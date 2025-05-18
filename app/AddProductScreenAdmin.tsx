@@ -16,6 +16,7 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 
 export default function AddProductScreenAdmin() {
@@ -28,8 +29,9 @@ export default function AddProductScreenAdmin() {
   const [stock, setStock] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [imageLoading, setImageLoading] = useState(false);
 
-  // בוחן גישה לגלריה ומבצע את העלאת התמונה
+  // בוחן גישה לגלריה ומעדכן ישירות את ה־uri של התמונה
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -37,16 +39,21 @@ export default function AddProductScreenAdmin() {
       return;
     }
 
+    setImageLoading(true); // התחלת טעינה
+
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ["images"] as ImagePicker.MediaType[],
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
+      quality: 0.7,
     });
 
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      const pickedUri = result.assets[0].uri;
+      setImage(pickedUri);
     }
+
+    setImageLoading(false); // סיום טעינה
   };
 
   // הגיש את הנתונים לשרת ויוצרים את המוצר
@@ -84,12 +91,17 @@ export default function AddProductScreenAdmin() {
       formData.append("cost", cost);
       formData.append("price", price);
       formData.append("ingredients", ingredients);
+      formData.append("stock", stock);
+      const imageName =
+        image
+          .split("/")
+          .pop()
+          ?.replace(/[^a-zA-Z0-9.-]/g, "_") || `image_${Date.now()}.jpg`;
       formData.append("image", {
         uri: image,
-        name: image.split("/").pop(),
-        type: "image/jpeg",
+        name: imageName,
+        type: "image/*",
       } as any);
-      formData.append("stock", stock);
 
       const responseBackend = await fetch(`${config.BASE_URL}/cakes/addcake`, {
         method: "POST",
@@ -123,12 +135,22 @@ export default function AddProductScreenAdmin() {
   const renderItem = ({ item }: { item: string }) => (
     <View style={styles.formItem}>
       {item === "image" && (
-        <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-          <Text style={styles.imagePickerText}>Pick an image</Text>
-        </TouchableOpacity>
-      )}
-      {item === "image" && image && (
-        <Image source={{ uri: image }} style={styles.imagePreview} />
+        <>
+          <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
+            <Text style={styles.imagePickerText}>Pick an image</Text>
+          </TouchableOpacity>
+          {imageLoading ? (
+            <ActivityIndicator
+              size="large"
+              color="#6b4226"
+              style={{ marginBottom: 10 }}
+            />
+          ) : (
+            image && (
+              <Image source={{ uri: image }} style={styles.imagePreview} />
+            )
+          )}
+        </>
       )}
       {item === "submitButton" && (
         <TouchableOpacity
@@ -145,32 +167,68 @@ export default function AddProductScreenAdmin() {
       )}
       {item === "inputs" && (
         <>
-          <TextInput
-            placeholder="Name"
-            style={styles.input}
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            placeholder="Description"
-            style={styles.input}
-            value={description}
-            onChangeText={setDescription}
-          />
-          <TextInput
-            placeholder="Cost (Production cost)"
-            style={styles.input}
-            keyboardType="numeric"
-            value={cost}
-            onChangeText={setCost}
-          />
-          <TextInput
-            placeholder="Price (Selling price)"
-            style={styles.input}
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
-          />
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                name ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Name
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                description ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Description
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={description}
+              onChangeText={setDescription}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                cost ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Cost
+            </Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={cost}
+              onChangeText={setCost}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                price ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Price
+            </Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={price}
+              onChangeText={setPrice}
+            />
+          </View>
           {cost && price && (
             <View style={styles.profitInfo}>
               <Text style={styles.profitText}>
@@ -187,19 +245,37 @@ export default function AddProductScreenAdmin() {
               </Text>
             </View>
           )}
-          <TextInput
-            placeholder="Ingredients (comma-separated)"
-            style={styles.input}
-            value={ingredients}
-            onChangeText={setIngredients}
-          />
-          <TextInput
-            placeholder="How much in stock?"
-            style={styles.input}
-            keyboardType="numeric"
-            value={stock}
-            onChangeText={setStock}
-          />
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                ingredients ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Ingredients
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={ingredients}
+              onChangeText={setIngredients}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                stock ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Stock
+            </Text>
+            <TextInput
+              style={styles.input}
+              keyboardType="numeric"
+              value={stock}
+              onChangeText={setStock}
+            />
+          </View>
         </>
       )}
     </View>
@@ -232,13 +308,38 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 20,
   },
+  inputWrapper: {
+    position: "relative",
+    marginBottom: 20,
+  },
+  floatingLabel: {
+    position: "absolute",
+    left: 12,
+    top: 14,
+    fontSize: 14,
+    color: "#aaa",
+    zIndex: 1,
+  },
+  floatingLabelActive: {
+    top: -8,
+    fontSize: 12,
+    color: "#6b4226",
+    backgroundColor: "#f9f3ea",
+    paddingHorizontal: 4,
+    alignSelf: "flex-start",
+    marginLeft: 8,
+    zIndex: 2,
+  },
   input: {
     borderWidth: 1,
     borderColor: "#6b4226",
     padding: 10,
+    paddingTop: 24,
     borderRadius: 8,
-    marginBottom: 10,
     backgroundColor: "#fff",
+    color: "#6b4226", // ← מוסיף צבע טקסט קבוע
+    fontSize: 14,
+    marginBottom: 10,
   },
   imagePicker: {
     backgroundColor: "#d49a6a",
