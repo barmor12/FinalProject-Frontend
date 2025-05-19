@@ -13,13 +13,13 @@ import {
   Modal,
   KeyboardAvoidingView,
   Platform,
-  ScrollView
+  ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useFocusEffect, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface CartItem {
   _id: string;
@@ -51,7 +51,9 @@ interface Address {
 export default function CheckoutScreen() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [shippingMethod, setShippingMethod] = useState("Standard Delivery (2-3 days)");
+  const [shippingMethod, setShippingMethod] = useState(
+    "Standard Delivery (2-3 days)"
+  );
   const [promoCode, setPromoCode] = useState("");
   const [deliveryDetailsVisible, setDeliveryDetailsVisible] = useState(false);
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -74,8 +76,8 @@ export default function CheckoutScreen() {
   const router = useRouter();
 
   const formatDate = (date: Date) => {
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const day = date.getDate().toString().padStart(2, "0");
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const year = date.getFullYear().toString().slice(-2);
     return `${day}/${month}/${year}`;
   };
@@ -115,7 +117,6 @@ export default function CheckoutScreen() {
   useEffect(() => {
     fetchAddresses();
   }, []);
-
 
   const fetchCartItems = async () => {
     try {
@@ -157,7 +158,10 @@ export default function CheckoutScreen() {
   );
 
   const calculateTotal = () => {
-    const subtotal = cartItems.reduce((sum, item) => sum + item.cake.price * item.quantity, 0);
+    const subtotal = cartItems.reduce(
+      (sum, item) => sum + item.cake.price * item.quantity,
+      0
+    );
     const discounted = subtotal * (1 - discountAmount / 100);
     return discounted.toFixed(2);
   };
@@ -179,11 +183,14 @@ export default function CheckoutScreen() {
   );
   const handlePlaceOrder = async () => {
     try {
-      if (!selectedAddress) {
+      if (
+        shippingMethod === "Standard Delivery (2-3 days)" &&
+        !selectedAddress
+      ) {
         Alert.alert("Error", "Please select a delivery address.");
         return;
       }
-      if (!deliveryDate) {
+      if (shippingMethod === "Standard Delivery (2-3 days)" && !deliveryDate) {
         Alert.alert("Error", "Please select a delivery date.");
         return;
       }
@@ -193,13 +200,13 @@ export default function CheckoutScreen() {
       if (!token) return;
 
       // Create a new date object and set it to start of day
-      const deliveryDateTime = new Date(deliveryDate);
+      const deliveryDateTime = new Date(deliveryDate ?? new Date());
       deliveryDateTime.setHours(0, 0, 0, 0);
 
       // Format the date as YYYY-MM-DD
       const year = deliveryDateTime.getFullYear();
-      const month = String(deliveryDateTime.getMonth() + 1).padStart(2, '0');
-      const day = String(deliveryDateTime.getDate()).padStart(2, '0');
+      const month = String(deliveryDateTime.getMonth() + 1).padStart(2, "0");
+      const day = String(deliveryDateTime.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
       const response = await fetch(`${config.BASE_URL}/order/create`, {
@@ -214,8 +221,10 @@ export default function CheckoutScreen() {
             quantity: item.quantity,
           })),
           paymentMethod: "cash",
-          address: selectedAddress,
-          deliveryDate: formattedDate, // Send as YYYY-MM-DD string
+          ...(shippingMethod === "Standard Delivery (2-3 days)" && {
+            address: selectedAddress,
+            deliveryDate: formattedDate,
+          }),
         }),
       });
 
@@ -275,8 +284,6 @@ export default function CheckoutScreen() {
     }
   };
 
-
-
   const handleAddAddress = async () => {
     try {
       setLoading(true);
@@ -289,6 +296,7 @@ export default function CheckoutScreen() {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({ ...newAddress, isDefault: false }),
       });
 
@@ -308,7 +316,7 @@ export default function CheckoutScreen() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
     if (selectedDate) {
@@ -354,52 +362,15 @@ export default function CheckoutScreen() {
                     />
                     <View style={styles.itemDetails}>
                       <Text style={styles.itemName}>{item.cake.name}</Text>
-                      <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-                      <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+                      <Text style={styles.itemPrice}>
+                        ${item.cake.price.toFixed(2)}
+                      </Text>
+                      <Text style={styles.itemQuantity}>
+                        Quantity: {item.quantity}
+                      </Text>
                     </View>
                   </View>
                 ))}
-              </View>
-
-              {/* Delivery Details Section */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Delivery Details</Text>
-                <TouchableOpacity
-                  style={styles.deliveryDetailsBox}
-                  onPress={() => setDeliveryDetailsVisible(true)}
-                >
-                  <View>
-                    {selectedAddress ? (
-                      <>
-                        <Text style={styles.deliveryName}>
-                          <Text style={{ fontWeight: "bold" }}>{selectedAddress.fullName}</Text> ({selectedAddress.phone})
-                        </Text>
-                        <Text style={styles.deliveryAddress}>
-                          {selectedAddress.street}, {selectedAddress.city}
-                        </Text>
-                      </>
-                    ) : (
-                      <Text style={styles.deliveryAddress}>No address selected</Text>
-                    )}
-                  </View>
-                  <Ionicons name="chevron-forward" size={20} color="#1D4ED8" />
-                </TouchableOpacity>
-              </View>
-
-              {/* Delivery Date Section */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Delivery Date</Text>
-                <TouchableOpacity
-                  style={styles.deliveryDateBox}
-                  onPress={toggleDatePicker}
-                >
-                  <View>
-                    <Text style={styles.deliveryDateText}>
-                      {deliveryDate ? formatDate(deliveryDate) : "Select delivery date"}
-                    </Text>
-                  </View>
-                  <Ionicons name="calendar-outline" size={24} color="#6b4226" />
-                </TouchableOpacity>
               </View>
 
               {/* Shipping Method Section */}
@@ -414,16 +385,81 @@ export default function CheckoutScreen() {
                 </TouchableOpacity>
               </View>
 
+              {/* Delivery Details Section */}
+              {shippingMethod !== "Self Pickup" && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Delivery Details</Text>
+                  <TouchableOpacity
+                    style={styles.deliveryDetailsBox}
+                    onPress={() => setDeliveryDetailsVisible(true)}
+                  >
+                    <View>
+                      {selectedAddress ? (
+                        <>
+                          <Text style={styles.deliveryName}>
+                            <Text style={{ fontWeight: "bold" }}>
+                              {selectedAddress.fullName}
+                            </Text>{" "}
+                            ({selectedAddress.phone})
+                          </Text>
+                          <Text style={styles.deliveryAddress}>
+                            {selectedAddress.street}, {selectedAddress.city}
+                          </Text>
+                        </>
+                      ) : (
+                        <Text style={styles.deliveryAddress}>
+                          No address selected
+                        </Text>
+                      )}
+                    </View>
+                    <Ionicons
+                      name="chevron-forward"
+                      size={20}
+                      color="#1D4ED8"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              {/* Delivery Date Section - show only if shipping is Standard Delivery */}
+              {shippingMethod === "Standard Delivery (2-3 days)" && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Delivery Date</Text>
+                  <TouchableOpacity
+                    style={styles.deliveryDateBox}
+                    onPress={toggleDatePicker}
+                  >
+                    <View>
+                      <Text style={styles.deliveryDateText}>
+                        {deliveryDate
+                          ? formatDate(deliveryDate)
+                          : "Select delivery date"}
+                      </Text>
+                    </View>
+                    <Ionicons
+                      name="calendar-outline"
+                      size={24}
+                      color="#6b4226"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+
               {/* Promo Code Section */}
               <View style={styles.promoContainer}>
                 <TextInput
                   style={styles.promoInput}
-                  placeholder={appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"}
+                  placeholder={
+                    appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"
+                  }
                   value={promoCode}
                   onChangeText={setPromoCode}
                   editable={!appliedCode}
                 />
-                <TouchableOpacity style={styles.applyButton} onPress={applyPromoCode}>
+                <TouchableOpacity
+                  style={styles.applyButton}
+                  onPress={applyPromoCode}
+                >
                   <Text style={styles.applyButtonText}>
                     {appliedCode ? "Remove" : "Apply"}
                   </Text>
@@ -447,7 +483,13 @@ export default function CheckoutScreen() {
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Subtotal</Text>
                   <Text style={styles.summaryValue}>
-                    ${cartItems.reduce((sum, item) => sum + item.cake.price * item.quantity, 0).toFixed(2)}
+                    $
+                    {cartItems
+                      .reduce(
+                        (sum, item) => sum + item.cake.price * item.quantity,
+                        0
+                      )
+                      .toFixed(2)}
                   </Text>
                 </View>
 
@@ -460,9 +502,18 @@ export default function CheckoutScreen() {
                 {/* Discount if applied */}
                 {discountAmount > 0 && (
                   <View style={styles.summaryRow}>
-                    <Text style={styles.summaryLabel}>Discount ({discountAmount}%)</Text>
+                    <Text style={styles.summaryLabel}>
+                      Discount ({discountAmount}%)
+                    </Text>
                     <Text style={[styles.summaryValue, styles.discountValue]}>
-                      -${(cartItems.reduce((sum, item) => sum + item.cake.price * item.quantity, 0) * (discountAmount / 100)).toFixed(2)}
+                      -$
+                      {(
+                        cartItems.reduce(
+                          (sum, item) => sum + item.cake.price * item.quantity,
+                          0
+                        ) *
+                        (discountAmount / 100)
+                      ).toFixed(2)}
                     </Text>
                   </View>
                 )}
@@ -489,7 +540,11 @@ export default function CheckoutScreen() {
           )}
         </ScrollView>
 
-        <Modal transparent={true} visible={deliveryDetailsVisible} animationType="slide">
+        <Modal
+          transparent={true}
+          visible={deliveryDetailsVisible}
+          animationType="slide"
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select a Delivery Address</Text>
@@ -516,7 +571,8 @@ export default function CheckoutScreen() {
                     <TouchableOpacity
                       style={[
                         styles.addressItem,
-                        selectedAddress?._id === item._id && styles.selectedAddress
+                        selectedAddress?._id === item._id &&
+                          styles.selectedAddress,
                       ]}
                       onPress={() => {
                         setSelectedAddress(item);
@@ -524,9 +580,14 @@ export default function CheckoutScreen() {
                       }}
                     >
                       <Text style={styles.modalText}>
-                        <Text style={{ fontWeight: "bold" }}>{item.fullName}</Text> ({item.phone})
+                        <Text style={{ fontWeight: "bold" }}>
+                          {item.fullName}
+                        </Text>{" "}
+                        ({item.phone})
                       </Text>
-                      <Text style={styles.modalText}>{item.street}, {item.city}</Text>
+                      <Text style={styles.modalText}>
+                        {item.street}, {item.city}
+                      </Text>
                     </TouchableOpacity>
                   )}
                 />
@@ -542,7 +603,11 @@ export default function CheckoutScreen() {
           </View>
         </Modal>
 
-        <Modal transparent={true} visible={shippingModalVisible} animationType="slide">
+        <Modal
+          transparent={true}
+          visible={shippingModalVisible}
+          animationType="slide"
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Choose Shipping Method</Text>
@@ -551,7 +616,8 @@ export default function CheckoutScreen() {
               <TouchableOpacity
                 style={[
                   styles.modalButton,
-                  shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOption,
+                  shippingMethod === "Standard Delivery (2-3 days)" &&
+                    styles.selectedOption,
                 ]}
                 onPress={() => {
                   setShippingMethod("Standard Delivery (2-3 days)");
@@ -559,7 +625,9 @@ export default function CheckoutScreen() {
                 }}
               >
                 <Ionicons name="bicycle" size={24} color="#6b4226" />
-                <Text style={styles.modalText}>Standard Delivery (2-3 days)</Text>
+                <Text style={styles.modalText}>
+                  Standard Delivery (2-3 days)
+                </Text>
               </TouchableOpacity>
 
               {/* אפשרות לאיסוף עצמי */}
@@ -587,7 +655,11 @@ export default function CheckoutScreen() {
             </View>
           </View>
         </Modal>
-        <Modal transparent={true} visible={ShowAddAddress} animationType="slide">
+        <Modal
+          transparent={true}
+          visible={ShowAddAddress}
+          animationType="slide"
+        >
           <View style={styles.modalOverlay}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Add New Address</Text>
@@ -596,14 +668,18 @@ export default function CheckoutScreen() {
                 style={styles.input}
                 placeholder="Full Name"
                 value={newAddress.fullName}
-                onChangeText={(text) => setNewAddress({ ...newAddress, fullName: text })}
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, fullName: text })
+                }
               />
 
               <TextInput
                 style={styles.input}
                 placeholder="Phone"
                 value={newAddress.phone}
-                onChangeText={(text) => setNewAddress({ ...newAddress, phone: text })}
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, phone: text })
+                }
                 keyboardType="phone-pad"
               />
 
@@ -611,21 +687,26 @@ export default function CheckoutScreen() {
                 style={styles.input}
                 placeholder="Street"
                 value={newAddress.street}
-                onChangeText={(text) => setNewAddress({ ...newAddress, street: text })}
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, street: text })
+                }
               />
 
               <TextInput
                 style={styles.input}
                 placeholder="City"
                 value={newAddress.city}
-                onChangeText={(text) => setNewAddress({ ...newAddress, city: text })}
+                onChangeText={(text) =>
+                  setNewAddress({ ...newAddress, city: text })
+                }
               />
 
-              <TouchableOpacity style={styles.addButton} onPress={handleAddAddress}>
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={handleAddAddress}
+              >
                 <Text style={styles.addButtonText}>Save Address</Text>
-
               </TouchableOpacity>
-
 
               <TouchableOpacity
                 style={styles.modalCloseButton}
@@ -638,15 +719,61 @@ export default function CheckoutScreen() {
         </Modal>
 
         {showDatePicker && (
-          <DateTimePicker
-            value={deliveryDate || new Date()}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={handleDateChange}
-            minimumDate={new Date()}
-            maximumDate={new Date(new Date().getFullYear(), 11, 31)} // December 31 of current year
-            locale="en-GB" // This will use DD/MM format
-          />
+          <Modal
+            transparent={true}
+            animationType="fade"
+            visible={showDatePicker}
+            onRequestClose={() => setShowDatePicker(false)}
+          >
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: "rgba(0,0,0,0.6)",
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+              activeOpacity={1}
+              onPressOut={() => setShowDatePicker(false)}
+            >
+              <View
+                style={{
+                  backgroundColor: "#fff",
+                  padding: 20,
+                  borderRadius: 12,
+                  width: "85%",
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: 18,
+                    fontWeight: "bold",
+                    color: "#5A3827",
+                    marginBottom: 10,
+                    textAlign: "center",
+                  }}
+                >
+                  Select Delivery Date
+                </Text>
+
+                <DateTimePicker
+                  value={deliveryDate || new Date()}
+                  mode="date"
+                  display="default"
+                  onChange={(event, selectedDate) => {
+                    if (event.type === "set" && selectedDate) {
+                      const currentYearDate = new Date(selectedDate);
+                      currentYearDate.setFullYear(new Date().getFullYear());
+                      setDeliveryDate(currentYearDate);
+                    }
+                    setShowDatePicker(false);
+                  }}
+                  minimumDate={new Date()}
+                  maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                  locale="en-GB"
+                />
+              </View>
+            </TouchableOpacity>
+          </Modal>
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>

@@ -43,31 +43,41 @@ export default function DashboardScreen() {
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   // State variable to determine whether to display only liked products
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
+  // Price range state
+  const [priceMin, setPriceMin] = useState<string>("");
+  const [priceMax, setPriceMax] = useState<string>("");
+  // Sort order state for price sorting
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const handleSearch = (text: string) => {
     setSearchText(text);
-    if (text.trim() === "") {
-      // If search is cleared and "liked" mode is enabled, filter based on likedProducts
-      if (showOnlyLiked) {
-        setFilteredProducts(
-          products.filter((product) => likedProducts.has(product._id))
-        );
-      } else {
-        setFilteredProducts(products);
-      }
-    } else {
-      const searched = products.filter((product) =>
+    let searched = products;
+
+    if (text.trim() !== "") {
+      searched = searched.filter((product) =>
         product.name.toLowerCase().includes(text.toLowerCase())
       );
-      // If "liked" mode is enabled, further filter by likedProducts
-      if (showOnlyLiked) {
-        setFilteredProducts(
-          searched.filter((product) => likedProducts.has(product._id))
-        );
-      } else {
-        setFilteredProducts(searched);
+    }
+
+    if (priceMin !== "") {
+      const min = parseFloat(priceMin);
+      if (!isNaN(min)) {
+        searched = searched.filter((product) => product.price >= min);
       }
     }
+
+    if (priceMax !== "") {
+      const max = parseFloat(priceMax);
+      if (!isNaN(max)) {
+        searched = searched.filter((product) => product.price <= max);
+      }
+    }
+
+    setFilteredProducts(
+      showOnlyLiked
+        ? searched.filter((product) => likedProducts.has(product._id))
+        : searched
+    );
   };
 
   // Toggle the search input visibility
@@ -354,15 +364,6 @@ export default function DashboardScreen() {
         </View>
         <View style={styles.centerHeader} />
         <View style={styles.rightHeader}>
-          {searchVisible && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search..."
-              value={searchText}
-              onChangeText={handleSearch}
-              autoFocus
-            />
-          )}
           <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
             <Ionicons
               name={searchVisible ? "close" : "search"}
@@ -372,6 +373,40 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {searchVisible && (
+        <View style={styles.searchBlock}>
+          <TextInput
+            style={styles.searchInputFull}
+            placeholder="Search by name..."
+            value={searchText}
+            onChangeText={handleSearch}
+            autoFocus
+          />
+          <View style={styles.priceRangeContainer}>
+            <TextInput
+              placeholder="Min Price"
+              value={priceMin}
+              onChangeText={(text) => {
+                setPriceMin(text);
+                handleSearch(searchText);
+              }}
+              keyboardType="numeric"
+              style={[styles.priceInput, { marginRight: 8 }]}
+            />
+            <TextInput
+              placeholder="Max Price"
+              value={priceMax}
+              onChangeText={(text) => {
+                setPriceMax(text);
+                handleSearch(searchText);
+              }}
+              keyboardType="numeric"
+              style={[styles.priceInput]}
+            />
+          </View>
+        </View>
+      )}
 
       <Text style={styles.title}>🍰 Our Cakes</Text>
       <View style={styles.filtersContainer}>
@@ -385,24 +420,17 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={styles.filterChip}
             onPress={() => {
-              const sorted = [...filteredProducts].sort(
-                (a, b) => a.price - b.price
+              const newOrder = sortOrder === "asc" ? "desc" : "asc";
+              setSortOrder(newOrder);
+              const sorted = [...filteredProducts].sort((a, b) =>
+                newOrder === "asc" ? a.price - b.price : b.price - a.price
               );
               setFilteredProducts(sorted);
             }}
           >
-            <Text style={styles.filterText}>⬆️ Price Low</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => {
-              const sorted = [...filteredProducts].sort(
-                (a, b) => b.price - a.price
-              );
-              setFilteredProducts(sorted);
-            }}
-          >
-            <Text style={styles.filterText}>⬇️ Price High</Text>
+            <Text style={styles.filterText}>
+              {sortOrder === "asc" ? "⬆️ Price Low" : "⬇️ Price High"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterChip}
@@ -579,5 +607,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#6b4226",
     textAlign: "right",
+  },
+  searchBlock: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 10,
+    marginVertical: 10,
+    elevation: 2,
+  },
+  searchInputFull: {
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
+    marginBottom: 10,
+  },
+  priceRangeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  priceInput: {
+    flex: 1,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    backgroundColor: "#f9f9f9",
   },
 });
