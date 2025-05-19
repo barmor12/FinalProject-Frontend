@@ -16,7 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import styles from "./styles/AccountSecurityStyles";
+import styles, { placeholderColor } from "./styles/AccountSecurityStyles";
 
 export default function AccountSecurityScreen() {
   const router = useRouter();
@@ -209,7 +209,6 @@ export default function AccountSecurityScreen() {
     }
   };
 
-
   const handleDeleteAccount = async () => {
     Alert.alert(
       "Delete Account",
@@ -232,12 +231,15 @@ export default function AccountSecurityScreen() {
                 return;
               }
 
-              const response = await fetch(`${config.BASE_URL}/user/delete-profile`, {
-                method: "DELETE",
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              });
+              const response = await fetch(
+                `${config.BASE_URL}/user/delete-profile`,
+                {
+                  method: "DELETE",
+                  headers: {
+                    Authorization: `Bearer ${token}`,
+                  },
+                }
+              );
 
               if (!response.ok) {
                 console.error("❌ Account deletion failed");
@@ -280,6 +282,7 @@ export default function AccountSecurityScreen() {
               secureTextEntry
               value={oldPassword}
               onChangeText={setOldPassword}
+              placeholderTextColor={placeholderColor}
             />
             <TextInput
               style={styles.input}
@@ -287,6 +290,7 @@ export default function AccountSecurityScreen() {
               secureTextEntry
               value={newPassword}
               onChangeText={setNewPassword}
+              placeholderTextColor={placeholderColor}
             />
             <TextInput
               style={styles.input}
@@ -294,6 +298,7 @@ export default function AccountSecurityScreen() {
               secureTextEntry
               value={verifyPassword}
               onChangeText={setVerifyPassword}
+              placeholderTextColor={placeholderColor}
             />
 
             <TouchableOpacity
@@ -345,7 +350,9 @@ export default function AccountSecurityScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>
-              {isEnabling2FA ? "Enable Two-Factor Authentication" : "Verify 2FA Setup"}
+              {isEnabling2FA
+                ? "Enable Two-Factor Authentication"
+                : "Verify 2FA Setup"}
             </Text>
             <Text style={styles.modalSubtitle}>
               {isEnabling2FA
@@ -353,12 +360,13 @@ export default function AccountSecurityScreen() {
                 : "Please enter the verification code sent to your email"}
             </Text>
             <TextInput
-              style={styles.input}
+              style={styles.verificationInput}
               placeholder="Verification Code"
               value={verificationCode}
               onChangeText={setVerificationCode}
               keyboardType="numeric"
               maxLength={6}
+              placeholderTextColor={placeholderColor}
             />
             <TouchableOpacity
               style={styles.button}

@@ -1,5 +1,7 @@
 import { StyleSheet } from "react-native";
 
+export const placeholderColor = "#999";
+
 export default StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: "#f9f3ea" },
   flexContainer: { flex: 1 },
@@ -26,6 +28,7 @@ export default StyleSheet.create({
     borderRadius: 8,
     marginBottom: 15,
     backgroundColor: "#fff",
+    color: "#000",
   },
   button: {
     backgroundColor: "#d49a6a",
@@ -85,5 +88,15 @@ export default StyleSheet.create({
   },
   cancelButton: {
     backgroundColor: "#666",
+  },
+  verificationInput: {
+    width: "100%",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    marginBottom: 15,
+    backgroundColor: "#fff",
+    color: "#000",
   },
 });
