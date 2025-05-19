@@ -5,9 +5,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#fdf6f0",
+    backgroundColor: "rgba(255, 255, 255, 0.4)",
     padding: 20,
-    paddingTop: "40%",
+    paddingTop: "80%",
   },
   inputContainer: {
     width: "100%",
@@ -15,17 +15,31 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginBottom: 8,
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#3e2723",
     textAlign: "center",
+    marginBottom: 6,
+    fontFamily: "System",
+    letterSpacing: 0.5,
+  },
+  title1: {
+    fontSize: 42,
+    fontWeight: "900",
+    color: "#6b4226",
+    textAlign: "center",
+    marginBottom: 18,
+    fontFamily: "System",
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
   },
   subtitle: {
-    fontSize: 18,
-    color: "#6b4226",
-    marginBottom: 14,
+    fontSize: 16,
+    color: "#5d4037",
     textAlign: "center",
+    marginBottom: 28,
+    fontWeight: "500",
+    letterSpacing: 0.3,
   },
   input: {
     width: "90%",
@@ -88,17 +102,17 @@ const styles = StyleSheet.create({
   },
   forgotPasswordText: {
     fontSize: 15,
-    color: "#d49a6a",
+    color: "#6b4226", // צבע חום כהה קריא
     fontWeight: "500",
   },
   signupText: {
     fontSize: 15,
-    color: "#666",
+    color: "#3e2723", // חום כהה נוסף לקריאות
     textAlign: "center",
   },
   signupLink: {
-    color: "#d49a6a",
-    fontWeight: "500",
+    color: "#3e2723", // כתמתם בולט
+    fontWeight: "600",
   },
   backButton: {
     marginTop: 20,
@@ -148,6 +162,39 @@ const styles = StyleSheet.create({
     marginTop: 10,
     width: "90%",
     alignSelf: "center",
+  },
+  background: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  brandPrefix: {
+    fontSize: 58,
+    fontWeight: "900",
+    color: "#f8b195", // גוון ורוד־קינוח
+    textAlign: "center",
+    marginTop: 12,
+    lineHeight: 60,
+    letterSpacing: 3,
+    fontFamily: "System",
+  },
+
+  brandRest: {
+    fontSize: 58,
+    fontWeight: "900",
+    color: "#6b4226", // חום־שוקולד עמוק
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 60,
+    letterSpacing: 3,
+    fontFamily: "System",
+    marginTop: -10,
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 4,
   },
 });
 

@@ -449,6 +449,7 @@ export default function CheckoutScreen() {
               <View style={styles.promoContainer}>
                 <TextInput
                   style={styles.promoInput}
+                  placeholderTextColor={"#7B6D63"}
                   placeholder={
                     appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"
                   }

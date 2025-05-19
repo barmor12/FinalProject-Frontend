@@ -6,6 +6,10 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/LoginStyles";
@@ -67,38 +71,54 @@ export default function ForgotPasswordScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Forgot Password?</Text>
-      <Text style={styles.subtitle}>
-        Enter your email to reset your password
-      </Text>
-      <Text style={styles.inputLabel}>Email</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor="#000"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-
-      <TouchableOpacity
-        style={styles.button}
-        onPress={handleForgotPassword}
-        disabled={loading}
+    <ImageBackground
+      source={require("../assets/bg-login.jpg")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+    >
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        {loading ? (
-          <ActivityIndicator size="small" color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Send Reset Code</Text>
-        )}
-      </TouchableOpacity>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <Text style={[styles.title, { opacity: 0 }]}>Forgot Password?</Text>
+            <Text style={[styles.subtitle, { opacity: 0 }]}>
+              Enter your email to reset your password
+            </Text>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholderTextColor="#000"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => router.push("/")}
-      >
-        <Text style={styles.signupLink}>Back to Login</Text>
-      </TouchableOpacity>
-    </View>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleForgotPassword}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Send Reset Code</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.push("/")}
+            >
+              <Text style={styles.signupLink}>Back to Login</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }

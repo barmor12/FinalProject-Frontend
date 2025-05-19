@@ -20,6 +20,7 @@ import {
   ScrollView,
   Platform,
   Keyboard,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -369,138 +370,142 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1 }}
-        keyboardShouldPersistTaps="handled"
+      <ImageBackground
+        source={require("../assets/bg-login.jpg")}
+        style={{ flex: 1 }}
+        resizeMode="cover"
       >
-        <View style={styles.container}>
-          <Text style={styles.title}>Welcome Back!</Text>
-          <Text style={styles.subtitle}>
-            Making your celebrations sweeter {"\n"}one cake at a time!
-          </Text>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.container}>
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={styles.input}
+                placeholderTextColor="#000"
+                keyboardType="email-address"
+                value={email}
+                onChangeText={setEmail}
+                textContentType="username"
+                autoComplete="email"
+              />
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={styles.input}
+                placeholderTextColor="#000"
+                secureTextEntry
+                value={password}
+                onChangeText={setPassword}
+                textContentType="password"
+                autoComplete="password"
+                onSubmitEditing={handleLogin}
+              />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              placeholderTextColor="#000"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-              textContentType="username"
-              autoComplete="email"
-            />
-            <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholderTextColor="#000"
-              secureTextEntry
-              value={password}
-              onChangeText={setPassword}
-              textContentType="password"
-              autoComplete="password"
-              onSubmitEditing={handleLogin}
-            />
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleLogin}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Log In</Text>
+                )}
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleLogin}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Log In</Text>
-              )}
-            </TouchableOpacity>
+              {/* Google Sign In Button */}
+              <TouchableOpacity
+                style={styles.googleButton}
+                onPress={handleGoogleAuth}
+                onPressIn={() => {
+                  Keyboard.dismiss();
+                }}
+              >
+                <FontAwesome name="google" size={22} color="#DB4437" />
+                <Text style={styles.googleButtonText}>Sign in with Google</Text>
+              </TouchableOpacity>
 
-            {/* Google Sign In Button */}
-            <TouchableOpacity
-              style={styles.googleButton}
-              onPress={handleGoogleAuth}
-              onPressIn={() => {
-                Keyboard.dismiss();
+              <TouchableOpacity
+                style={styles.forgotPasswordButton}
+                onPress={() => router.push("/ForgotPasswordScreen")}
+              >
+                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+              </TouchableOpacity>
+
+              <Text style={styles.signupText}>
+                Don't have an account?{" "}
+                <Text
+                  style={styles.signupLink}
+                  onPress={() => router.push("/SignUpScreen")}
+                >
+                  Sign Up here
+                </Text>
+              </Text>
+            </View>
+
+            {/* 2FA Verification Modal */}
+            <Modal
+              visible={show2FAModal}
+              transparent={true}
+              animationType="slide"
+              onRequestClose={() => {
+                setShow2FAModal(false);
+                setVerificationCode("");
+                setTempTokens(null);
+                setTempUserData(null);
               }}
             >
-              <FontAwesome name="google" size={22} color="#DB4437" />
-              <Text style={styles.googleButtonText}>Sign in with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.forgotPasswordButton}
-              onPress={() => router.push("/ForgotPasswordScreen")}
-            >
-              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-            </TouchableOpacity>
-
-            <Text style={styles.signupText}>
-              Don't have an account?{" "}
-              <Text
-                style={styles.signupLink}
-                onPress={() => router.push("/SignUpScreen")}
+              <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={styles.modalOverlay}
               >
-                Sign Up here
-              </Text>
-            </Text>
+                <View style={styles.modalContent}>
+                  <Text style={styles.modalTitle}>
+                    Two-Factor Authentication
+                  </Text>
+                  <Text style={styles.modalSubtitle}>
+                    Please enter the 6-digit verification code sent to your
+                    email
+                  </Text>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Verification Code"
+                    placeholderTextColor="#000"
+                    keyboardType="numeric"
+                    maxLength={6}
+                    value={verificationCode}
+                    onChangeText={setVerificationCode}
+                  />
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={handle2FAVerification}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Verify</Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, styles.cancelButton]}
+                    onPress={() => {
+                      setShow2FAModal(false);
+                      setVerificationCode("");
+                      setTempTokens(null);
+                      setTempUserData(null);
+                    }}
+                  >
+                    <Text style={styles.buttonText}>Cancel</Text>
+                  </TouchableOpacity>
+                </View>
+              </KeyboardAvoidingView>
+            </Modal>
           </View>
-
-          {/* 2FA Verification Modal */}
-          <Modal
-            visible={show2FAModal}
-            transparent={true}
-            animationType="slide"
-            onRequestClose={() => {
-              setShow2FAModal(false);
-              setVerificationCode("");
-              setTempTokens(null);
-              setTempUserData(null);
-            }}
-          >
-            <KeyboardAvoidingView
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              style={styles.modalOverlay}
-            >
-              <View style={styles.modalContent}>
-                <Text style={styles.modalTitle}>Two-Factor Authentication</Text>
-                <Text style={styles.modalSubtitle}>
-                  Please enter the 6-digit verification code sent to your email
-                </Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Verification Code"
-                  placeholderTextColor="#000"
-                  keyboardType="numeric"
-                  maxLength={6}
-                  value={verificationCode}
-                  onChangeText={setVerificationCode}
-                />
-                <TouchableOpacity
-                  style={styles.button}
-                  onPress={handle2FAVerification}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <Text style={styles.buttonText}>Verify</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.cancelButton]}
-                  onPress={() => {
-                    setShow2FAModal(false);
-                    setVerificationCode("");
-                    setTempTokens(null);
-                    setTempUserData(null);
-                  }}
-                >
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-              </View>
-            </KeyboardAvoidingView>
-          </Modal>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </ImageBackground>
     </KeyboardAvoidingView>
   );
 }

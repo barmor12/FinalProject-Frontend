@@ -36,7 +36,10 @@ export default function ProductDetailsScreen() {
       try {
         const parsedProduct = JSON.parse(params.product as string);
         if (parsedProduct && parsedProduct._id) {
-          parsedProduct.image = parsedProduct.image.replace(/(cakes)\//, "$1%2F");
+          parsedProduct.image = parsedProduct.image.replace(
+            /(cakes)\//,
+            "$1%2F"
+          );
           setProduct(parsedProduct);
         } else {
           console.error("❌ Invalid product data received:", params.product);
@@ -170,59 +173,90 @@ export default function ProductDetailsScreen() {
         >
           <Text style={styles.addButtonText}>Add to Cart</Text>
         </TouchableOpacity>
-
       </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9f3ea" },
-  scrollContent: { padding: 16 },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
+  container: {
+    flex: 1,
+    backgroundColor: "#f4ede4",
   },
-  image: { width: "100%", height: 200, borderRadius: 10 },
+  scrollContent: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#3e2723",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  image: {
+    width: "100%",
+    height: 240,
+    borderRadius: 12,
+    marginVertical: 12,
+  },
   description: {
     fontSize: 16,
-    color: "#6b4226",
-    marginTop: 16,
-    textAlign: "justify",
+    color: "#5d4037",
+    marginVertical: 12,
+    lineHeight: 22,
+    textAlign: "left",
   },
   ingredients: {
     fontSize: 16,
-    color: "#6b4226",
-    marginBottom: 16,
-    textAlign: "justify",
+    color: "#5d4037",
+    marginBottom: 20,
+    lineHeight: 22,
+    textAlign: "left",
   },
   price: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#6b4226",
+    fontSize: 22,
+    fontWeight: "600",
+    color: "#bf360c",
     textAlign: "center",
+    marginBottom: 20,
   },
   quantityContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    marginVertical: 10,
+    alignItems: "center",
+    marginVertical: 16,
   },
   button: {
     backgroundColor: "#6b4226",
-    padding: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderRadius: 8,
-    marginHorizontal: 10,
+    marginHorizontal: 12,
   },
   buttonText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  quantityText: { fontSize: 18, color: "#6b4226" },
-  addButton: {
-    backgroundColor: "#6b4226",
-    padding: 10,
-    borderRadius: 8,
-    alignItems: "center",
+  quantityText: {
+    fontSize: 20,
+    fontWeight: "500",
+    color: "#6b4226",
   },
-  addButtonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  error: { fontSize: 18, color: "red", textAlign: "center", marginTop: 20 },
+  addButton: {
+    backgroundColor: "#4e342e",
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: "center",
+    marginHorizontal: 20,
+    marginBottom: 30,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "700",
+    letterSpacing: 0.5,
+  },
+  error: {
+    fontSize: 18,
+    color: "red",
+    textAlign: "center",
+    marginTop: 40,
+  },
 });
