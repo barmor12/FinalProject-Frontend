@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
+    borderRadius: 24,
     marginBottom: 15,
     backgroundColor: "#fff",
     fontSize: 16,
@@ -55,7 +55,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: "#d49a6a",
     padding: 15,
-    borderRadius: 8,
+    borderRadius: 24,
     width: "90%",
     alignItems: "center",
     marginBottom: 15,
@@ -101,9 +101,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   forgotPasswordText: {
-    fontSize: 15,
-    color: "#6b4226", // צבע חום כהה קריא
-    fontWeight: "500",
+    fontSize: 13,
+    color: "#6b4226",
+    fontWeight: "400",
+    opacity: 0.8,
   },
   signupText: {
     fontSize: 15,

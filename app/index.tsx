@@ -403,6 +403,22 @@ export default function LoginScreen() {
                 onSubmitEditing={handleLogin}
               />
 
+              <View
+                style={{
+                  width: "90%",
+                  alignItems: "flex-end",
+                  marginBottom: 50,
+                }}
+              >
+                <TouchableOpacity
+                  onPress={() => router.push("/ForgotPasswordScreen")}
+                >
+                  <Text style={styles.forgotPasswordText}>
+                    Forgot Password?
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
               <TouchableOpacity
                 style={styles.button}
                 onPress={handleLogin}
@@ -416,33 +432,64 @@ export default function LoginScreen() {
               </TouchableOpacity>
 
               {/* Google Sign In Button */}
+              <Text
+                style={{
+                  color: "#5d3a1a",
+                  marginTop: 12,
+                  marginBottom: 16,
+                  fontSize: 16,
+                  fontWeight: "600",
+                }}
+              >
+                or
+              </Text>
               <TouchableOpacity
-                style={styles.googleButton}
                 onPress={handleGoogleAuth}
                 onPressIn={() => {
                   Keyboard.dismiss();
                 }}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: "#fff",
+                  borderWidth: 1,
+                  borderColor: "#e0e0e0",
+                  paddingVertical: 12,
+                  paddingHorizontal: 24,
+                  borderRadius: 30,
+                  elevation: 2,
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 2 },
+                  shadowOpacity: 0.1,
+                  shadowRadius: 3,
+                  marginBottom: 30,
+                }}
               >
-                <FontAwesome name="google" size={22} color="#DB4437" />
-                <Text style={styles.googleButtonText}>Sign in with Google</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={styles.forgotPasswordButton}
-                onPress={() => router.push("/ForgotPasswordScreen")}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
-
-              <Text style={styles.signupText}>
-                Don't have an account?{" "}
+                <FontAwesome
+                  name="google"
+                  size={22}
+                  color="#DB4437"
+                  style={{ marginRight: 10 }}
+                />
                 <Text
-                  style={styles.signupLink}
-                  onPress={() => router.push("/SignUpScreen")}
+                  style={{ fontSize: 16, color: "#3c4043", fontWeight: "500" }}
                 >
-                  Sign Up here
+                  Continue with Google
                 </Text>
-              </Text>
+              </TouchableOpacity>
+
+              <View style={{ marginTop: 40 }}>
+                <Text style={styles.signupText}>
+                  Don't have an account?{" "}
+                  <Text
+                    style={styles.signupLink}
+                    onPress={() => router.push("/SignUpScreen")}
+                  >
+                    Sign Up here
+                  </Text>
+                </Text>
+              </View>
             </View>
 
             {/* 2FA Verification Modal */}
