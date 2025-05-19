@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
@@ -122,108 +123,120 @@ export default function SignUpScreen() {
   ];
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    <ImageBackground
+      source={require("../assets/bg-login.jpg")}
+      style={{ flex: 1 }}
+      resizeMode="cover"
+      blurRadius={3}
     >
-      <ScrollView
-        contentContainerStyle={{
-          alignItems: "center",
-          paddingHorizontal: 20,
-          paddingBottom: 40,
-        }}
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <View style={{ width: "100%", maxWidth: 360 }}>
-          <Text style={styles.title}>Create an Account</Text>
-          <Text style={styles.subtitle}>
-            Join us and order your first cake with us
-          </Text>
-
-          <TouchableOpacity onPress={pickImage} style={styles.imageCircle}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.imageCircle}
-              />
-            ) : (
-              <Image
-                source={require("../assets/images/profile-user.png")}
-                style={styles.imageCircle}
-              />
-            )}
-          </TouchableOpacity>
-
-          <Text style={styles.inputLabel}>First Name</Text>
-          <TextInput
-            style={styles.input}
-            value={firstName}
-            placeholderTextColor="#000"
-            onChangeText={setFirstName}
-          />
-          <Text style={styles.inputLabel}>Last Name</Text>
-          <TextInput
-            style={styles.input}
-            value={lastName}
-            placeholderTextColor="#000"
-            onChangeText={setLastName}
-          />
-          <Text style={styles.inputLabel}>Email</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            placeholderTextColor="#000"
-            keyboardType="email-address"
-            onChangeText={setEmail}
-          />
-          <Text style={styles.inputLabel}>Password</Text>
-          <TextInput
-            placeholderTextColor="#000"
-            secureTextEntry
-            style={styles.input}
-            value={password}
-            onChangeText={(text) => {
-              setPassword(text);
-              checkPasswordStrength(text);
-            }}
-          />
-          <View style={styles.passwordContainer}>
-            {requirementList.map((item) => (
-              <View key={item.key} style={styles.requirementItem}>
-                <Text style={styles.requirementIcon}>
-                  {passwordRequirements[item.key] ? "✔️" : "❌"}
-                </Text>
-                <Text
-                  style={[
-                    styles.requirementText,
-                    { color: passwordRequirements[item.key] ? "green" : "red" },
-                  ]}
-                >
-                  {item.label}
-                </Text>
-              </View>
-            ))}
-          </View>
-
-          <Text style={styles.inputLabel}>Confirm Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholderTextColor="#000"
-            secureTextEntry
-            value={confirmPassword}
-            onChangeText={setConfirmPassword}
-          />
-
-          <TouchableOpacity style={styles.button} onPress={handleSignUp}>
-            <Text style={styles.buttonText}>Sign Up</Text>
-          </TouchableOpacity>
-          <Text style={styles.loginText}>
-            Already has account?{" "}
-            <Text style={styles.loginLink} onPress={() => router.replace("/")}>
-              Log In
+        <ScrollView
+          contentContainerStyle={{
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingBottom: 40,
+          }}
+        >
+          <View style={{ width: "100%", maxWidth: 360 }}>
+            <Text style={styles.title}>Create an Account</Text>
+            <Text style={styles.subtitle}>
+              Join us and order your first cake with us
             </Text>
-          </Text>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+
+            <TouchableOpacity onPress={pickImage} style={styles.imageCircle}>
+              {profileImage ? (
+                <Image
+                  source={{ uri: profileImage }}
+                  style={styles.imageCircle}
+                />
+              ) : (
+                <Image
+                  source={require("../assets/images/profile-user.png")}
+                  style={styles.imageCircle}
+                />
+              )}
+            </TouchableOpacity>
+
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              value={firstName}
+              placeholderTextColor="#000"
+              onChangeText={setFirstName}
+            />
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              value={lastName}
+              placeholderTextColor="#000"
+              onChangeText={setLastName}
+            />
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              value={email}
+              placeholderTextColor="#000"
+              keyboardType="email-address"
+              onChangeText={setEmail}
+            />
+            <Text style={styles.inputLabel}>Password</Text>
+            <TextInput
+              placeholderTextColor="#000"
+              secureTextEntry
+              style={styles.input}
+              value={password}
+              onChangeText={(text) => {
+                setPassword(text);
+                checkPasswordStrength(text);
+              }}
+            />
+            <View style={styles.passwordContainer}>
+              {requirementList.map((item) => (
+                <View key={item.key} style={styles.requirementItem}>
+                  <Text style={styles.requirementIcon}>
+                    {passwordRequirements[item.key] ? "✔️" : "❌"}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.requirementText,
+                      {
+                        color: passwordRequirements[item.key] ? "green" : "red",
+                      },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.inputLabel}>Confirm Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholderTextColor="#000"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+
+            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+            <Text style={styles.loginText}>
+              Already has account?{" "}
+              <Text
+                style={styles.loginLink}
+                onPress={() => router.replace("/")}
+              >
+                Log In
+              </Text>
+            </Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </ImageBackground>
   );
 }

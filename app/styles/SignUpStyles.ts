@@ -3,10 +3,10 @@ import { StyleSheet } from "react-native";
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f9f3ea",
+    backgroundColor: "rgba(255,255,255,0.4)",
     paddingHorizontal: 20,
     paddingTop: 40,
-    paddingBottom: 20,
+    paddingBottom: 30,
   },
 
   imageCircle: {
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     color: "#555",
   },
   loginLink: {
-    color: "#d49a6a", // צבע זהב כמו בכפתורים
+    color: "brown", // צבע זהב כמו בכפתורים
     fontWeight: "bold",
   },
   instructionsContainer: {
