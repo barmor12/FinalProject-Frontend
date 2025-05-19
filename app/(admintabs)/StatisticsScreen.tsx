@@ -1,5 +1,14 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Dimensions,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from "react-native";
 import { LineChart, PieChart } from "react-native-chart-kit";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -47,7 +56,7 @@ const StatisticsScreen = () => {
     totalOrdersPrice: 0,
     monthlyData: [],
     orderStatusData: [],
-    topProfitableCakes: []
+    topProfitableCakes: [],
   });
 
   const fetchStatistics = useCallback(async () => {
@@ -61,14 +70,14 @@ const StatisticsScreen = () => {
       }
       const response = await fetch(`${config.BASE_URL}/statistics`, {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const data = await response.json();
       setStatistics(data);
     } catch (error) {
-      console.error('Error fetching statistics:', error);
+      console.error("Error fetching statistics:", error);
     } finally {
       setIsLoading(false);
     }
@@ -90,13 +99,16 @@ const StatisticsScreen = () => {
         return;
       }
 
-      const response = await fetch(`${config.BASE_URL}/statistics/financial-report`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `${config.BASE_URL}/statistics/financial-report`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
-      });
+      );
 
       const data = await response.json();
 
@@ -107,10 +119,13 @@ const StatisticsScreen = () => {
           [{ text: "OK" }]
         );
       } else {
-        Alert.alert("Error", data.message || "Failed to generate financial report");
+        Alert.alert(
+          "Error",
+          data.message || "Failed to generate financial report"
+        );
       }
     } catch (error) {
-      console.error('Error generating financial report:', error);
+      console.error("Error generating financial report:", error);
       Alert.alert("Error", "Failed to generate financial report");
     } finally {
       setIsLoading(false);
@@ -118,40 +133,41 @@ const StatisticsScreen = () => {
   };
 
   const chartConfig = {
-    backgroundGradientFrom: '#ffffff',
-    backgroundGradientTo: '#ffffff',
+    backgroundGradientFrom: "#ffffff",
+    backgroundGradientTo: "#ffffff",
     color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
     strokeWidth: 2,
     barPercentage: 0.5,
-    useShadowColorFromDataset: false
+    useShadowColorFromDataset: false,
   };
   const statusColors: { [key: string]: string } = {
     delivered: "#4CAF50",
     pending: "#FFC107",
-    cancelled: "#F44336"
+    cancelled: "#F44336",
   };
 
   const pieChartData = statistics.orderStatusData
-    .filter(item => typeof item.count === "number" && isFinite(item.count))
-    .map(item => ({
+    .filter((item) => typeof item.count === "number" && isFinite(item.count))
+    .map((item) => ({
       name: item.status.charAt(0).toUpperCase() + item.status.slice(1),
       population: item.count,
       color: statusColors[item.status] || "#999999",
       legendFontColor: "#6d4226",
-      legendFontSize: 12
+      legendFontSize: 12,
     }));
 
-
   const lineChartData = {
-    labels: statistics.monthlyData.length ? statistics.monthlyData.map(item => item.month) : [''],
+    labels: statistics.monthlyData.length
+      ? statistics.monthlyData.map((item) => item.month)
+      : [""],
     datasets: [
       {
-        data: statistics.monthlyData.length ? statistics.monthlyData.map(item => item.count || 0) : [0]
-      }
-    ]
+        data: statistics.monthlyData.length
+          ? statistics.monthlyData.map((item) => item.count || 0)
+          : [0],
+      },
+    ],
   };
-
-
 
   return (
     <SafeAreaView style={styles.container}>
@@ -163,7 +179,9 @@ const StatisticsScreen = () => {
             onPress={generateFinancialReport}
             disabled={isLoading}
           >
-            <Text style={styles.reportButtonText}>Generate Financial Report</Text>
+            <Text style={styles.reportButtonText}>
+              Generate Financial Report
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -195,22 +213,33 @@ const StatisticsScreen = () => {
 
               <View style={styles.statCard}>
                 <Text style={styles.statTitle}>Total Orders Price</Text>
-                <Text style={styles.statValue}>${statistics.totalOrdersPrice.toFixed(2)}</Text>
+                <Text style={styles.statValue}>
+                  ${statistics.totalOrdersPrice.toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.statCard}>
                 <Text style={styles.statTitle}>Total Revenue</Text>
-                <Text style={styles.statValue}>${statistics.totalRevenue.toFixed(2)}</Text>
+                <Text style={styles.statValue}>
+                  ${statistics.totalRevenue.toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.statCard}>
                 <Text style={styles.statTitle}>Total Cost</Text>
-                <Text style={styles.statValue}>${(statistics.totalOrdersPrice - statistics.totalRevenue).toFixed(2)}</Text>
+                <Text style={styles.statValue}>
+                  $
+                  {(
+                    statistics.totalOrdersPrice - statistics.totalRevenue
+                  ).toFixed(2)}
+                </Text>
               </View>
 
               <View style={styles.statCard}>
                 <Text style={styles.statTitle}>Total Profit</Text>
-                <Text style={styles.statValue}>${statistics.totalRevenue.toFixed(2)}</Text>
+                <Text style={styles.statValue}>
+                  ${statistics.totalRevenue.toFixed(2)}
+                </Text>
               </View>
             </View>
 
@@ -228,6 +257,15 @@ const StatisticsScreen = () => {
               />
             </View>
 
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#eee",
+                marginHorizontal: 16,
+                marginVertical: 8,
+              }}
+            />
+
             <View style={styles.chartContainer}>
               <Text style={styles.chartTitle}>Monthly Orders</Text>
               <LineChart
@@ -241,14 +279,27 @@ const StatisticsScreen = () => {
               />
             </View>
 
+            <View
+              style={{
+                height: 1,
+                backgroundColor: "#eee",
+                marginHorizontal: 16,
+                marginVertical: 8,
+              }}
+            />
+
             <View style={styles.chartContainer}>
               <Text style={styles.chartTitle}>Top Profitable Cakes</Text>
               {statistics.topProfitableCakes?.map((cake, index) => (
                 <View key={index} style={styles.cakeItem}>
                   <Text style={styles.cakeName}>{cake.name}</Text>
                   <View style={styles.cakeStats}>
-                    <Text style={styles.cakeStat}>Quantity: {cake.quantity}</Text>
-                    <Text style={styles.cakeStat}>Profit: ${cake.profit.toFixed(2)}</Text>
+                    <Text style={styles.cakeStat}>
+                      Quantity: {cake.quantity}
+                    </Text>
+                    <Text style={styles.cakeStat}>
+                      Profit: ${cake.profit.toFixed(2)}
+                    </Text>
                   </View>
                 </View>
               ))}
@@ -264,24 +315,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fdf6f0",
-    marginBottom: 20
+    marginBottom: 20,
   },
   header: {
     padding: 20,
     backgroundColor: "#fdf6f0",
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "bold",
-    color: "#6d4226",
+    color: "#4e2c17",
+    marginBottom: 10,
   },
   statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     padding: 10,
   },
   statCard: {
@@ -289,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 15,
     alignItems: "center",
-    width: '31%',
+    width: "31%",
     marginBottom: 15,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -325,76 +377,80 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   chartContainer: {
-    margin: 20,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 15,
+    marginHorizontal: 16,
+    marginVertical: 10,
+    backgroundColor: "#fffdf9",
+    borderRadius: 14,
+    padding: 18,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowRadius: 6,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#f1e7dc",
   },
   chartTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "bold",
-    color: "#6d4226",
-    marginBottom: 10,
+    color: "#4e2c17",
+    marginBottom: 12,
+    textAlign: "center",
   },
   chart: {
     marginVertical: 8,
     borderRadius: 16,
-
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
     minHeight: 200,
   },
   loadingText: {
     marginTop: 10,
     fontSize: 16,
-    color: '#6d4226',
+    color: "#6d4226",
   },
   cakeItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    backgroundColor: "#fff",
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#f0f0f0',
+    borderColor: "#f0e6da",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   cakeName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6d4226',
-    marginBottom: 4,
+    fontSize: 17,
+    fontWeight: "bold",
+    color: "#6d4226",
+    marginBottom: 6,
   },
   cakeStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   cakeStat: {
     fontSize: 14,
-    color: '#666',
+    color: "#555",
   },
   reportButton: {
-    backgroundColor: "#6b4226",
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 8,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    backgroundColor: "#8e5c3b",
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    elevation: 3,
   },
   reportButtonText: {
     color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
   },
 });
 
