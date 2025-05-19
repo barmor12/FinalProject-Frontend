@@ -380,9 +380,9 @@ export default function LoginScreen() {
           </Text>
 
           <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={styles.input}
-              placeholder="Email"
               placeholderTextColor="#000"
               keyboardType="email-address"
               value={email}
@@ -390,10 +390,9 @@ export default function LoginScreen() {
               textContentType="username"
               autoComplete="email"
             />
-
+            <Text style={styles.inputLabel}>Password</Text>
             <TextInput
               style={styles.input}
-              placeholder="Password"
               placeholderTextColor="#000"
               secureTextEntry
               value={password}

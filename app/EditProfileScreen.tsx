@@ -36,7 +36,9 @@ export default function EditProfileScreen() {
         const userData = await fetchUserData();
         console.log("🔄 Fetched user data:", userData);
 
-        let profilePicUri: string | number = require("../assets/images/userIcon.png");
+        let profilePicUri:
+          | string
+          | number = require("../assets/images/userIcon.png");
 
         if (userData.profilePic && userData.profilePic.url) {
           profilePicUri = userData.profilePic.url;
@@ -58,7 +60,8 @@ export default function EditProfileScreen() {
 
   const pickImage = async () => {
     try {
-      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult =
+        await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Permission Denied", "You need to allow access to photos.");
         return;
@@ -101,18 +104,24 @@ export default function EditProfileScreen() {
         name: "profile_pic.jpg",
       } as any);
 
-      const response = await fetch(`${config.BASE_URL}/user/update-profile-pic`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+      const response = await fetch(
+        `${config.BASE_URL}/user/update-profile-pic`,
+        {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        Alert.alert("Error", data.message || "Failed to update profile picture.");
+        Alert.alert(
+          "Error",
+          data.message || "Failed to update profile picture."
+        );
         setIsUploading(false);
         return;
       }
@@ -124,7 +133,6 @@ export default function EditProfileScreen() {
       setIsUploading(false);
     }
   };
-
 
   const handleUpdateName = async () => {
     try {
@@ -139,17 +147,20 @@ export default function EditProfileScreen() {
         return;
       }
 
-      const response = await fetch(`${config.BASE_URL}/user/updateNameProfile`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          firstName,
-          lastName,
-        }),
-      });
+      const response = await fetch(
+        `${config.BASE_URL}/user/updateNameProfile`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+          }),
+        }
+      );
 
       const data = await response.json();
 
@@ -158,19 +169,14 @@ export default function EditProfileScreen() {
         return;
       }
 
-      Alert.alert(
-        "Success",
-        "Name updated successfully!",
-        [
-          {
-            text: "OK",
-            onPress: () => {
-              router.back(); // לדוגמה: מעבר למסך הפרופיל
-            },
+      Alert.alert("Success", "Name updated successfully!", [
+        {
+          text: "OK",
+          onPress: () => {
+            router.back(); // לדוגמה: מעבר למסך הפרופיל
           },
-        ]
-      );
-
+        },
+      ]);
     } catch (error) {
       console.error("❌ Error updating name:", error);
       Alert.alert("Error", "Something went wrong.");
@@ -187,7 +193,11 @@ export default function EditProfileScreen() {
             <ActivityIndicator size="large" color="#0000ff" />
           ) : (
             <Image
-              source={typeof user.profilePic === "string" ? { uri: user.profilePic } : user.profilePic}
+              source={
+                typeof user.profilePic === "string"
+                  ? { uri: user.profilePic }
+                  : user.profilePic
+              }
               style={styles.profileImage}
               resizeMode="cover"
             />
@@ -195,15 +205,18 @@ export default function EditProfileScreen() {
           <Text style={styles.changePhotoText}>Change Photo</Text>
         </View>
       </TouchableOpacity>
-
+      <Text style={styles.inputLabel}>FirstName</Text>
       <TextInput
         style={styles.input}
         placeholder={user.firstName}
+        placeholderTextColor={"#000"}
         value={firstName}
         onChangeText={setFirstName}
       />
+      <Text style={styles.inputLabel}>LirstName</Text>
       <TextInput
         style={styles.input}
+        placeholderTextColor={"#000"}
         placeholder={user.lastName}
         value={lastName}
         onChangeText={setLastName}
@@ -214,4 +227,4 @@ export default function EditProfileScreen() {
       </TouchableOpacity>
     </View>
   );
-};
+}

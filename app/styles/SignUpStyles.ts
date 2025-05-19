@@ -27,8 +27,7 @@ const styles = StyleSheet.create({
     color: "#6b4226", // צבע חום עדין
     marginBottom: 10,
     textAlign: "center",
-    marginTop: 15
-
+    marginTop: 15,
   },
   subtitle: {
     fontSize: 16,
@@ -36,9 +35,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     textAlign: "center",
   },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000",
+    marginTop: 8,
+    marginBottom: 4,
+  },
   input: {
     width: "100%", // במקום 90%
-    padding: 16,    // שיהיה יותר מרווח
+    padding: 16, // שיהיה יותר מרווח
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
@@ -135,7 +141,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     flexShrink: 1,
   },
-
 });
 
 export default styles;

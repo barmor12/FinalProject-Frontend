@@ -69,4 +69,13 @@ export default StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 4,
+    marginTop: 10,
+    width: "90%",
+    alignSelf: "center",
+  },
 });

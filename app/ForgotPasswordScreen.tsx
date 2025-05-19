@@ -72,10 +72,9 @@ export default function ForgotPasswordScreen() {
       <Text style={styles.subtitle}>
         Enter your email to reset your password
       </Text>
-
+      <Text style={styles.inputLabel}>Email</Text>
       <TextInput
         style={styles.input}
-        placeholder="Email"
         placeholderTextColor="#000"
         keyboardType="email-address"
         value={email}

@@ -31,7 +31,12 @@ export default function SignUpScreen() {
     number: false,
     special: false,
   });
-  type RequirementKey = "length" | "lowercase" | "uppercase" | "number" | "special";
+  type RequirementKey =
+    | "length"
+    | "lowercase"
+    | "uppercase"
+    | "number"
+    | "special";
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -121,9 +126,14 @@ export default function SignUpScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40 }}>
+      <ScrollView
+        contentContainerStyle={{
+          alignItems: "center",
+          paddingHorizontal: 20,
+          paddingBottom: 40,
+        }}
+      >
         <View style={{ width: "100%", maxWidth: 360 }}>
-
           <Text style={styles.title}>Create an Account</Text>
           <Text style={styles.subtitle}>
             Join us and order your first cake with us
@@ -131,36 +141,43 @@ export default function SignUpScreen() {
 
           <TouchableOpacity onPress={pickImage} style={styles.imageCircle}>
             {profileImage ? (
-              <Image source={{ uri: profileImage }} style={styles.imageCircle} />
+              <Image
+                source={{ uri: profileImage }}
+                style={styles.imageCircle}
+              />
             ) : (
-              <Image source={require("../assets/images/profile-user.png")} style={styles.imageCircle} />
+              <Image
+                source={require("../assets/images/profile-user.png")}
+                style={styles.imageCircle}
+              />
             )}
           </TouchableOpacity>
 
+          <Text style={styles.inputLabel}>First Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="First Name"
             value={firstName}
             placeholderTextColor="#000"
             onChangeText={setFirstName}
           />
+          <Text style={styles.inputLabel}>Last Name</Text>
           <TextInput
             style={styles.input}
-            placeholder="Last Name"
             value={lastName}
             placeholderTextColor="#000"
             onChangeText={setLastName}
           />
+          <Text style={styles.inputLabel}>Email</Text>
           <TextInput
             style={styles.input}
-            placeholder="Email"
             value={email}
             placeholderTextColor="#000"
             keyboardType="email-address"
             onChangeText={setEmail}
           />
+          <Text style={styles.inputLabel}>Password</Text>
           <TextInput
-            placeholder="Password"
+            placeholderTextColor="#000"
             secureTextEntry
             style={styles.input}
             value={password}
@@ -187,12 +204,10 @@ export default function SignUpScreen() {
             ))}
           </View>
 
-
-
+          <Text style={styles.inputLabel}>Confirm Password</Text>
           <TextInput
             style={styles.input}
             placeholderTextColor="#000"
-            placeholder="Confirm Password"
             secureTextEntry
             value={confirmPassword}
             onChangeText={setConfirmPassword}
@@ -209,6 +224,6 @@ export default function SignUpScreen() {
           </Text>
         </View>
       </ScrollView>
-    </KeyboardAvoidingView >
+    </KeyboardAvoidingView>
   );
 }
