@@ -21,6 +21,7 @@ interface Product {
   description: string;
   ingredients: string[];
   price: number;
+  stock: number;
 }
 
 export default function ProductDetailsScreen() {
@@ -144,6 +145,7 @@ export default function ProductDetailsScreen() {
           Ingredients: {product.ingredients?.join(", ")}
         </Text>
         <Text style={styles.price}>Price: ${product.price.toFixed(2)}</Text>
+        <Text style={styles.stock}>In Stock: {product.stock}</Text>
 
         <View style={styles.quantityContainer}>
           <TouchableOpacity
@@ -155,7 +157,13 @@ export default function ProductDetailsScreen() {
           <Text style={styles.quantityText}>{quantity}</Text>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => setQuantity((prev) => prev + 1)}
+            onPress={() => {
+              if (product && quantity >= product.stock) {
+                Alert.alert("Stock Limit", `Only ${product.stock} in stock`);
+                return;
+              }
+              setQuantity((prev) => prev + 1);
+            }}
           >
             <Text style={styles.buttonText}>+</Text>
           </TouchableOpacity>
@@ -252,6 +260,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "700",
     letterSpacing: 0.5,
+  },
+  stock: {
+    fontSize: 16,
+    color: "#5d4037",
+    textAlign: "center",
+    marginBottom: 10,
   },
   error: {
     fontSize: 18,

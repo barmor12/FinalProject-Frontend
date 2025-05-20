@@ -28,6 +28,7 @@ interface CartItem {
     };
     price: number;
     description: string;
+    stock: number;
   };
   quantity: number;
 }
@@ -138,6 +139,12 @@ export default function CartScreen() {
   // Update the quantity of a specific item in the cart on the server and locally
   const updateQuantity = async (itemId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    // ✅ בדיקה מול המלאי הנוכחי
+    const currentItem = cartItems.find((item) => item._id === itemId);
+    if (currentItem && newQuantity > currentItem.cake.stock) {
+      Alert.alert("Error", `Only ${currentItem.cake.stock} units in stock`);
+      return;
+    }
     try {
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
@@ -222,7 +229,9 @@ export default function CartScreen() {
         try {
           const data = await response.json();
           console.error(
-            `❌ Server error removing item - itemId: ${itemId}: ${data.error || "Unknown error"}`
+            `❌ Server error removing item - itemId: ${itemId}: ${
+              data.error || "Unknown error"
+            }`
           );
           Alert.alert(
             "Error",
@@ -307,7 +316,9 @@ export default function CartScreen() {
         // If the API call fails, display an error to the user
         const data = await response.json();
         console.error(
-          `❌ Server error removing item ${itemId}: ${data.error || "Unknown error"}`
+          `❌ Server error removing item ${itemId}: ${
+            data.error || "Unknown error"
+          }`
         );
         Alert.alert(
           "Error",
@@ -400,6 +411,8 @@ export default function CartScreen() {
           <View style={styles.itemDetails}>
             <Text style={styles.itemName}>{item.cake.name}</Text>
             <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
+            {/* ✅ הצגת מלאי זמין */}
+            <Text style={styles.itemQuantity}>In Stock: {item.cake.stock}</Text>
             <View style={styles.quantityContainer}>
               <TouchableOpacity
                 onPress={() => updateQuantity(item._id, item.quantity - 1)}
@@ -413,8 +426,13 @@ export default function CartScreen() {
               <Text style={styles.quantityText}>{item.quantity}</Text>
               <TouchableOpacity
                 onPress={() => updateQuantity(item._id, item.quantity + 1)}
+                disabled={item.quantity >= item.cake.stock}
               >
-                <Ionicons name="add-circle-outline" size={26} color="#6b4226" />
+                <Ionicons
+                  name="add-circle-outline"
+                  size={26}
+                  color={item.quantity >= item.cake.stock ? "#ccc" : "#6b4226"}
+                />
               </TouchableOpacity>
             </View>
           </View>
