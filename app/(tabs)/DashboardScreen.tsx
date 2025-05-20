@@ -408,7 +408,7 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      <Text style={styles.title}>🍰 Our Cakes</Text>
+      <Text style={styles.title}> Bakey Cakes 🍰</Text>
       <View style={styles.filtersContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <TouchableOpacity
@@ -435,8 +435,10 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={styles.filterChip}
             onPress={() => {
-              const filtered = products.filter((p) => p.stock > 0);
-              setFilteredProducts(filtered);
+              const sortedInStock = products
+                .filter((p) => p.stock > 0)
+                .sort((a, b) => b.stock - a.stock);
+              setFilteredProducts(sortedInStock);
             }}
           >
             <Text style={styles.filterText}>✅ In Stock</Text>
