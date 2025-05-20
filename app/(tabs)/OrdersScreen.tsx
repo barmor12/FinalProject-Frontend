@@ -305,6 +305,78 @@ export default function OrdersScreen() {
                 >
                   <Text style={styles.reorderButtonText}>Re-Order</Text>
                 </TouchableOpacity>
+                {/* Delete/Edit buttons for pending orders */}
+                {order.status === "pending" && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginTop: 10,
+                    }}
+                  >
+                    <TouchableOpacity
+                      style={[
+                        styles.reorderButton,
+                        { backgroundColor: "#d9534f", flex: 1, marginRight: 5 },
+                      ]}
+                      onPress={() => {
+                        Alert.alert(
+                          "Delete Order",
+                          "Are you sure you want to delete this order?",
+                          [
+                            { text: "Cancel", style: "cancel" },
+                            {
+                              text: "Delete",
+                              style: "destructive",
+                              onPress: async () => {
+                                try {
+                                  const token = await AsyncStorage.getItem(
+                                    "accessToken"
+                                  );
+                                  const response = await fetch(
+                                    `${config.BASE_URL}/order/delete/${order._id}`,
+                                    {
+                                      method: "DELETE",
+                                      headers: {
+                                        Authorization: `Bearer ${token}`,
+                                      },
+                                    }
+                                  );
+                                  if (!response.ok)
+                                    throw new Error("Failed to delete order");
+                                  Alert.alert(
+                                    "Deleted",
+                                    "Order deleted successfully"
+                                  );
+                                  fetchOrders(); // רענון רשימת ההזמנות
+                                } catch (error) {
+                                  Alert.alert(
+                                    "Error",
+                                    "Failed to delete order."
+                                  );
+                                }
+                              },
+                            },
+                          ]
+                        );
+                      }}
+                    >
+                      <Text style={styles.reorderButtonText}>Delete</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[styles.reorderButton, { flex: 1, marginLeft: 5 }]}
+                      onPress={() => {
+                        router.push({
+                          pathname: "/EditOrderScreen",
+                          params: { orderId: order._id },
+                        });
+                      }}
+                    >
+                      <Text style={styles.reorderButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
               </View>
             ))
           )}
