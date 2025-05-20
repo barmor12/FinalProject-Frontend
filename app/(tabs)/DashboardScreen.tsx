@@ -183,11 +183,11 @@ export default function DashboardScreen() {
     fetchProducts();
   }, []);
 
-  // Refetch user data and products when screen gains focus
+  // No need to refetch products on focus to preserve filters
   useFocusEffect(
     React.useCallback(() => {
-      fetchProducts();
-      fetchUserDataAndSetState();
+      // No need to refetch products on focus to preserve filters
+      return () => {};
     }, [])
   );
 
