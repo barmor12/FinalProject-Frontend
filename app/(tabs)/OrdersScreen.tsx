@@ -218,7 +218,9 @@ export default function OrdersScreen() {
             filteredOrders.map((order) => (
               <View key={order._id} style={styles.orderCard}>
                 <View style={styles.orderHeader}>
-                  <Text style={styles.orderText}>Order ID: {order._id}</Text>
+                  <Text style={styles.orderText}>
+                    Order #{order._id.slice(-6)}
+                  </Text>
                   <Text
                     style={[
                       styles.statusText,
