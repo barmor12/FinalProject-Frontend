@@ -41,6 +41,8 @@ interface Order {
   items: { cake: Cake; quantity: number }[];
   totalPrice: number;
   createdAt: string;
+  shippingMethod?: string;
+  deliveryDate?: string;
 }
 
 export default function OrderDetailsScreen() {
@@ -246,6 +248,64 @@ export default function OrderDetailsScreen() {
           {order.status}
         </Text>
       </Text>
+
+      <View
+        style={{
+          backgroundColor: "#fff",
+          padding: 15,
+          borderRadius: 10,
+          marginBottom: 20,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 1 },
+          shadowOpacity: 0.1,
+          shadowRadius: 4,
+          elevation: 3,
+        }}
+      >
+        <Text
+          style={[styles.subTitle, { fontWeight: "bold", marginBottom: 5 }]}
+        >
+          📦 Shipping Method:
+        </Text>
+        <Text style={styles.subTitle}>
+          {order.shippingMethod
+            ? order.shippingMethod
+            : order.address
+            ? "Standard Delivery (2-3 days)"
+            : "Self Pickup"}
+        </Text>
+
+        <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
+          📅 {order.address ? "Delivery Date" : "Pickup Date"}:
+        </Text>
+        <Text style={styles.subTitle}>
+          {order.deliveryDate
+            ? new Date(order.deliveryDate).toLocaleDateString()
+            : order.shippingMethod === "Self Pickup"
+            ? "Pickup date not selected"
+            : "Delivery date not selected"}
+        </Text>
+
+        <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
+          🏠 Delivery Address:
+        </Text>
+        <Text style={styles.subTitle}>
+          {order.address
+            ? `${order.address.fullName}, ${order.address.street}, ${order.address.city}`
+            : "Pickup at store"}
+        </Text>
+
+        {order.address?.phone && (
+          <>
+            <Text
+              style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}
+            >
+              📞 Phone:
+            </Text>
+            <Text style={styles.subTitle}>{order.address.phone}</Text>
+          </>
+        )}
+      </View>
 
       <ScrollView contentContainerStyle={styles.scrollView}>
         {order.items.map((item, index) => (

@@ -31,7 +31,9 @@ export default function AdminDashboardScreen() {
   const [displayedOrders, setDisplayedOrders] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [showCalendar] = useState(true);
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().slice(0, 7)); // Format: YYYY-MM
+  const [currentMonth, setCurrentMonth] = useState(
+    new Date().toISOString().slice(0, 7)
+  ); // Format: YYYY-MM
 
   const fetchData = async () => {
     try {
@@ -43,12 +45,9 @@ export default function AdminDashboardScreen() {
       }
 
       // Fetch admin stats
-      const statsResponse = await axios.get(
-        `${config.BASE_URL}/admin/stats`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const statsResponse = await axios.get(`${config.BASE_URL}/admin/stats`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
       const { ordersCount, usersCount, totalRevenue } = statsResponse.data;
       setStats({
@@ -67,7 +66,7 @@ export default function AdminDashboardScreen() {
         {
           params: {
             month: currentMonth,
-            year: currentYear
+            year: currentYear,
           },
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -100,7 +99,7 @@ export default function AdminDashboardScreen() {
         return;
       }
 
-      const [year, monthNum] = month.split('-');
+      const [year, monthNum] = month.split("-");
       const monthNumber = parseInt(monthNum);
 
       const response = await axios.get(
@@ -108,7 +107,7 @@ export default function AdminDashboardScreen() {
         {
           params: {
             month: monthNumber,
-            year: parseInt(year)
+            year: parseInt(year),
           },
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -145,36 +144,54 @@ export default function AdminDashboardScreen() {
     }
   };
 
-  // Create marked dates for calendar
+  // Create marked dates for calendar with multi-dot support
   const getMarkedDates = () => {
-    const markedDates: { [key: string]: any } = {};
+    const markedDates: {
+      [key: string]: {
+        marked?: boolean;
+        dotColor?: string;
+        dots?: any[];
+        selected?: boolean;
+        selectedColor?: string;
+      };
+    } = {};
 
-    // Add dots for days with orders - use allOrders instead of orders
-    allOrders.forEach(order => {
-      if (order.deliveryDate) {
-        try {
-          const date = new Date(order.deliveryDate);
-          if (!isNaN(date.getTime())) {
-            const dateString = date.toISOString().split('T')[0];
+    // Group orders by date
+    allOrders.forEach((order) => {
+      // Mark if order has a deliveryDate, or is pending (even if no deliveryDate)
+      if (order.deliveryDate || order.status === "pending") {
+        // Use deliveryDate if present, otherwise fallback to createdAt
+        const date = new Date(order.deliveryDate || order.createdAt);
+        if (!isNaN(date.getTime())) {
+          const dateString = date.toISOString().split("T")[0];
+
+          const dotColor = getStatusColor(order.status);
+
+          if (!markedDates[dateString]) {
             markedDates[dateString] = {
               marked: true,
-              dotColor: getStatusColor(order.status)
+              dots: [{ color: dotColor }],
             };
+          } else {
+            // Ensure dots array is unique by status color
+            const existingDots = markedDates[dateString].dots || [];
+            if (!existingDots.some((dot) => dot.color === dotColor)) {
+              existingDots.push({ color: dotColor });
+            }
+            markedDates[dateString].dots = existingDots;
           }
-        } catch (error) {
-          console.warn('Invalid date format:', order.deliveryDate);
         }
       }
     });
 
-    // Add selected date styling if a date is selected
+    // Add selected date styling
     if (selectedDate) {
-      // Create a proper merge of the existing dots with the selection
       const existingProps = markedDates[selectedDate] || {};
       markedDates[selectedDate] = {
         ...existingProps,
+        marked: true,
         selected: true,
-        selectedColor: '#6b4226'
+        selectedColor: "#6b4226",
       };
     }
 
@@ -183,25 +200,30 @@ export default function AdminDashboardScreen() {
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case 'pending': return '#FFA500';
-      case 'confirmed': return '#007bff';
-      case 'delivered': return '#28a745';
-      case 'cancelled': return '#d9534f';
-      default: return '#6b4226';
+      case "pending":
+        return "#FFA500";
+      case "confirmed":
+        return "#007bff";
+      case "delivered":
+        return "#28a745";
+      case "cancelled":
+        return "#d9534f";
+      default:
+        return "#6b4226";
     }
   };
 
   // Get orders for selected date
   const getOrdersForDate = (date: string) => {
-    return orders.filter(order => {
+    return orders.filter((order) => {
       try {
         if (!order.deliveryDate) return false;
         const orderDate = new Date(order.deliveryDate);
         if (isNaN(orderDate.getTime())) return false;
-        const orderDateString = orderDate.toISOString().split('T')[0];
+        const orderDateString = orderDate.toISOString().split("T")[0];
         return orderDateString === date;
       } catch (error) {
-        console.warn('Error processing order date:', error);
+        console.warn("Error processing order date:", error);
         return false;
       }
     });
@@ -245,20 +267,20 @@ export default function AdminDashboardScreen() {
               fetchOrdersByMonth(newMonth);
             }}
             markedDates={getMarkedDates()}
-            markingType="dot"
+            markingType="multi-dot"
             theme={{
-              calendarBackground: '#fff',
-              textSectionTitleColor: '#6b4226',
-              selectedDayBackgroundColor: '#6b4226',
-              selectedDayTextColor: '#fff',
-              todayTextColor: '#6b4226',
-              dayTextColor: '#5A3827',
-              textDisabledColor: '#d9d9d9',
-              dotColor: '#6b4226',
-              selectedDotColor: '#fff',
-              arrowColor: '#6b4226',
-              monthTextColor: '#6b4226',
-              indicatorColor: '#6b4226'
+              calendarBackground: "#fff",
+              textSectionTitleColor: "#6b4226",
+              selectedDayBackgroundColor: "#6b4226",
+              selectedDayTextColor: "#fff",
+              todayTextColor: "#6b4226",
+              dayTextColor: "#5A3827",
+              textDisabledColor: "#d9d9d9",
+              dotColor: "#6b4226",
+              selectedDotColor: "#fff",
+              arrowColor: "#6b4226",
+              monthTextColor: "#6b4226",
+              indicatorColor: "#6b4226",
             }}
             firstDay={0}
           />
@@ -272,20 +294,38 @@ export default function AdminDashboardScreen() {
             </Text>
             <ScrollView style={styles.selectedDateOrders}>
               {displayedOrders.length > 0 ? (
-                displayedOrders.map(order => (
+                displayedOrders.map((order) => (
                   <TouchableOpacity
                     key={order._id}
-                    style={[styles.orderCard, { borderLeftColor: getStatusColor(order.status) }]}
-                    onPress={() => navigation.navigate("OrderDetailsScreen", { orderId: order._id })}
+                    style={[
+                      styles.orderCard,
+                      { borderLeftColor: getStatusColor(order.status) },
+                    ]}
+                    onPress={() =>
+                      navigation.navigate("OrderDetailsScreen", {
+                        orderId: order._id,
+                      })
+                    }
                   >
-                    <Text style={styles.orderId}>Order ID: {order._id.slice(-6)}</Text>
-                    <Text style={[styles.orderStatus, { color: getStatusColor(order.status) }]}>
+                    <Text style={styles.orderId}>
+                      Order ID: {order._id.slice(-6)}
+                    </Text>
+                    <Text
+                      style={[
+                        styles.orderStatus,
+                        { color: getStatusColor(order.status) },
+                      ]}
+                    >
                       {order.status}
                     </Text>
                     <Text style={styles.orderCustomer}>
-                      {order.user ? `${order.user.firstName} ${order.user.lastName}` : 'Deleted User'}
+                      {order.user
+                        ? `${order.user.firstName} ${order.user.lastName}`
+                        : "Deleted User"}
                     </Text>
-                    <Text style={styles.orderTotal}>Total: ${order.totalPrice.toFixed(2)}</Text>
+                    <Text style={styles.orderTotal}>
+                      Total: ${order.totalPrice.toFixed(2)}
+                    </Text>
                   </TouchableOpacity>
                 ))
               ) : (
@@ -294,8 +334,6 @@ export default function AdminDashboardScreen() {
             </ScrollView>
           </View>
         )}
-
-
       </ScrollView>
     </SafeAreaView>
   );
@@ -309,7 +347,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     padding: 20,
-    marginBottom: 50
+    marginBottom: 50,
   },
   title: {
     fontSize: 32,
@@ -317,7 +355,7 @@ const styles = StyleSheet.create({
     color: "#6b4226",
     marginBottom: 25,
     textAlign: "center",
-    textShadowColor: 'rgba(0, 0, 0, 0.1)',
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
@@ -336,7 +374,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#6b4226",
     marginBottom: 12,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   button: {
     backgroundColor: "#6b4226",
@@ -358,22 +396,22 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   calendarContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 15,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
     elevation: 5,
   },
   selectedDateContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 20,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 8,
@@ -381,21 +419,21 @@ const styles = StyleSheet.create({
   },
   selectedDateTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#6b4226',
+    fontWeight: "bold",
+    color: "#6b4226",
     marginBottom: 15,
-    textAlign: 'center',
+    textAlign: "center",
   },
   selectedDateOrders: {
     maxHeight: 400,
   },
   orderCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 18,
     borderRadius: 12,
     marginBottom: 12,
     borderLeftWidth: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 3,
@@ -403,43 +441,43 @@ const styles = StyleSheet.create({
   },
   orderId: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6b4226',
+    fontWeight: "bold",
+    color: "#6b4226",
     marginBottom: 4,
   },
   orderStatus: {
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginVertical: 6,
-    textTransform: 'capitalize',
+    textTransform: "capitalize",
   },
   orderCustomer: {
     fontSize: 14,
-    color: '#666',
+    color: "#666",
     marginBottom: 4,
   },
   orderTotal: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6b4226',
+    fontWeight: "bold",
+    color: "#6b4226",
     marginTop: 6,
   },
   noOrdersText: {
-    textAlign: 'center',
-    color: '#666',
+    textAlign: "center",
+    color: "#666",
     fontSize: 16,
-    fontStyle: 'italic',
+    fontStyle: "italic",
     marginTop: 20,
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   errorText: {
-    color: '#d9534f',
-    textAlign: 'center',
+    color: "#d9534f",
+    textAlign: "center",
     marginTop: 10,
     fontSize: 14,
-  }
+  },
 });
