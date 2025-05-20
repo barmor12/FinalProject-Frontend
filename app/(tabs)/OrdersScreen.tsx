@@ -35,6 +35,14 @@ interface Order {
   }>;
   totalPrice: number;
   status: "pending" | "confirmed" | "delivered" | "cancelled";
+  address?: {
+    fullName: string;
+    phone: string;
+    street: string;
+    city: string;
+  };
+  deliveryDate?: string;
+  shippingMethod?: string;
 }
 
 export default function OrdersScreen() {
@@ -71,6 +79,10 @@ export default function OrdersScreen() {
 
       setOrders(response.data);
       setFilteredOrders(response.data);
+      console.log(
+        "Sample Order Object >>>",
+        JSON.stringify(response.data[0], null, 2)
+      );
     } catch (error) {
       console.error("[ERROR] Failed to fetch orders:", error);
     } finally {
@@ -219,7 +231,7 @@ export default function OrdersScreen() {
                 </View>
                 <View style={styles.orderDetails}>
                   {order.items.map((item, index) => (
-                    <View key={index} style={styles.itemContainer}>
+                    <View key={index} style={styles.itemRow}>
                       {item.cake?.image?.url ? (
                         <Image
                           source={{ uri: item.cake.image.url }}
@@ -227,22 +239,63 @@ export default function OrdersScreen() {
                           resizeMode="cover"
                         />
                       ) : (
-                        <Text style={{ color: "#999" }}>
-                          No image available
-                        </Text>
+                        <Text style={{ color: "#999" }}>No image</Text>
                       )}
-                      <Text style={styles.orderText}>
-                        🍰 {item.cake?.name || "Unknown"}
-                      </Text>
-                      <Text style={styles.orderText}>
-                        🛒 Quantity: {item.quantity}
-                      </Text>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.itemName}>
+                          🍰 {item.cake?.name || "Unknown"}
+                        </Text>
+                        <Text style={styles.itemQuantity}>
+                          Quantity: {item.quantity}
+                        </Text>
+                      </View>
                     </View>
                   ))}
-                  <Text style={styles.totalPrice}>
-                    💰 Total: ${order.totalPrice.toFixed(2)}
-                  </Text>
+
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>💰 Total:</Text>
+                    <Text style={styles.infoValue}>
+                      ${order.totalPrice.toFixed(2)}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>🚚 Shipping Method:</Text>
+                    <Text style={styles.infoValue}>
+                      {order.shippingMethod
+                        ? order.shippingMethod
+                        : order.address
+                        ? "Standard Delivery (2-3 days)"
+                        : "Self Pickup"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>
+                      📅 {order.address ? "Delivery Date:" : "Pickup Date:"}
+                    </Text>
+                    <Text style={styles.infoValue}>
+                      {order.deliveryDate
+                        ? new Date(order.deliveryDate).toLocaleDateString()
+                        : "Not set"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoBlock}>
+                    <Text style={styles.infoLabel}>🏠 Delivery Address:</Text>
+                    <Text style={styles.infoValue}>
+                      {order.address
+                        ? `${order.address.fullName}, ${order.address.street}, ${order.address.city}`
+                        : "Pickup at store"}
+                    </Text>
+                    {order.address && (
+                      <Text style={styles.infoValue}>
+                        📞 {order.address.phone}
+                      </Text>
+                    )}
+                  </View>
                 </View>
+                <View style={{ height: 10 }} />
                 {/* Trigger reordering of selected order */}
                 <TouchableOpacity
                   style={styles.reorderButton}
@@ -348,7 +401,34 @@ const styles: { [key: string]: any } = StyleSheet.create({
   itemContainer: {
     marginBottom: 5,
   },
+  // --- NEW/UPDATED STYLES FOR PROFESSIONAL ORDER DETAILS ---
+  itemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   itemImage: { width: 50, height: 50, borderRadius: 8, marginRight: 12 },
+  itemName: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#6b4226",
+  },
+  itemQuantity: {
+    fontSize: 14,
+    color: "#555",
+  },
+  infoBlock: {
+    marginTop: 10,
+  },
+  infoLabel: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#6b4226",
+  },
+  infoValue: {
+    fontSize: 14,
+    color: "#333",
+  },
   reorderButton: {
     backgroundColor: "#6b4226",
     paddingVertical: 10,

@@ -209,23 +209,28 @@ export default function CheckoutScreen() {
       const day = String(deliveryDateTime.getDate()).padStart(2, "0");
       const formattedDate = `${year}-${month}-${day}`;
 
+      const body: any = {
+        items: cartItems.map((item) => ({
+          cakeId: item.cake._id,
+          quantity: item.quantity,
+        })),
+        paymentMethod: "cash",
+        shippingMethod,
+      };
+      if (shippingMethod === "Standard Delivery (2-3 days)") {
+        body.address = selectedAddress;
+        body.deliveryDate = formattedDate;
+      } else if (shippingMethod === "Self Pickup") {
+        body.deliveryDate = formattedDate;
+      }
+
       const response = await fetch(`${config.BASE_URL}/order/create`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          items: cartItems.map((item) => ({
-            cakeId: item.cake._id,
-            quantity: item.quantity,
-          })),
-          paymentMethod: "cash",
-          ...(shippingMethod === "Standard Delivery (2-3 days)" && {
-            address: selectedAddress,
-            deliveryDate: formattedDate,
-          }),
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
@@ -421,10 +426,14 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              {/* Delivery Date Section - show only if shipping is Standard Delivery */}
-              {shippingMethod === "Standard Delivery (2-3 days)" && (
+              {/* Delivery Date Section - show for any shipping method */}
+              {shippingMethod !== "" && (
                 <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Delivery Date</Text>
+                  <Text style={styles.sectionTitle}>
+                    {shippingMethod === "Self Pickup"
+                      ? "Pickup Date"
+                      : "Delivery Date"}
+                  </Text>
                   <TouchableOpacity
                     style={styles.deliveryDateBox}
                     onPress={toggleDatePicker}
@@ -497,7 +506,9 @@ export default function CheckoutScreen() {
                 {/* Shipping */}
                 <View style={styles.summaryRow}>
                   <Text style={styles.summaryLabel}>Shipping</Text>
-                  <Text style={styles.summaryValue}>$10.00</Text>
+                  <Text style={styles.summaryValue}>
+                    {shippingMethod === "Self Pickup" ? "$0.00" : "$10.00"}
+                  </Text>
                 </View>
 
                 {/* Discount if applied */}
@@ -523,7 +534,11 @@ export default function CheckoutScreen() {
                 <View style={[styles.summaryRow, styles.totalRow]}>
                   <Text style={styles.totalLabel}>Total</Text>
                   <Text style={styles.totalValue}>
-                    ${(parseFloat(calculateTotal()) + 10).toFixed(2)}
+                    $
+                    {(
+                      parseFloat(calculateTotal()) +
+                      (shippingMethod === "Self Pickup" ? 0 : 10)
+                    ).toFixed(2)}
                   </Text>
                 </View>
               </View>
