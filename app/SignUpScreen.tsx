@@ -159,6 +159,7 @@ export default function SignUpScreen() {
                 />
               )}
             </TouchableOpacity>
+            <Text style={styles.imagePickerText}>Tap to add profile picture</Text>
 
             <Text style={styles.inputLabel}>First Name</Text>
             <TextInput

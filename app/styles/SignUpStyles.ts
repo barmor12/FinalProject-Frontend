@@ -12,13 +12,20 @@ const styles = StyleSheet.create({
   imageCircle: {
     width: 120,
     height: 120,
-    borderRadius: 60,
-    backgroundColor: "#eee",
+    borderRadius: 70,
     alignSelf: "center",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 10,
     overflow: "hidden",
+  },
+
+  imagePickerText: {
+    fontSize: 14,
+    color: "#6b4226",
+    textAlign: "center",
+    marginBottom: 15,
+    fontStyle: "italic",
   },
 
   title: {
@@ -92,10 +99,11 @@ const styles = StyleSheet.create({
   },
   loginText: {
     fontSize: 14,
-    color: "#555",
+    color: "#6b4226",
+    textAlign: "center",
   },
   loginLink: {
-    color: "brown", // צבע זהב כמו בכפתורים
+    color: "#6b4226",
     fontWeight: "bold",
   },
   instructionsContainer: {

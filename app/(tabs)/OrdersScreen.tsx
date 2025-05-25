@@ -58,8 +58,7 @@ export default function OrdersScreen() {
       setRefreshing(true);
       const token = await AsyncStorage.getItem("accessToken");
       const userId = await AsyncStorage.getItem("userId");
-      console.log("userId", userId);
-      console.log("token", token);
+
       if (!token || !userId) {
         Alert.alert("Error", "Missing access token or user ID.");
         setLoading(false);
@@ -188,7 +187,7 @@ export default function OrdersScreen() {
               style={[
                 styles.filterButton,
                 selectedFilter === status ||
-                (status === "all" && !selectedFilter)
+                  (status === "all" && !selectedFilter)
                   ? styles.activeFilter
                   : null,
               ]}
@@ -267,8 +266,8 @@ export default function OrdersScreen() {
                       {order.shippingMethod
                         ? order.shippingMethod
                         : order.address
-                        ? "Standard Delivery (2-3 days)"
-                        : "Self Pickup"}
+                          ? "Standard Delivery (2-3 days)"
+                          : "Self Pickup"}
                     </Text>
                   </View>
 

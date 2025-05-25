@@ -123,7 +123,7 @@ export default function DashboardScreen() {
   const fetchProducts = async () => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
-      const userId = await AsyncStorage.getItem("userID");
+      const userId = await AsyncStorage.getItem("userId");
 
       const productsResponse = await fetch(`${config.BASE_URL}/cakes`, {
         method: "GET",
@@ -187,7 +187,7 @@ export default function DashboardScreen() {
   useFocusEffect(
     React.useCallback(() => {
       // No need to refetch products on focus to preserve filters
-      return () => {};
+      return () => { };
     }, [])
   );
 
@@ -219,7 +219,7 @@ export default function DashboardScreen() {
   // Add or remove product from user's favorites
   const handleLike = async (cakeId: string) => {
     const token = await AsyncStorage.getItem("accessToken");
-    const userId = await AsyncStorage.getItem("userID"); // Assumes userId is stored in AsyncStorage
+    const userId = await AsyncStorage.getItem("userId"); // Assumes userId is stored in AsyncStorage
 
     if (!token || !userId) {
       Alert.alert("Error", "Please login to save favorites.");

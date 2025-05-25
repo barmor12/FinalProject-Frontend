@@ -86,3 +86,9 @@ export function setupNotificationListeners() {
     sub2.remove();
   };
 }
+export default {
+  registerNotifications,
+  registerPushToken,
+  scheduleTestNotification,
+  setupNotificationListeners,
+};

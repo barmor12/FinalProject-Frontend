@@ -463,7 +463,7 @@ export default function LoginScreen() {
                   shadowOffset: { width: 0, height: 2 },
                   shadowOpacity: 0.1,
                   shadowRadius: 3,
-                  marginBottom: 30,
+                  marginBottom: 20,
                 }}
               >
                 <FontAwesome
@@ -479,7 +479,7 @@ export default function LoginScreen() {
                 </Text>
               </TouchableOpacity>
 
-              <View style={{ marginTop: 40 }}>
+              <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>
                   Don&apos;t have an account?{" "}
                   <Text

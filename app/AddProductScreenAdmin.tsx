@@ -31,7 +31,6 @@ export default function AddProductScreenAdmin() {
   const [uploading, setUploading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
 
-  // בוחן גישה לגלריה ומעדכן ישירות את ה־uri של התמונה
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -39,7 +38,7 @@ export default function AddProductScreenAdmin() {
       return;
     }
 
-    setImageLoading(true); // התחלת טעינה
+    setImageLoading(true);
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"] as ImagePicker.MediaType[],
@@ -53,17 +52,15 @@ export default function AddProductScreenAdmin() {
       setImage(pickedUri);
     }
 
-    setImageLoading(false); // סיום טעינה
+    setImageLoading(false);
   };
 
-  // הגיש את הנתונים לשרת ויוצרים את המוצר
   const handleSubmit = async () => {
     if (!name || !description || !cost || !price || !ingredients || !image) {
       Alert.alert("Error", "All fields including image are required");
       return;
     }
 
-    // Validate cost and price
     const costValue = parseFloat(cost);
     const priceValue = parseFloat(price);
 
@@ -126,12 +123,10 @@ export default function AddProductScreenAdmin() {
     }
   };
 
-  // הסתרת המקלדת כאשר לוחצים מחוץ לשדות הקלט
   const dismissKeyboard = () => {
     Keyboard.dismiss();
   };
 
-  // הצגת שדות טופס לפי הצורך
   const renderItem = ({ item }: { item: string }) => (
     <View style={styles.formItem}>
       {item === "image" && (
@@ -168,45 +163,33 @@ export default function AddProductScreenAdmin() {
       {item === "inputs" && (
         <>
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                name ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, name ? styles.floatingLabelActive : null]}>
               Name
             </Text>
             <TextInput
+              placeholder="Name"
               style={styles.input}
               value={name}
               onChangeText={setName}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                description ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, description ? styles.floatingLabelActive : null]}>
               Description
             </Text>
             <TextInput
+              placeholder="Description"
               style={styles.input}
               value={description}
               onChangeText={setDescription}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                cost ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, cost ? styles.floatingLabelActive : null]}>
               Cost
             </Text>
             <TextInput
+              placeholder="Cost"
               style={styles.input}
               keyboardType="numeric"
               value={cost}
@@ -214,15 +197,11 @@ export default function AddProductScreenAdmin() {
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                price ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, price ? styles.floatingLabelActive : null]}>
               Price
             </Text>
             <TextInput
+              placeholder="Price"
               style={styles.input}
               keyboardType="numeric"
               value={price}
@@ -232,44 +211,30 @@ export default function AddProductScreenAdmin() {
           {cost && price && (
             <View style={styles.profitInfo}>
               <Text style={styles.profitText}>
-                Profit per unit: $
-                {(parseFloat(price) - parseFloat(cost)).toFixed(2)}
+                Profit per unit: ${(+price - +cost).toFixed(2)}
               </Text>
               <Text style={styles.profitText}>
-                Profit margin:{" "}
-                {(
-                  ((parseFloat(price) - parseFloat(cost)) / parseFloat(price)) *
-                  100
-                ).toFixed(1)}
-                %
+                Profit margin: {(((+price - +cost) / +price) * 100).toFixed(1)}%
               </Text>
             </View>
           )}
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                ingredients ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, ingredients ? styles.floatingLabelActive : null]}>
               Ingredients
             </Text>
             <TextInput
+              placeholder="Ingredients"
               style={styles.input}
               value={ingredients}
               onChangeText={setIngredients}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
-                stock ? styles.floatingLabelActive : null,
-              ]}
-            >
+            <Text style={[styles.floatingLabel, stock ? styles.floatingLabelActive : null]}>
               Stock
             </Text>
             <TextInput
+              placeholder="Stock"
               style={styles.input}
               keyboardType="numeric"
               value={stock}
@@ -337,7 +302,7 @@ const styles = StyleSheet.create({
     paddingTop: 24,
     borderRadius: 8,
     backgroundColor: "#fff",
-    color: "#6b4226", // ← מוסיף צבע טקסט קבוע
+    color: "#6b4226",
     fontSize: 14,
     marginBottom: 10,
   },

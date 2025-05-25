@@ -106,13 +106,20 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     opacity: 0.8,
   },
+  signupContainer: {
+    marginTop: 10,
+    marginBottom: 5,
+    width: "100%",
+    alignItems: "center",
+  },
   signupText: {
     fontSize: 15,
-    color: "#3e2723", // חום כהה נוסף לקריאות
+    color: "#6b4226",
     textAlign: "center",
+    marginBottom: 5,
   },
   signupLink: {
-    color: "#3e2723", // כתמתם בולט
+    color: "#6b4226",
     fontWeight: "600",
   },
   backButton: {
