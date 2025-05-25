@@ -3,7 +3,6 @@ import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import LoginScreen from "../app/index";
 import { Alert } from "react-native";
 
-// צריך למנוע שגיאות של AsyncStorage וכו'
 jest.mock("@react-native-async-storage/async-storage", () => ({
     getItem: jest.fn(),
     setItem: jest.fn(),
@@ -21,21 +20,23 @@ jest.mock("expo-auth-session/providers/google", () => ({
     useAuthRequest: () => [null, null, jest.fn()],
 }));
 
-jest.mock("react-native/Libraries/Animated/NativeAnimatedHelper"); // כדי למנוע אזהרות באנימציות
+jest.mock("react-native-reanimated", () => require("react-native-reanimated/mock"));
+
+afterEach(() => {
+    jest.clearAllMocks();
+});
 
 describe("LoginScreen", () => {
     it("renders email and password inputs", () => {
-        const { getByLabelText } = render(<LoginScreen />);
-        expect(getByLabelText("Email")).toBeTruthy();
-        expect(getByLabelText("Password")).toBeTruthy();
+        const { getByPlaceholderText } = render(<LoginScreen />);
+        expect(getByPlaceholderText("Email")).toBeTruthy();
+        expect(getByPlaceholderText("Password")).toBeTruthy();
     });
 
     it("shows alert if email or password is empty", async () => {
         const alertSpy = jest.spyOn(Alert, "alert");
         const { getByText } = render(<LoginScreen />);
-
-        const loginButton = getByText("Log In");
-        fireEvent.press(loginButton);
+        fireEvent.press(getByText("Log In"));
 
         await waitFor(() => {
             expect(alertSpy).toHaveBeenCalledWith("Error", "Please enter email and password.");
@@ -64,7 +65,10 @@ describe("LoginScreen", () => {
         fireEvent.press(getByText("Log In"));
 
         await waitFor(() => {
-            expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining("/auth/login"), expect.any(Object));
+            expect(global.fetch).toHaveBeenCalledWith(
+                expect.stringContaining("/auth/login"),
+                expect.any(Object)
+            );
         });
     });
 });
