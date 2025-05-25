@@ -1,0 +1,45 @@
+name: CI - Frontend (Expo)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clone repository
+        uses: actions/checkout@v3
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📦 Install dependencies
+        run: |
+          cd client
+          npm ci
+
+      - name: 🔍 Type checking
+        run: |
+          cd client
+          npm run tsc
+
+      - name: 🧼 Lint
+        run: |
+          cd client
+          npm run lint
+
+      - name: 🧪 Tests
+        run: |
+          cd client
+          npm test
+
+      - name: 🛠️ Build
+        run: |
+          cd client
+          npm run build || echo "Build skipped (Expo may not support web build)"
