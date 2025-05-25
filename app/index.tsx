@@ -481,7 +481,7 @@ export default function LoginScreen() {
 
               <View style={{ marginTop: 40 }}>
                 <Text style={styles.signupText}>
-                  Don't have an account?{" "}
+                  Don&apos;t have an account?{" "}
                   <Text
                     style={styles.signupLink}
                     onPress={() => router.push("/SignUpScreen")}
