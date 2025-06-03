@@ -15,7 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import config from "../config";
+import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Ingredient {
@@ -99,9 +99,8 @@ export default function AddRecipeScreen() {
     if (!validateRecipe()) return;
     setUploading(true);
 
-    const makingTime = `${hours ? `${hours}H` : ""} ${
-      minutes ? `${minutes}M` : ""
-    }`.trim();
+    const makingTime = `${hours ? `${hours}H` : ""} ${minutes ? `${minutes}M` : ""
+      }`.trim();
 
     try {
       const token = await AsyncStorage.getItem("accessToken");
@@ -301,7 +300,7 @@ export default function AddRecipeScreen() {
                       style={[
                         styles.difficultyText,
                         recipe.difficulty === level &&
-                          styles.selectedDifficultyText,
+                        styles.selectedDifficultyText,
                       ]}
                     >
                       {level}

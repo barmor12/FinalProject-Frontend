@@ -20,6 +20,7 @@ export default function EditProfileScreen() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{
     firstName: string;
     lastName: string;
@@ -33,6 +34,7 @@ export default function EditProfileScreen() {
   useEffect(() => {
     const fetchUserDataAndSetState = async () => {
       try {
+        setLoading(true);
         const userData = await fetchUserData();
         console.log("🔄 Fetched user data:", userData);
 
@@ -52,6 +54,8 @@ export default function EditProfileScreen() {
       } catch (error) {
         console.error("❌ Error fetching user data:", error);
         Alert.alert("Error", "Failed to load user data.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -187,44 +191,53 @@ export default function EditProfileScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Edit Profile</Text>
 
-      <TouchableOpacity onPress={pickImage} disabled={isUploading}>
-        <View>
-          {isUploading ? (
-            <ActivityIndicator size="large" color="#0000ff" />
-          ) : (
-            <Image
-              source={
-                typeof user.profilePic === "string"
-                  ? { uri: user.profilePic }
-                  : user.profilePic
-              }
-              style={styles.profileImage}
-              resizeMode="cover"
-            />
-          )}
-          <Text style={styles.changePhotoText}>Change Photo</Text>
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#d49a6a" />
+          <Text style={styles.loadingText}>Loading Profile...</Text>
         </View>
-      </TouchableOpacity>
-      <Text style={styles.inputLabel}>FirstName</Text>
-      <TextInput
-        style={styles.input}
-        placeholder={user.firstName}
-        placeholderTextColor={"#000"}
-        value={firstName}
-        onChangeText={setFirstName}
-      />
-      <Text style={styles.inputLabel}>LirstName</Text>
-      <TextInput
-        style={styles.input}
-        placeholderTextColor={"#000"}
-        placeholder={user.lastName}
-        value={lastName}
-        onChangeText={setLastName}
-      />
+      ) : (
+        <>
+          <TouchableOpacity onPress={pickImage} disabled={isUploading}>
+            <View>
+              {isUploading ? (
+                <ActivityIndicator size="large" color="#0000ff" />
+              ) : (
+                <Image
+                  source={
+                    typeof user.profilePic === "string"
+                      ? { uri: user.profilePic }
+                      : user.profilePic
+                  }
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              )}
+              <Text style={styles.changePhotoText}>Change Photo</Text>
+            </View>
+          </TouchableOpacity>
+          <Text style={styles.inputLabel}>First Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder={user.firstName}
+            placeholderTextColor={"#000"}
+            value={firstName}
+            onChangeText={setFirstName}
+          />
+          <Text style={styles.inputLabel}>Last Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholderTextColor={"#000"}
+            placeholder={user.lastName}
+            value={lastName}
+            onChangeText={setLastName}
+          />
 
-      <TouchableOpacity onPress={handleUpdateName} style={styles.button}>
-        <Text style={styles.buttonText}>Update Profile</Text>
-      </TouchableOpacity>
+          <TouchableOpacity onPress={handleUpdateName} style={styles.button}>
+            <Text style={styles.buttonText}>Update Profile</Text>
+          </TouchableOpacity>
+        </>
+      )}
     </View>
   );
 }

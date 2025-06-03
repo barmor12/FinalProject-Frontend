@@ -13,7 +13,7 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "../config";
+import config from "../../config";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -31,6 +31,7 @@ export default function AdminDiscountCodes() {
   const [code, setCode] = useState("");
   const [discount, setDiscount] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   useEffect(() => {
     fetchCodes();
@@ -161,14 +162,27 @@ export default function AdminDiscountCodes() {
           <Text style={styles.datePickerText}>
             Please select an expiry date:
           </Text>
-          <DateTimePicker
-            value={expiryDate || new Date()}
-            mode="date"
-            display="default"
-            onChange={(event, selectedDate) => {
-              setExpiryDate(selectedDate || expiryDate);
-            }}
-          />
+          <TouchableOpacity
+            style={styles.dateButton}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <Text style={styles.dateButtonText}>
+              {expiryDate ? expiryDate.toLocaleDateString() : "Select Date"}
+            </Text>
+          </TouchableOpacity>
+          {showDatePicker && (
+            <DateTimePicker
+              value={expiryDate || new Date()}
+              mode="date"
+              display="default"
+              onChange={(event, selectedDate) => {
+                setShowDatePicker(false);
+                if (event.type === "set" && selectedDate) {
+                  setExpiryDate(selectedDate);
+                }
+              }}
+            />
+          )}
         </View>
 
         <TouchableOpacity style={styles.button} onPress={createCode}>
@@ -256,5 +270,18 @@ const styles = StyleSheet.create({
     padding: 5,
     alignSelf: "flex-end", // ממקם את הכפתור בצד ימין
     marginBottom: 25,
+  },
+  dateButton: {
+    backgroundColor: "#fff",
+    padding: 10,
+    borderRadius: 8,
+    borderColor: "#ccc",
+    borderWidth: 1,
+    width: "100%",
+    alignItems: "center",
+  },
+  dateButtonText: {
+    color: "#6b4226",
+    fontSize: 16,
   },
 });

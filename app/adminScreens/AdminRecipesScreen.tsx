@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import config from "../config";
+import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Recipe {
@@ -82,7 +82,7 @@ export default function AdminRecipesScreen() {
 
     const handleEdit = (recipe: Recipe) => {
         router.push({
-            pathname: "/AdminRecipeEdit",
+            pathname: "/adminScreens/AdminRecipeEdit",
             params: { recipeId: recipe._id }
         });
     };
@@ -188,7 +188,7 @@ export default function AdminRecipesScreen() {
                 <Text style={styles.title}>Manage Recipes</Text>
                 <TouchableOpacity
                     style={styles.addButton}
-                    onPress={() => router.push("/AddRecipeScreen")}
+                    onPress={() => router.push("/adminScreens/AddRecipeScreen")}
                 >
                     <Ionicons name="add" size={24} color="#fff" />
                 </TouchableOpacity>

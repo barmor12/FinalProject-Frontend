@@ -186,66 +186,75 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        <TouchableOpacity onPress={pickImage}>
-          {user.profilePic ? (
-            <Image
-              source={
-                typeof user.profilePic === "string"
-                  ? { uri: user.profilePic }
-                  : user.profilePic
-              }
-              style={styles.profileImage}
-            />
-          ) : (
-            <Ionicons name="person-circle" size={100} color="black" />
-          )}
-        </TouchableOpacity>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        <View style={styles.container}>
+          <TouchableOpacity onPress={pickImage}>
+            {user.profilePic ? (
+              <Image
+                source={
+                  typeof user.profilePic === "string"
+                    ? { uri: user.profilePic }
+                    : user.profilePic
+                }
+                style={styles.profileImage}
+              />
+            ) : (
+              <Ionicons name="person-circle" size={100} color="black" />
+            )}
+          </TouchableOpacity>
 
-        <Text style={styles.userName}>
-          {user.name || "User"} {user.lastName || ""}
-        </Text>
-        <Text style={styles.title}>Profile</Text>
+          <Text style={styles.userName}>
+            {user.name || "User"} {user.lastName || ""}
+          </Text>
+          <Text style={styles.title}>Profile</Text>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/EditProfileScreen")}
-        >
-          <MaterialIcons name="edit" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Edit Profile</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/EditProfileScreen")}
+          >
+            <MaterialIcons name="edit" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Edit Profile</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/OrdersScreen")}
-        >
-          <MaterialIcons name="receipt-long" size={20} color="#fff" />
-          <Text style={styles.buttonText}>My Orders</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/manageAddressScreen")}
-        >
-          <MaterialIcons name="receipt-long" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Manage Addresses</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/OrdersScreen")}
+          >
+            <MaterialIcons name="receipt-long" size={20} color="#fff" />
+            <Text style={styles.buttonText}>My Orders</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/AccountSecurityScreen")}
-        >
-          <MaterialIcons name="security" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Account Security</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/manageAddressScreen")}
+          >
+            <MaterialIcons name="receipt-long" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Manage Addresses</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.button, styles.logoutButton]}
-          onPress={handleLogout}
-        >
-          <MaterialIcons name="logout" size={20} color="#fff" />
-          <Text style={styles.buttonText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/AccountSecurityScreen")}
+          >
+            <MaterialIcons name="security" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Account Security</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.logoutButton]}
+            onPress={handleLogout}
+          >
+            <MaterialIcons name="logout" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -255,11 +264,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9f3ea",
   },
-  container: {
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
     flexGrow: 1,
+  },
+  container: {
+    flex: 1,
     alignItems: "center",
     backgroundColor: "#f9f3ea",
-    paddingVertical: 100,
+    paddingVertical: 40,
+    paddingHorizontal: 20,
   },
   loadingContainer: {
     justifyContent: "center",

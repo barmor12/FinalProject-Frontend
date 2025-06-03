@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Image,
   SafeAreaView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -95,61 +97,64 @@ export default function AdminPanelScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Admin Icon */}
-        <Image
-          source={require("../../assets/images/adminIcon.png")}
-          style={styles.adminIcon}
-        />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.container}>
+          {/* Admin Icon */}
+          <Image
+            source={require("../../assets/images/adminIcon.png")}
+            style={styles.adminIcon}
+          />
 
+          <Text style={styles.userName}>{user.name}</Text>
 
-        <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.title}>Admin Panel</Text>
 
-        <Text style={styles.title}>Admin Panel</Text>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/adminScreens/adminOrdersScreen")}
+          >
+            <Text style={styles.buttonText}>Manage Orders</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/adminOrdersScreen")}
-        >
-          <Text style={styles.buttonText}>Manage Orders</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/adminScreens/adminDiscountCodesScreen")}
+          >
+            <Text style={styles.buttonText}>Manage Discount Codes</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/adminScreens/manageUsersScreen")}
+          >
+            <Text style={styles.buttonText}>Manage Users</Text>
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/adminScreens/AdminRecipesScreen")}
+          >
+            <Text style={styles.buttonText}>Manage Recipes</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/adminDiscountCodesScreen")}
-        >
-          <Text style={styles.buttonText}>Manage Discount Codes</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/manageUsersScreen")}
-        >
-          <Text style={styles.buttonText}>Manage Users</Text>
-        </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/adminScreens/AdminNotificationsScreen")}
+          >
+            <Text style={styles.buttonText}>Send Notifications</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/AdminRecipesScreen")}
-        >
-          <Text style={styles.buttonText}>Manage Recipes</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.button}
-          onPress={() => router.push("/AdminNotificationsScreen")}
-        >
-          <Text style={styles.buttonText}>Send Notifications</Text>
-        </TouchableOpacity>
-
-        {/* כפתור התנתקות */}
-        <TouchableOpacity
-          style={[styles.button, styles.logoutButton]}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutText}>Log Out</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={[styles.button, styles.logoutButton]}
+            onPress={handleLogout}
+          >
+            <Text style={styles.logoutText}>Log Out</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -159,11 +164,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f9f3ea",
   },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#f9f3ea",
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 40,
   },
   loadingContainer: {
     flex: 1,
@@ -219,8 +231,9 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   logoutButton: {
-    backgroundColor: "#b22222", // אדום להתנתקות
-    marginBottom: 100
+    backgroundColor: "#b22222",
+    marginTop: 'auto',
+    marginBottom: Platform.OS === 'ios' ? 40 : 40,
   },
   logoutText: {
     color: "#fff",
@@ -237,7 +250,6 @@ const styles = StyleSheet.create({
     borderRadius: 90,
     borderColor: "#6b4226",
     borderWidth: 1,
-    marginBottom: 60,
-    marginTop: 100
+    marginBottom: 30,
   },
 });

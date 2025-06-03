@@ -243,7 +243,12 @@ const styles = StyleSheet.create({
     defaultAddress: { borderWidth: 2, borderColor: "#6b4226" },
     addressText: { fontSize: 14, color: "#6b4226" },
     bold: { fontWeight: "bold" },
-    newAddressContainer: { padding: 15, backgroundColor: "#fff", borderRadius: 10, marginTop: 10 },
+    newAddressContainer: {
+        padding: 15,
+        backgroundColor: "#f9f3ea",
+        borderRadius: 10,
+        marginTop: 10
+    },
     sectionTitle: { fontSize: 16, fontWeight: "bold", color: "#6b4226", marginBottom: 10 },
     input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 8, padding: 10, fontSize: 14, marginBottom: 10 },
     addButton: { backgroundColor: "#6b4226", padding: 15, borderRadius: 8, alignItems: "center" },
@@ -256,12 +261,14 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     toggleButtonText: {
+
         color: "#fff",
         fontSize: 16,
         fontWeight: "bold",
     },
     buttonContainer: {
         flexDirection: "row",
+
         alignItems: "center",
         gap: 10, // ריווח בין האייקונים
     },

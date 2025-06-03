@@ -195,7 +195,7 @@ const StatisticsScreen = () => {
             <View style={styles.statsGrid}>
               <TouchableOpacity
                 style={styles.statCard}
-                onPress={() => router.push("/adminOrdersScreen")}
+                onPress={() => router.push("/adminScreens/adminOrdersScreen")}
               >
                 <Text style={styles.statTitle}>Total Orders</Text>
                 <Text style={styles.statValue}>{statistics.totalOrders}</Text>
@@ -204,7 +204,7 @@ const StatisticsScreen = () => {
 
               <TouchableOpacity
                 style={styles.statCard}
-                onPress={() => router.push("/manageUsersScreen")}
+                onPress={() => router.push("/adminScreens/manageUsersScreen")}
               >
                 <Text style={styles.statTitle}>Total Users</Text>
                 <Text style={styles.statValue}>{statistics.totalUsers}</Text>
@@ -315,7 +315,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fdf6f0",
-    marginBottom: 20,
   },
   header: {
     padding: 20,
@@ -339,7 +338,7 @@ const styles = StyleSheet.create({
   statCard: {
     backgroundColor: "#fff",
     borderRadius: 16,
-    padding: 15,
+    padding: 12,
     alignItems: "center",
     width: "31%",
     marginBottom: 15,
@@ -352,16 +351,18 @@ const styles = StyleSheet.create({
     borderColor: "#f0f0f0",
   },
   statTitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#666",
-    marginBottom: 6,
+    marginBottom: 4,
     fontWeight: "500",
+    textAlign: "center",
   },
   statValue: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#333",
-    marginBottom: 8,
+    marginBottom: 4,
+    textAlign: "center",
   },
   revenueValue: {
     fontSize: 18,
@@ -442,15 +443,15 @@ const styles = StyleSheet.create({
   },
   reportButton: {
     backgroundColor: "#8e5c3b",
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
-    elevation: 3,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    elevation: 2,
   },
   reportButtonText: {
     color: "#fff",
-    fontSize: 15,
-    fontWeight: "700",
+    fontSize: 13,
+    fontWeight: "600",
   },
 });
 

@@ -15,10 +15,10 @@ import {
   Platform,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import config from "../config";
+import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "./_layout";
+import type { RootStackParamList } from "../_layout";
 import { router, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -621,7 +621,7 @@ export default function AdminUsersScreen() {
                       style={[
                         styles.roleButton,
                         editedUser.role === "admin" &&
-                          styles.selectedRoleButton,
+                        styles.selectedRoleButton,
                       ]}
                       onPress={() =>
                         setEditedUser({ ...editedUser, role: "admin" })
@@ -631,7 +631,7 @@ export default function AdminUsersScreen() {
                         style={[
                           styles.roleButtonText,
                           editedUser.role === "admin" &&
-                            styles.selectedRoleText,
+                          styles.selectedRoleText,
                         ]}
                       >
                         Admin
@@ -672,7 +672,7 @@ export default function AdminUsersScreen() {
                       style={[
                         styles.roleButton,
                         editedUser.twoFactorEnabled === true &&
-                          styles.selectedRoleButton,
+                        styles.selectedRoleButton,
                       ]}
                       onPress={() =>
                         setEditedUser({ ...editedUser, twoFactorEnabled: true })
@@ -682,7 +682,7 @@ export default function AdminUsersScreen() {
                         style={[
                           styles.roleButtonText,
                           editedUser.twoFactorEnabled === true &&
-                            styles.selectedRoleText,
+                          styles.selectedRoleText,
                         ]}
                       >
                         Enabled
@@ -693,7 +693,7 @@ export default function AdminUsersScreen() {
                       style={[
                         styles.roleButton,
                         editedUser.twoFactorEnabled === false &&
-                          styles.selectedRoleButton,
+                        styles.selectedRoleButton,
                       ]}
                       onPress={() =>
                         setEditedUser({
@@ -706,7 +706,7 @@ export default function AdminUsersScreen() {
                         style={[
                           styles.roleButtonText,
                           editedUser.twoFactorEnabled === false &&
-                            styles.selectedRoleText,
+                          styles.selectedRoleText,
                         ]}
                       >
                         Disabled

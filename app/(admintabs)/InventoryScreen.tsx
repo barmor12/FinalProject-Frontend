@@ -109,14 +109,14 @@ export default function InventoryScreen() {
       toggleSelectProduct(product._id);
     } else {
       router.push({
-        pathname: "/ProductDetailsScreenAdmin",
+        pathname: "/adminScreens/ProductDetailsScreenAdmin",
         params: { product: JSON.stringify(product) },
       });
     }
   };
 
   const navigateToAddProduct = () => {
-    router.push("/AddProductScreenAdmin");
+    router.push("/adminScreens/AddProductScreenAdmin");
   };
 
   const toggleSelectProduct = (productId: string) => {

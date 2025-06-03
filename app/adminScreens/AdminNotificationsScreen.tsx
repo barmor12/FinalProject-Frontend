@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "../config";
+import config from "../../config";
 // import useNotifications from '../hooks/useNotifications';
 
 export default function AdminNotificationsScreen() {

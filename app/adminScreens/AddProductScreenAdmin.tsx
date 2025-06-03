@@ -14,7 +14,7 @@ import {
   ScrollView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "../config";
+import config from "../../config";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
@@ -167,7 +167,6 @@ export default function AddProductScreenAdmin() {
               Name
             </Text>
             <TextInput
-              placeholder="Name"
               style={styles.input}
               value={name}
               onChangeText={setName}
@@ -178,7 +177,6 @@ export default function AddProductScreenAdmin() {
               Description
             </Text>
             <TextInput
-              placeholder="Description"
               style={styles.input}
               value={description}
               onChangeText={setDescription}
@@ -189,7 +187,6 @@ export default function AddProductScreenAdmin() {
               Cost
             </Text>
             <TextInput
-              placeholder="Cost"
               style={styles.input}
               keyboardType="numeric"
               value={cost}
@@ -201,7 +198,6 @@ export default function AddProductScreenAdmin() {
               Price
             </Text>
             <TextInput
-              placeholder="Price"
               style={styles.input}
               keyboardType="numeric"
               value={price}
@@ -223,7 +219,6 @@ export default function AddProductScreenAdmin() {
               Ingredients
             </Text>
             <TextInput
-              placeholder="Ingredients"
               style={styles.input}
               value={ingredients}
               onChangeText={setIngredients}
@@ -234,7 +229,6 @@ export default function AddProductScreenAdmin() {
               Stock
             </Text>
             <TextInput
-              placeholder="Stock"
               style={styles.input}
               keyboardType="numeric"
               value={stock}
@@ -248,13 +242,15 @@ export default function AddProductScreenAdmin() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.title}>Add New Product</Text>
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          {renderItem({ item: "inputs" })}
-          {renderItem({ item: "image" })}
-          {renderItem({ item: "submitButton" })}
-        </ScrollView>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#f9f3ea" }}>
+        <View style={styles.container}>
+          <Text style={styles.title}>Add New Product</Text>
+          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            {renderItem({ item: "inputs" })}
+            {renderItem({ item: "image" })}
+            {renderItem({ item: "submitButton" })}
+          </ScrollView>
+        </View>
       </SafeAreaView>
     </TouchableWithoutFeedback>
   );
@@ -265,6 +261,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
     backgroundColor: "#f9f3ea",
+    marginHorizontal: 10,
   },
   title: {
     fontSize: 22,
@@ -280,7 +277,7 @@ const styles = StyleSheet.create({
   floatingLabel: {
     position: "absolute",
     left: 12,
-    top: 14,
+    top: 16,
     fontSize: 14,
     color: "#aaa",
     zIndex: 1,

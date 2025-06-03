@@ -11,12 +11,13 @@ import {
   Modal,
   RefreshControl,
   TextInput,
+  Platform,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "../config";
+import config from "../../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "./_layout";
+import type { RootStackParamList } from "../_layout";
 import { useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -37,12 +38,12 @@ export default function AdminOrdersScreen() {
   >("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [statusDropdownVisible, setStatusDropdownVisible] = useState(false);
 
   // ניצור מערך הזמנות מסוננות לפי פילטר
-  const filteredOrders =
-    filterStatus === "all"
-      ? orders
-      : orders.filter((order) => order.status === filterStatus);
+  const filteredOrders = filterStatus === "all"
+    ? orders
+    : orders.filter((order) => order.status === filterStatus);
   const searchedOrders = filteredOrders.filter((order) => {
     // If search is empty, show all orders including those with deleted users
     if (!searchQuery.trim()) return true;
@@ -392,46 +393,49 @@ export default function AdminOrdersScreen() {
         onChangeText={setSearchQuery}
       />
 
-      {/* ⏳ כפתור מיון לפי תאריך */}
-      <TouchableOpacity
-        style={styles.sortButton}
-        onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-      >
-        <Text style={styles.sortButtonText}>
-          Sort by Date ({sortOrder === "asc" ? "Oldest" : "Newest"})
-        </Text>
-      </TouchableOpacity>
-
-      {/* 📌 כפתורי פילטר לפי סטטוס */}
-      <View style={styles.filterContainer}>
-        {["all", "pending", "confirmed", "delivered", "cancelled"].map(
-          (status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.filterButton,
-                filterStatus === status && styles.activeFilter,
-              ]}
-              onPress={() => setFilterStatus(status as Order["status"])}
-            >
-              <Text style={styles.filterButtonText}>
-                {status === "all"
-                  ? "All"
-                  : status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          )
-        )}
-      </View>
-
       {/* 🛒 טבלת כותרות */}
       <View style={styles.tableHeader}>
         <Text style={styles.priorityHeaderCell}></Text>
         <Text style={styles.headerCell}>Order ID</Text>
-        <Text style={styles.headerCell}>Order Date</Text>
-        <Text style={styles.statusHeaderCell}>Status</Text>
+        <TouchableOpacity
+          style={styles.headerCell}
+          onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+        >
+          <Text style={styles.headerCellText}>
+            Order Date {sortOrder === "asc" ? "↑" : "↓"}
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.statusHeaderCell}
+          onPress={() => setStatusDropdownVisible(!statusDropdownVisible)}
+        >
+          <Text style={styles.headerCellText}>Status ▼</Text>
+        </TouchableOpacity>
         <Text style={styles.nameHeaderCell}>Customer Name</Text>
       </View>
+
+      {/* Status Dropdown */}
+      {statusDropdownVisible && (
+        <View style={styles.statusDropdown}>
+          {["all", "pending", "confirmed", "delivered", "cancelled"].map((status) => (
+            <TouchableOpacity
+              key={status}
+              style={[
+                styles.statusDropdownItem,
+                filterStatus === status && styles.selectedStatus,
+              ]}
+              onPress={() => {
+                setFilterStatus(status as Order["status"]);
+                setStatusDropdownVisible(false);
+              }}
+            >
+              <Text style={styles.statusDropdownText}>
+                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* 📜 רשימת הזמנות */}
       {loading ? (
@@ -471,7 +475,7 @@ export default function AdminOrdersScreen() {
               <Text style={[styles.cell, styles[order.status]]}>
                 {order.status}
               </Text>
-              <Text style={styles.cell}>
+              <Text style={styles.cell} numberOfLines={1} ellipsizeMode="tail">
                 {order.user
                   ? `${order.user.firstName || "Unknown"} ${order.user.lastName || "User"}`
                   : "Deleted User"}
@@ -645,12 +649,18 @@ export default function AdminOrdersScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
+  container: {
+    flex: 1,
+    backgroundColor: "#f9f3ea",
+    paddingTop: Platform.OS === 'ios' ? 20 : 40,
+    paddingHorizontal: 15,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 15,
+    color: "#6b4226",
   },
   tableHeader: {
     flexDirection: "row",
@@ -664,26 +674,38 @@ const styles = StyleSheet.create({
     flex: 1,
     color: "#fff",
     fontWeight: "bold",
-    textAlign: "right",
-    minWidth: 70,
+    textAlign: "center",
+    fontSize: 13,
+    minWidth: 50,
+    paddingHorizontal: 8,
+  },
+  headerCellText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+    textAlign: "center",
   },
   nameHeaderCell: {
-    flex: 1,
+    flex: 1.2,
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
-    paddingRight: 30,
-    minWidth: 120,
+    fontSize: 13,
+    minWidth: 90,
+    paddingHorizontal: 8,
   },
   statusHeaderCell: {
-    flex: 1,
+    flex: 0.8,
     color: "#fff",
     fontWeight: "bold",
-    textAlign: "right",
-    paddingRight: 25,
-    minWidth: 120,
+    textAlign: "center",
+    fontSize: 13,
+    minWidth: 70,
+    paddingHorizontal: 8,
   },
-  scrollViewContent: { paddingBottom: 120 },
+  scrollViewContent: {
+    paddingBottom: Platform.OS === 'ios' ? 20 : 40,
+  },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -697,7 +719,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     elevation: 2,
   },
-  cell: { flex: 1, textAlign: "center", color: "#6b4226", minWidth: 70 },
+  cell: {
+    flex: 1,
+    textAlign: "center",
+    color: "#6b4226",
+    minWidth: 50,
+    fontSize: 13,
+    paddingHorizontal: 8,
+  },
   pending: { color: "#FFA500", fontWeight: "bold" },
   confirmed: { color: "#007bff", fontWeight: "bold" },
   delivered: { color: "#28a745", fontWeight: "bold" },
@@ -775,10 +804,16 @@ const styles = StyleSheet.create({
   closeButtonText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
   filterContainer: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    marginVertical: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 5,
   },
-  filterButton: { padding: 10, backgroundColor: "#ddd", borderRadius: 5 },
+  filterButton: {
+    padding: 10,
+    backgroundColor: "#ddd",
+    borderRadius: 5,
+    marginHorizontal: 5,
+    minWidth: 100,
+  },
   activeFilter: { backgroundColor: "#6b4226" },
   filterButtonText: { color: "#fff", fontWeight: "bold" },
   modalButton: {
@@ -816,23 +851,14 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#fff",
     textAlign: "right",
-  },
-  sortButton: {
-    padding: 10,
-    backgroundColor: "#6b4226",
-    borderRadius: 5,
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  sortButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
+    marginBottom: 10,
   },
   priorityHeaderCell: {
-    width: 10,
+    width: 34,
     color: "#fff",
     fontWeight: "bold",
     textAlign: "center",
+    paddingHorizontal: 8,
   },
   priorityButton: {
     width: 34,
@@ -843,5 +869,29 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff9e6",
     borderLeftWidth: 4,
     borderLeftColor: "#FFD700",
+  },
+  statusDropdown: {
+    position: 'absolute',
+    top: 120,
+    right: 15,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    zIndex: 1000,
+  },
+  statusDropdownItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  statusDropdownText: {
+    color: '#6b4226',
+    fontSize: 14,
   },
 });

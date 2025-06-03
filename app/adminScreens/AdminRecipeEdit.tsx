@@ -16,7 +16,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
-import config from "../config";
+import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Recipe {

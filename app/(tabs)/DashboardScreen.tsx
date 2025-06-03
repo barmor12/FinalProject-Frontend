@@ -43,9 +43,6 @@ export default function DashboardScreen() {
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   // State variable to determine whether to display only liked products
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
-  // Price range state
-  const [priceMin, setPriceMin] = useState<string>("");
-  const [priceMax, setPriceMax] = useState<string>("");
   // Sort order state for price sorting
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
@@ -59,20 +56,6 @@ export default function DashboardScreen() {
       );
     }
 
-    if (priceMin !== "") {
-      const min = parseFloat(priceMin);
-      if (!isNaN(min)) {
-        searched = searched.filter((product) => product.price >= min);
-      }
-    }
-
-    if (priceMax !== "") {
-      const max = parseFloat(priceMax);
-      if (!isNaN(max)) {
-        searched = searched.filter((product) => product.price <= max);
-      }
-    }
-
     setFilteredProducts(
       showOnlyLiked
         ? searched.filter((product) => likedProducts.has(product._id))
@@ -83,7 +66,12 @@ export default function DashboardScreen() {
   // Toggle the search input visibility
   const toggleSearch = () => {
     setSearchVisible((prev) => {
-      if (!prev) setSearchText(""); // Reset search text when search is closed
+      if (!prev) {
+        setSearchText(""); // Reset search text when search is opened
+      } else {
+        setSearchText(""); // Reset search text when search is closed
+        setFilteredProducts(products); // Reset filtered products to show all products
+      }
       return !prev;
     });
     setShowHorizontalScroll((prev) => !prev); // Toggle horizontal scroll visibility with search
@@ -382,29 +370,8 @@ export default function DashboardScreen() {
             value={searchText}
             onChangeText={handleSearch}
             autoFocus
+            textAlign="left"
           />
-          <View style={styles.priceRangeContainer}>
-            <TextInput
-              placeholder="Min Price"
-              value={priceMin}
-              onChangeText={(text) => {
-                setPriceMin(text);
-                handleSearch(searchText);
-              }}
-              keyboardType="numeric"
-              style={[styles.priceInput, { marginRight: 8 }]}
-            />
-            <TextInput
-              placeholder="Max Price"
-              value={priceMax}
-              onChangeText={(text) => {
-                setPriceMax(text);
-                handleSearch(searchText);
-              }}
-              keyboardType="numeric"
-              style={[styles.priceInput]}
-            />
-          </View>
         </View>
       )}
 
@@ -462,7 +429,6 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     backgroundColor: "#f9f3ea",
-    marginBottom: 30,
   },
   header: {
     flexDirection: "row",
@@ -519,13 +485,17 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     elevation: 2,
     alignItems: "center",
+    position: "relative",
   },
   productImage: { width: 120, height: 120, borderRadius: 8, marginBottom: 10 },
   productName: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: "bold",
     color: "#6b4226",
-    textAlign: "center",
+    textAlign: "left",
+    marginBottom: 8,
+    flexWrap: "wrap",
+    maxWidth: "90%",
   },
   row: { justifyContent: "space-between" },
   itemPrice: {},
@@ -549,12 +519,20 @@ const styles = StyleSheet.create({
   },
   favoriteButtonTop: {
     position: "absolute",
-    top: 8,
-    right: 8,
+    top: 10,
+    right: 10,
     backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 4,
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
     elevation: 2,
+    zIndex: 1,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   productInfo: {
     alignItems: "center",
@@ -600,18 +578,20 @@ const styles = StyleSheet.create({
   },
   wideProductInfo: {
     flex: 1,
-    justifyContent: "space-between",
     height: 150,
+    justifyContent: "space-between",
     paddingVertical: 8,
+    paddingRight: 40,
   },
   priceTextRight: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#6b4226",
     textAlign: "right",
+    marginTop: "auto",
   },
   searchBlock: {
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f3ea",
     borderRadius: 10,
     padding: 10,
     marginVertical: 10,
@@ -623,20 +603,7 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 8,
     paddingHorizontal: 10,
-    backgroundColor: "#f9f9f9",
-    marginBottom: 10,
-  },
-  priceRangeContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  priceInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: "#f9f9f9",
+    backgroundColor: "#fff",
+    textAlign: "left",
   },
 });

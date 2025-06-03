@@ -97,18 +97,27 @@ export default function LoginScreen() {
         if (decoded.exp * 1000 < Date.now()) {
           console.log("🔄 Token expired, refreshing...");
           const refreshed = await refreshAccessToken();
-          if (!refreshed) return;
+          if (!refreshed) {
+            console.log("⚠️ Token refresh failed, but user is still logged in");
+            return;
+          }
           accessToken = await AsyncStorage.getItem("accessToken");
         }
       } catch (error) {
-        console.error("❌ Error decoding token:", error);
+        console.log("⚠️ Error during token validation, but user is still logged in:", error);
         const refreshed = await refreshAccessToken();
-        if (!refreshed) return;
+        if (!refreshed) {
+          console.log("⚠️ Token refresh failed, but user is still logged in");
+          return;
+        }
         accessToken = await AsyncStorage.getItem("accessToken");
       }
     } else {
       const refreshed = await refreshAccessToken();
-      if (!refreshed) return;
+      if (!refreshed) {
+        console.log("⚠️ No access token found and refresh failed");
+        return;
+      }
     }
 
     // Only navigate if both accessToken and role exist
