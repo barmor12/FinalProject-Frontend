@@ -23,4 +23,17 @@ jest.mock('@/hooks/useColorScheme', () => ({
 jest.mock('react-native/Libraries/Utilities/Platform', () => ({
     OS: 'ios',
     select: jest.fn((obj) => obj.ios),
-})); 
+}));
+jest.mock('@expo/vector-icons', () => ({
+    Ionicons: () => null,
+}));
+
+jest.mock('expo-modules-core', () => ({
+    Platform: {
+        OS: 'ios',
+        select: (options) => options.ios,
+    },
+}));
+jest.mock('expo-font', () => ({
+    loadAsync: jest.fn(),
+}));

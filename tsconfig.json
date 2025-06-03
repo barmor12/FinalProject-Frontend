@@ -5,7 +5,9 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ]
     }
   },
   "include": [
@@ -15,6 +17,7 @@
     "expo-env.d.ts",
     "app/product/[id].tsx",
     "app/storage.js",
-    "app/storage.js"
+    "app/storage.js",
+    "__mocks__/expo-image-picker.jss"
   ]
 }

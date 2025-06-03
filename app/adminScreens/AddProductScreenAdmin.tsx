@@ -169,6 +169,7 @@ export default function AddProductScreenAdmin() {
             <TextInput
               style={styles.input}
               value={name}
+              placeholder="Name"
               onChangeText={setName}
             />
           </View>
@@ -179,6 +180,7 @@ export default function AddProductScreenAdmin() {
             <TextInput
               style={styles.input}
               value={description}
+              placeholder="Description"
               onChangeText={setDescription}
             />
           </View>
@@ -190,6 +192,7 @@ export default function AddProductScreenAdmin() {
               style={styles.input}
               keyboardType="numeric"
               value={cost}
+              placeholder="Cost"
               onChangeText={setCost}
             />
           </View>
@@ -201,6 +204,7 @@ export default function AddProductScreenAdmin() {
               style={styles.input}
               keyboardType="numeric"
               value={price}
+              placeholder="Price"
               onChangeText={setPrice}
             />
           </View>
@@ -221,6 +225,7 @@ export default function AddProductScreenAdmin() {
             <TextInput
               style={styles.input}
               value={ingredients}
+              placeholder="Ingredients"
               onChangeText={setIngredients}
             />
           </View>
@@ -232,6 +237,7 @@ export default function AddProductScreenAdmin() {
               style={styles.input}
               keyboardType="numeric"
               value={stock}
+              placeholder="Stock"
               onChangeText={setStock}
             />
           </View>
