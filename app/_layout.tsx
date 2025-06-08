@@ -43,16 +43,16 @@ export default function RootLayout() {
           />
 
           {/* כאן יש להשתמש ב-component */}
-          <Stack.Screen name="manageUsersScreen" />
+          <Stack.Screen name="adminScreens/manageUsersScreen" />
           <Stack.Screen name="ProductDetailsScreen" />
-          <Stack.Screen name="ProductDetailsScreenAdmin" />
-          <Stack.Screen name="AddProductScreenAdmin" />
+          <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" />
+          <Stack.Screen name="adminScreens/AddProductScreenAdmin" />
           <Stack.Screen name="manageAddressScreen" />
-          <Stack.Screen name="adminDiscountCodesScreen" />
+          <Stack.Screen name="adminScreens/adminDiscountCodesScreen" />
           <Stack.Screen name="index"
             options={{ gestureEnabled: false }}
           />
-          <Stack.Screen name="adminOrdersScreen" />
+          <Stack.Screen name="adminScreens/adminOrdersScreen" />
           <Stack.Screen name="OrderDetailsScreen" />
 
           {/* הטאבים נטענים תמיד */}
@@ -61,8 +61,6 @@ export default function RootLayout() {
             name="(admintabs)"
             options={{ gestureEnabled: false }} // Disable swipe back for admin dashboard
           />
-          <Stack.Screen name="SaveDraftOrder" />
-          <Stack.Screen name="DuplicateOrder" />
         </Stack>
 
         <StatusBar style="auto" />

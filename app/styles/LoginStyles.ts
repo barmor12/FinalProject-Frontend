@@ -6,8 +6,8 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
     backgroundColor: "rgba(255, 255, 255, 0.4)",
-    padding: 20,
-    paddingTop: "80%",
+    padding: 10,
+    paddingTop: "50%",
   },
   inputContainer: {
     width: "100%",

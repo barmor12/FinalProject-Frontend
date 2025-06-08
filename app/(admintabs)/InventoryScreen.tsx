@@ -22,6 +22,7 @@ interface Product {
   description: string;
   ingredients: string[];
   price: number;
+  stock: string;
 }
 
 export default function InventoryScreen() {
@@ -230,11 +231,18 @@ export default function InventoryScreen() {
             style={[
               styles.productCard,
               isSelectionMode && selectedProducts.includes(item._id) ? styles.selectedProduct : {},
+              parseInt(item.stock) > 0 && parseInt(item.stock) < 5 ? styles.lowStockProduct : {},
             ]}
             onPress={() => navigateToProduct(item)}
           >
             <Image source={{ uri: item.image }} style={styles.productImage} />
             <Text style={styles.productName}>{item.name}</Text>
+            {parseInt(item.stock) > 0 && parseInt(item.stock) < 5 && (
+              <View style={styles.lowStockIndicator}>
+                <Ionicons name="warning" size={16} color="#d9534f" />
+                <Text style={styles.lowStockText}>Low Stock: {item.stock}</Text>
+              </View>
+            )}
             {isSelectionMode && selectedProducts.includes(item._id) && (
               <Ionicons name="checkmark-circle" size={24} color="green" />
             )}
@@ -301,4 +309,23 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   row: { justifyContent: "space-between" },
+  lowStockProduct: {
+    borderColor: "#d9534f",
+    borderWidth: 2,
+  },
+  lowStockIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff3f3",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 4,
+  },
+  lowStockText: {
+    color: "#d9534f",
+    fontSize: 12,
+    fontWeight: "600",
+    marginLeft: 4,
+  },
 });
