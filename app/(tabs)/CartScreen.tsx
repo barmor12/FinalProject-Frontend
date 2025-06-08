@@ -229,8 +229,7 @@ export default function CartScreen() {
         try {
           const data = await response.json();
           console.error(
-            `❌ Server error removing item - itemId: ${itemId}: ${
-              data.error || "Unknown error"
+            `❌ Server error removing item - itemId: ${itemId}: ${data.error || "Unknown error"
             }`
           );
           Alert.alert(
@@ -316,8 +315,7 @@ export default function CartScreen() {
         // If the API call fails, display an error to the user
         const data = await response.json();
         console.error(
-          `❌ Server error removing item ${itemId}: ${
-            data.error || "Unknown error"
+          `❌ Server error removing item ${itemId}: ${data.error || "Unknown error"
           }`
         );
         Alert.alert(
@@ -481,7 +479,7 @@ export default function CartScreen() {
             {selectedProduct && selectedProduct.cake && (
               <>
                 {imageErrors[selectedProduct._id] ||
-                !getImageSource(selectedProduct.cake.image?.url?.trim()) ? (
+                  !getImageSource(selectedProduct.cake.image?.url?.trim()) ? (
                   <View style={[styles.modalImage, styles.placeholderImage]}>
                     <Text style={styles.placeholderText}>
                       Image Unavailable
@@ -524,7 +522,10 @@ export default function CartScreen() {
           <Text style={styles.totalText}>Total: ${calculateTotalPrice()}</Text>
           <TouchableOpacity
             style={styles.checkoutButton}
-            onPress={() => router.push("/CheckoutScreen")}
+            onPress={() => router.push({
+              pathname: "/CheckoutScreen",
+              params: { newCheckout: "true" }
+            })}
           >
             <Text style={styles.checkoutButtonText}>Proceed to Checkout</Text>
           </TouchableOpacity>

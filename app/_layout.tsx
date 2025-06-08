@@ -47,8 +47,9 @@ export default function RootLayout() {
           <Stack.Screen name="ProductDetailsScreen" />
           <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" />
           <Stack.Screen name="adminScreens/AddProductScreenAdmin" />
-          <Stack.Screen name="manageAddressScreen" />
+          <Stack.Screen name="AddressScreen" />
           <Stack.Screen name="adminScreens/adminDiscountCodesScreen" />
+          <Stack.Screen name="CreditCardScreen" />
           <Stack.Screen name="index"
             options={{ gestureEnabled: false }}
           />

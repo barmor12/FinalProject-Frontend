@@ -1,0 +1,166 @@
+import { StyleSheet } from 'react-native';
+
+export default StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: '#f9f3ea',
+        padding: 16,
+    },
+    title: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        color: '#6b4226',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    cardList: {
+        flex: 1,
+    },
+    cardContainer: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 16,
+        elevation: 4,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    cardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 16,
+    },
+    cardLogo: {
+        width: 50,
+        height: 30,
+        resizeMode: 'contain',
+    },
+    cardNumber: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#333',
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    cardDetails: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 8,
+    },
+    cardLabel: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 4,
+    },
+    cardValue: {
+        fontSize: 14,
+        color: '#333',
+        fontWeight: '500',
+    },
+    cardActions: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        marginTop: 8,
+    },
+    actionButton: {
+        padding: 8,
+        marginLeft: 8,
+    },
+    addButton: {
+        backgroundColor: '#6b4226',
+        padding: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    addButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    modalContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        padding: 16,
+    },
+    modalContent: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 24,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: '#6b4226',
+        marginBottom: 20,
+        textAlign: 'center',
+    },
+    inputContainer: {
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 14,
+        color: '#666',
+        marginBottom: 8,
+    },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ddd',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        color: '#333',
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 24,
+    },
+    modalButton: {
+        flex: 1,
+        padding: 12,
+        borderRadius: 8,
+        marginHorizontal: 8,
+    },
+    saveButton: {
+        backgroundColor: '#6b4226',
+    },
+    cancelButton: {
+        backgroundColor: '#ddd',
+    },
+    buttonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+        textAlign: 'center',
+    },
+    cancelButtonText: {
+        color: '#666',
+    },
+    errorText: {
+        color: '#d9534f',
+        fontSize: 12,
+        marginTop: 4,
+    },
+    defaultBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#f9f3ea',
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 12,
+        alignSelf: 'flex-start',
+        marginTop: 8,
+    },
+    defaultText: {
+        color: '#6b4226',
+        fontSize: 12,
+        fontWeight: '600',
+        marginLeft: 4,
+    },
+}); 

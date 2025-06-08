@@ -230,11 +230,21 @@ export default function ProfileScreen() {
             <Text style={styles.buttonText}>My Orders</Text>
           </TouchableOpacity>
 
+
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push("/manageAddressScreen")}
+            onPress={() => router.push("/CreditCardScreen")}
           >
-            <MaterialIcons name="receipt-long" size={20} color="#fff" />
+            <MaterialIcons name="credit-card" size={20} color="#fff" />
+            <Text style={styles.buttonText}>My Credit Cards</Text>
+          </TouchableOpacity>
+
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => router.push("/AddressScreen")}
+          >
+            <MaterialIcons name="location-pin" size={20} color="#fff" />
             <Text style={styles.buttonText}>Manage Addresses</Text>
           </TouchableOpacity>
 

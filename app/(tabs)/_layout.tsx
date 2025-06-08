@@ -20,7 +20,6 @@ import {
 } from "../utils/notifications";
 
 export default function TabLayout() {
-  console.log("🚀 TabLayout mounted");
   const [role, setRole] = useState<string | null>(null);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [loading, setLoading] = useState(true);

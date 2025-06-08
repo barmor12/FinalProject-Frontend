@@ -17,7 +17,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
-import { useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 
@@ -48,7 +48,17 @@ interface Address {
   isDefault: boolean;
 }
 
+interface CreditCard {
+  id: string;
+  cardNumber: string;
+  cardHolderName: string;
+  expiryDate: string;
+  cardType: 'visa' | 'mastercard';
+  isDefault?: boolean;
+}
+
 export default function CheckoutScreen() {
+  const params = useLocalSearchParams();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [shippingMethod, setShippingMethod] = useState(
@@ -72,6 +82,9 @@ export default function CheckoutScreen() {
 
   const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit'>('cash');
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
 
   const router = useRouter();
 
@@ -147,15 +160,64 @@ export default function CheckoutScreen() {
     }
   };
 
+  const fetchCreditCards = async () => {
+    try {
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) return;
+
+      const response = await fetch(`${config.BASE_URL}/auth/credit-cards`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch credit cards');
+      }
+
+      const data = await response.json();
+      const cards = data.cards || [];
+      setCreditCards(cards);
+
+      // Find and set the default card
+      const defaultCard = cards.find((card: CreditCard) => card.isDefault);
+      if (defaultCard) {
+        setSelectedCard(defaultCard);
+      } else if (cards.length > 0) {
+        // If no default card but cards exist, select the first one
+        setSelectedCard(cards[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching credit cards:', error);
+    }
+  };
+
   useEffect(() => {
     fetchCartItems();
+    fetchCreditCards();
+    // Reset to cash payment
+    setPaymentMethod('cash');
+    setSelectedCard(null);
   }, []);
 
   useFocusEffect(
     React.useCallback(() => {
       fetchCartItems();
+      // Reset to cash payment
+      setPaymentMethod('cash');
+      setSelectedCard(null);
     }, [])
   );
+
+  // Reset payment method when coming from cart
+  useEffect(() => {
+    if (params.newCheckout === "true") {
+      setPaymentMethod('cash');
+      setSelectedCard(null);
+    }
+  }, [params.newCheckout]);
 
   const calculateTotal = () => {
     const subtotal = cartItems.reduce(
@@ -194,16 +256,18 @@ export default function CheckoutScreen() {
         Alert.alert("Error", "Please select a delivery date.");
         return;
       }
+      if (paymentMethod === 'credit' && !selectedCard) {
+        Alert.alert("Error", "Please select a credit card.");
+        return;
+      }
 
       setLoading(true);
       const token = await AsyncStorage.getItem("accessToken");
       if (!token) return;
 
-      // Create a new date object and set it to start of day
       const deliveryDateTime = new Date(deliveryDate ?? new Date());
       deliveryDateTime.setHours(0, 0, 0, 0);
 
-      // Format the date as YYYY-MM-DD
       const year = deliveryDateTime.getFullYear();
       const month = String(deliveryDateTime.getMonth() + 1).padStart(2, "0");
       const day = String(deliveryDateTime.getDate()).padStart(2, "0");
@@ -214,9 +278,14 @@ export default function CheckoutScreen() {
           cakeId: item.cake._id,
           quantity: item.quantity,
         })),
-        paymentMethod: "cash",
+        paymentMethod,
         shippingMethod,
       };
+
+      if (paymentMethod === 'credit') {
+        body.creditCardId = selectedCard?.id;
+      }
+
       if (shippingMethod === "Standard Delivery (2-3 days)") {
         body.address = selectedAddress;
         body.deliveryDate = formattedDate;
@@ -479,9 +548,64 @@ export default function CheckoutScreen() {
               {/* Payment Method Section */}
               <View style={styles.paymentContainer}>
                 <Text style={styles.paymentTitle}>Payment Method</Text>
-                <View style={styles.cashPayment}>
-                  <Ionicons name="cash-outline" size={24} color="#6b4226" />
-                  <Text style={styles.paymentText}>Cash</Text>
+                <View style={styles.paymentOptionsContainer}>
+                  <TouchableOpacity
+                    style={[
+                      styles.paymentOptionButton,
+                      paymentMethod === 'cash' && styles.selectedOption,
+                    ]}
+                    onPress={() => {
+                      setPaymentMethod('cash');
+                      setSelectedCard(null);
+                    }}
+                  >
+                    <Ionicons name="cash-outline" size={24} color={paymentMethod === 'cash' ? "#fff" : "#6b4226"} />
+                    <Text style={[styles.paymentText, paymentMethod === 'cash' && styles.selectedOptionText]}>Cash</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[
+                      styles.paymentOptionButton,
+                      paymentMethod === 'credit' && styles.selectedOption,
+                    ]}
+                    onPress={() => {
+                      setPaymentMethod('credit');
+                      if (creditCards.length === 0) {
+                        Alert.alert(
+                          "No Credit Cards",
+                          "Please add a credit card in your profile first.",
+                          [
+                            {
+                              text: "Add Card",
+                              onPress: () => router.push("/CreditCardScreen"),
+                            },
+                            { text: "Cancel", style: "cancel" },
+                          ]
+                        );
+                      } else if (!selectedCard) {
+                        // Only show card selector if no default card exists
+                        const defaultCard = creditCards.find(card => card.isDefault);
+                        if (!defaultCard) {
+                          Alert.alert(
+                            "Select Credit Card",
+                            "Choose a credit card to use",
+                            creditCards.map((card) => ({
+                              text: `**** **** **** ${card.cardNumber.slice(-4)}`,
+                              onPress: () => setSelectedCard(card),
+                            }))
+                          );
+                        } else {
+                          // If there's a default card, select it automatically
+                          setSelectedCard(defaultCard);
+                        }
+                      }
+                    }}
+                  >
+                    <Ionicons name="card-outline" size={24} color={paymentMethod === 'credit' ? "#fff" : "#6b4226"} />
+                    <Text style={[styles.paymentText, paymentMethod === 'credit' && styles.selectedOptionText]}>
+                      {selectedCard ? `**** **** **** ${selectedCard.cardNumber.slice(-4)}` : 'Credit Card'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -588,7 +712,7 @@ export default function CheckoutScreen() {
                       style={[
                         styles.addressItem,
                         selectedAddress?._id === item._id &&
-                          styles.selectedAddress,
+                        styles.selectedAddress,
                       ]}
                       onPress={() => {
                         setSelectedAddress(item);
@@ -633,7 +757,7 @@ export default function CheckoutScreen() {
                 style={[
                   styles.modalButton,
                   shippingMethod === "Standard Delivery (2-3 days)" &&
-                    styles.selectedOption,
+                  styles.selectedOption,
                 ]}
                 onPress={() => {
                   setShippingMethod("Standard Delivery (2-3 days)");
@@ -945,7 +1069,6 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: "#fff",
     borderRadius: 12,
-    alignItems: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -957,14 +1080,37 @@ const styles = StyleSheet.create({
     color: "#5A3827",
     marginBottom: 10,
   },
-  cashPayment: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 10,
-    borderRadius: 8,
-    backgroundColor: "#F8F1E7",
+  paymentOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 10,
   },
-  paymentText: { fontSize: 16, color: "#5A3827", marginLeft: 10 },
+  paymentOptionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    backgroundColor: '#FAEDE1',
+    borderWidth: 1.5,
+    borderColor: '#E5D3C2',
+    gap: 8,
+  },
+  paymentText: {
+    fontSize: 14,
+    color: "#5A3827",
+    letterSpacing: 0.5,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+  },
+  selectedOptionText: {
+    color: '#fff',
+  },
+  selectedOption: {
+    backgroundColor: "#5A3827",
+    borderColor: "#5A3827",
+  },
   checkoutContainer: { marginTop: 20, alignItems: "center" },
   totalText: { fontSize: 20, fontWeight: "bold", color: "#5A3827" },
   checkoutButton: {
@@ -1034,10 +1180,6 @@ const styles = StyleSheet.create({
     width: "100%",
     borderWidth: 1.5,
     borderColor: "#E5D3C2",
-  },
-  selectedOption: {
-    backgroundColor: "#5A3827",
-    borderColor: "#5A3827",
   },
   addressItem: {
     padding: 12,
