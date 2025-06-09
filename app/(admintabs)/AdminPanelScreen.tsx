@@ -52,17 +52,31 @@ export default function AdminPanelScreen() {
   const handleLogout = async () => {
     try {
       const refreshToken = await AsyncStorage.getItem("refreshToken");
+      const accessToken = await AsyncStorage.getItem("accessToken");
+
+      console.log("🧾 refreshToken:", refreshToken);
+      console.log("🧾 accessToken:", accessToken);
 
       if (!refreshToken) {
+        console.warn("⚠️ No refresh token found in AsyncStorage");
         Alert.alert("Error", "No refresh token found");
         return;
       }
 
       const response = await fetch(`${config.BASE_URL}/auth/logout`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          // הוסף את זה אם אתה משתמש ב־auth header בצד השרת
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ refreshToken }),
       });
+
+      console.log("📡 Logout response status:", response.status);
+
+      const data = await response.json();
+      console.log("📡 Logout response body:", data);
 
       if (response.ok) {
         await AsyncStorage.removeItem("accessToken");
@@ -72,11 +86,10 @@ export default function AdminPanelScreen() {
         Alert.alert("Success", "Logged out successfully");
         router.replace("/");
       } else {
-        const data = await response.json();
         Alert.alert("Error", data.message || "Failed to logout");
       }
     } catch (error) {
-      console.error("Logout error:", error);
+      console.error("❌ Logout error:", error);
       Alert.alert("Error", "Something went wrong");
     }
   };
@@ -88,7 +101,11 @@ export default function AdminPanelScreen() {
           <View style={styles.profileImagePlaceholder} />
           <View style={styles.userNamePlaceholder} />
           <View style={styles.titlePlaceholder} />
-          <ActivityIndicator size="large" color="#6b4226" style={styles.loader} />
+          <ActivityIndicator
+            size="large"
+            color="#6b4226"
+            style={styles.loader}
+          />
           <Text style={styles.loadingText}>Loading Admin Panel...</Text>
         </View>
       </SafeAreaView>
@@ -122,7 +139,9 @@ export default function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push("/adminScreens/adminDiscountCodesScreen")}
+            onPress={() =>
+              router.push("/adminScreens/adminDiscountCodesScreen")
+            }
           >
             <Text style={styles.buttonText}>Manage Discount Codes</Text>
           </TouchableOpacity>
@@ -142,7 +161,9 @@ export default function AdminPanelScreen() {
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => router.push("/adminScreens/AdminNotificationsScreen")}
+            onPress={() =>
+              router.push("/adminScreens/AdminNotificationsScreen")
+            }
           >
             <Text style={styles.buttonText}>Send Notifications</Text>
           </TouchableOpacity>
@@ -174,8 +195,8 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     backgroundColor: "#f9f3ea",
-    paddingTop: Platform.OS === 'ios' ? 20 : 40,
-    paddingBottom: Platform.OS === 'ios' ? 20 : 40,
+    paddingTop: Platform.OS === "ios" ? 20 : 40,
+    paddingBottom: Platform.OS === "ios" ? 20 : 40,
   },
   loadingContainer: {
     flex: 1,
@@ -187,20 +208,20 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     marginBottom: 10,
   },
   userNamePlaceholder: {
     width: 150,
     height: 22,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     marginBottom: 5,
   },
   titlePlaceholder: {
     width: 120,
     height: 18,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     marginBottom: 20,
   },
@@ -232,8 +253,8 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: "#b22222",
-    marginTop: 'auto',
-    marginBottom: Platform.OS === 'ios' ? 40 : 40,
+    marginTop: "auto",
+    marginBottom: Platform.OS === "ios" ? 40 : 40,
   },
   logoutText: {
     color: "#fff",

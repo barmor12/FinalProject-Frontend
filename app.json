@@ -11,7 +11,15 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.avielandbar.cakebusinessapp",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        },
+        "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
+        "UIBackgroundModes": ["remote-notification"],
+        "UNUserNotificationCenterUsageDescription": "This app uses notifications to inform you of updates and alerts."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -35,7 +43,8 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true
@@ -45,9 +54,8 @@
         "origin": false
       },
       "eas": {
-        "projectId": "297ce7db-3a58-4056-ab81-01b16bd0628d"
+        "projectId": "fbc9882c-5a50-4890-ac90-04995b12cff7"
       }
-    },
-    "owner": "avieles100"
+    }
   }
 }

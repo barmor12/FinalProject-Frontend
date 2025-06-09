@@ -96,7 +96,10 @@ export default function UserDetailsScreen() {
       setUser(updatedUser);
       alert(`Role updated to ${newRole}`);
       // Navigate back and signal refresh
-      router.push("/manageUsersScreen?shouldRefresh=true");
+      router.push({
+        pathname: "/adminScreens/manageUsersScreen",
+        params: { shouldRefresh: "true" },
+      });
     } catch (err) {
       console.error("❌ Failed to update role:", err);
       alert("Error updating role");
