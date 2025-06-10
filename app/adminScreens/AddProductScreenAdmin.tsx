@@ -163,48 +163,64 @@ export default function AddProductScreenAdmin() {
       {item === "inputs" && (
         <>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, name ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                name ? styles.floatingLabelActive : null,
+              ]}
+            >
               Name
             </Text>
             <TextInput
               style={styles.input}
               value={name}
-              placeholder="Name"
               onChangeText={setName}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, description ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                description ? styles.floatingLabelActive : null,
+              ]}
+            >
               Description
             </Text>
             <TextInput
               style={styles.input}
               value={description}
-              placeholder="Description"
               onChangeText={setDescription}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, cost ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                cost ? styles.floatingLabelActive : null,
+              ]}
+            >
               Cost
             </Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
               value={cost}
-              placeholder="Cost"
               onChangeText={setCost}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, price ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                price ? styles.floatingLabelActive : null,
+              ]}
+            >
               Price
             </Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
               value={price}
-              placeholder="Price"
               onChangeText={setPrice}
             />
           </View>
@@ -219,25 +235,33 @@ export default function AddProductScreenAdmin() {
             </View>
           )}
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, ingredients ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                ingredients ? styles.floatingLabelActive : null,
+              ]}
+            >
               Ingredients
             </Text>
             <TextInput
               style={styles.input}
               value={ingredients}
-              placeholder="Ingredients"
               onChangeText={setIngredients}
             />
           </View>
           <View style={styles.inputWrapper}>
-            <Text style={[styles.floatingLabel, stock ? styles.floatingLabelActive : null]}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                stock ? styles.floatingLabelActive : null,
+              ]}
+            >
               Stock
             </Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
               value={stock}
-              placeholder="Stock"
               onChangeText={setStock}
             />
           </View>
