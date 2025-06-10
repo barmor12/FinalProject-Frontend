@@ -4,11 +4,11 @@
 
 const config = {
   //BASE_URL: "http://172.20.10.3:3000", // bar home
-  BASE_URL: "http://188.245.37.93:3000", // bar home
+  BASE_URL: "http://188.245.37.93:3000", // base server
   googleClientIdWeb:
-    "382363420678-4vo977g15lco32t0br17iv9tjq40jk0f.apps.googleusercontent.com",
+    "382363420678-fhktpquvsaks4olea89uokd73ee6k0ps.apps.googleusercontent.com",
   googleClientIdAndroid:
-    "382363420678-4sftvkmts6kka698jgo7i7bdm7no99f7.apps.googleusercontent.com",
+    "382363420678-gmqgv5hmuvql0g10sna6v235j891cutu.apps.googleusercontent.com",
   googleClientIdIos:
     "382363420678-76qo2sdglhrl24chiiupoalbapq7m67o.apps.googleusercontent.com",
 };

@@ -104,7 +104,10 @@ export default function LoginScreen() {
           accessToken = await AsyncStorage.getItem("accessToken");
         }
       } catch (error) {
-        console.log("⚠️ Error during token validation, but user is still logged in:", error);
+        console.log(
+          "⚠️ Error during token validation, but user is still logged in:",
+          error
+        );
         const refreshed = await refreshAccessToken();
         if (!refreshed) {
           console.log("⚠️ Token refresh failed, but user is still logged in");
@@ -276,7 +279,7 @@ export default function LoginScreen() {
     }),
     redirectUri: Platform.select({
       ios: "com.avielandbar.cakebusinessapp:/oauth2redirect",
-      android: "exp://localhost:8081",
+      android: "com.avielandbar.cakebusinessapp:/oauth2redirect",
       web: "http://localhost:8081",
     }),
     scopes: ["profile", "email"],

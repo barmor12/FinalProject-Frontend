@@ -5,10 +5,9 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "myapp",
+    "scheme": "com.avielandbar.cakebusinessapp",
     "userInterfaceStyle": "automatic",
-    "sdkVersion": "53.0.0",
-    "newArchEnabled": true,
+
     "ios": {
       "bundleIdentifier": "com.avielandbar.cakebusinessapp",
       "supportsTablet": true,
@@ -17,8 +16,9 @@
           "NSAllowsArbitraryLoads": true
         },
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
-        "UIBackgroundModes": ["remote-notification"],
-        "UNUserNotificationCenterUsageDescription": "This app uses notifications to inform you of updates and alerts."
+        "UIBackgroundModes": ["remote-notification", "remote-notification"],
+        "UNUserNotificationCenterUsageDescription": "This app uses notifications to inform you of updates and alerts.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
