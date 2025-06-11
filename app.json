@@ -18,7 +18,9 @@
         "NSUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you.",
         "UIBackgroundModes": ["remote-notification", "remote-notification"],
         "UNUserNotificationCenterUsageDescription": "This app uses notifications to inform you of updates and alerts.",
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "This app needs access to the camera to allow you to upload photos of cakes.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library so you can select images of cakes."
       }
     },
     "android": {
@@ -26,7 +28,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.avielandbar.cakebusinessapp"
+      "package": "com.avielandbar.cakebusinessapp",
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",
