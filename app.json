@@ -29,7 +29,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.avielandbar.cakebusinessapp",
-      "usesCleartextTraffic": true
+      "usesCleartextTraffic": false
     },
     "web": {
       "bundler": "metro",

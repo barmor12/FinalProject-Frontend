@@ -122,7 +122,10 @@ export default function AdminNotificationsScreen() {
       }
 
       const result = await response.json();
-      Alert.alert("Success", `Notification sent to ${result.sentTo} customers`);
+      Alert.alert(
+        "Success",
+        `Notification sent to ${result.sentTo || 0} customers`
+      );
 
       // Clear form and refresh list
       setTitle("");
@@ -130,7 +133,9 @@ export default function AdminNotificationsScreen() {
       fetchRecentNotifications();
     } catch (error) {
       console.error("Error sending notification:", error);
-      Alert.alert("Error", "Failed to send notification");
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to send notification";
+      Alert.alert("Error", errorMessage);
     } finally {
       setLoading(false);
     }
