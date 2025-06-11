@@ -721,9 +721,9 @@ const styles = StyleSheet.create({
         fontWeight: '800',
         color: '#6b4226',
         letterSpacing: 0.5,
-        flex: 1,                     // הכותרת תתפוס את כל הרוחב הפנוי
-        flexWrap: 'wrap',            // אם ארוכה – תרד שורה במקום לדחוף החוצה
-        paddingRight: 60,            // משאירים מקום פיזי לכפתור (רוחב-בערך)
+        flex: 1,
+        flexWrap: 'wrap',
+        paddingRight: 60,
     },
     modalDescription: {
         fontSize: 16,
