@@ -19,11 +19,15 @@ jest.mock('@/hooks/useColorScheme', () => ({
     useColorScheme: () => 'light',
 }));
 
-// Mock the Platform API
-jest.mock('react-native/Libraries/Utilities/Platform', () => ({
-    OS: 'ios',
-    select: jest.fn((obj) => obj.ios),
-}));
+// Mock the Platform API to support the full react-native Platform module
+jest.mock('react-native', () => {
+    const RN = jest.requireActual('react-native');
+    RN.Platform = {
+        OS: 'ios',
+        select: (options) => options.ios,
+    };
+    return RN;
+});
 jest.mock('@expo/vector-icons', () => ({
     Ionicons: () => null,
 }));
