@@ -1,11 +1,11 @@
+import React from "react";
+import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
+
 jest.mock("react-native", () => {
   const RN = jest.requireActual("react-native");
   RN.Platform.OS = "ios";
   return RN;
 });
-
-import React from "react";
-import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
 
 import AdminDiscountCodes from "@/app/adminScreens/adminDiscountCodesScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -36,7 +36,7 @@ describe("AdminDiscountCodes Screen", () => {
   });
 
   it("renders discount codes list", async () => {
-    let getByText;
+    let getByText!: (text: string) => any;
     await act(async () => {
       ({ getByText } = render(<AdminDiscountCodes />));
     });
@@ -48,7 +48,7 @@ describe("AdminDiscountCodes Screen", () => {
   });
 
   it("does not allow creating a code with missing fields", async () => {
-    let getByText;
+    let getByText!: (text: string) => any;
     await act(async () => {
       ({ getByText } = render(<AdminDiscountCodes />));
     });
@@ -59,7 +59,9 @@ describe("AdminDiscountCodes Screen", () => {
   it("allows creating a new discount code", async () => {
     (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce("mocked_token");
 
-    let getByPlaceholderText, getByText;
+    let getByPlaceholderText: (text: string) => any = () => null as any;
+    let getByText: (text: string) => any = () => null as any;
+
     await act(async () => {
       ({ getByPlaceholderText, getByText } = render(<AdminDiscountCodes />));
     });

@@ -182,6 +182,19 @@ const styles = StyleSheet.create({
       backgroundColor: "#fff",
       textAlign: "left",
     },
+    banner: {
+      backgroundColor: "#fff3e6",
+      padding: 20,
+      borderRadius: 10,
+      marginBottom: 10,
+      alignItems: "center",
+    },
+    sectionTitle: {
+      fontSize: 18,
+      fontWeight: "600",
+      marginVertical: 10,
+      color: "#6b4226",
+    },
   });
 
   export default styles;
