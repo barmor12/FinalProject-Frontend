@@ -718,11 +718,12 @@ const styles = StyleSheet.create({
     },
     modalTitle: {
         fontSize: 26,
-        fontWeight: "800",
-        color: "#6b4226",
-        marginBottom: 12,
-        textAlign: "center",
+        fontWeight: '800',
+        color: '#6b4226',
         letterSpacing: 0.5,
+        flex: 1,
+        flexWrap: 'wrap',
+        paddingRight: 60,
     },
     modalDescription: {
         fontSize: 16,
@@ -795,15 +796,16 @@ const styles = StyleSheet.create({
         color: '#6b4226',
     },
     modalTitleRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+        position: 'relative',        // מאפשר לכפתור להתמקם יחסית לשורה
         marginBottom: 10,
     },
     modalLikeButton: {
+        position: 'absolute',        // כפתור יושב בפינה – לא מושפע מאורך הכותרת
+        top: 0,
+        right: 0,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'rgba(255,255,255,0.8)',
         paddingHorizontal: 12,
         paddingVertical: 6,
         borderRadius: 20,
