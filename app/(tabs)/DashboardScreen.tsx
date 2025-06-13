@@ -24,7 +24,7 @@ interface Product {
   name: string;
   image: string;
   description: string;
-  ingredients: string[];
+  ingredients: string[]; // Can contain "contains nuts", "gluten-free", etc.
   price: number;
   stock: number;
 }
@@ -52,8 +52,11 @@ export default function DashboardScreen() {
     let searched = products;
 
     if (text.trim() !== "") {
-      searched = searched.filter((product) =>
-        product.name.toLowerCase().includes(text.toLowerCase())
+      const lowerText = text.toLowerCase();
+      searched = searched.filter(
+        (product) =>
+          product.name.toLowerCase().includes(lowerText) ||
+          product.ingredients.some((ing) => ing.toLowerCase().includes(lowerText))
       );
     }
 
@@ -320,7 +323,7 @@ export default function DashboardScreen() {
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}
-            {isFavorite && <Text style={styles.favoriteLabel}>❤️ מועדף</Text>}
+            {isFavorite && <Text style={styles.favoriteLabel}>❤️ Favorite</Text>}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -362,17 +365,31 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      <View style={{ backgroundColor: "#fff3e6", padding: 20, borderRadius: 10, marginBottom: 10 }}>
+        <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
+          Discover Delicious Cakes!
+        </Text>
+        <Text style={{ fontSize: 14, color: "#6b4226", textAlign: "center", marginTop: 6 }}>
+          Browse our collection, mark your favorites and order now 🍰
+        </Text>
+      </View>
 
       {searchVisible && (
         <View style={styles.searchBlock}>
           <TextInput
             style={styles.searchInputFull}
-            placeholder="Search by name..."
+            placeholder="Search by name, ingredient, or allergen..."
             value={searchText}
             onChangeText={handleSearch}
             autoFocus
             textAlign="left"
           />
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+            <Text style={{ marginRight: 8, color: "#6b4226" }}>🔍 Try typing:</Text>
+            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Chocolate</Text>
+            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Gluten</Text>
+            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Nuts</Text>
+          </View>
         </View>
       )}
 
@@ -403,9 +420,13 @@ export default function DashboardScreen() {
           <TouchableOpacity
             style={styles.filterChip}
             onPress={() => {
-              const sortedInStock = products
+              const sortedInStock = [...products]
                 .filter((p) => p.stock > 0)
-                .sort((a, b) => b.stock - a.stock);
+                .sort((a, b) => {
+                  const direction = sortOrder === "asc" ? 1 : -1;
+                  return direction * (b.stock - a.stock);
+                });
+              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
               setFilteredProducts(sortedInStock);
             }}
           >
@@ -413,10 +434,15 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </ScrollView>
       </View>
+      <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
+        Explore Cakes
+      </Text>
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item._id}
-        renderItem={renderProductCardHorizontal}
+        renderItem={renderProductCardVertical}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -424,5 +450,3 @@ export default function DashboardScreen() {
     </SafeAreaView>
   );
 }
-
-
