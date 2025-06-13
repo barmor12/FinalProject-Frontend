@@ -16,6 +16,7 @@ import {
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
+import styles from "../app/styles/OrderDetailsScreenStyles"; // Importing styles
 
 interface Cake {
   _id: string;
@@ -89,7 +90,7 @@ export default function OrderDetailsScreen() {
     }
   };
 
-  // פונקציה לשליחת מייל ביקורת – מופעלת פעם אחת
+
   const sendReviewEmail = async (
     orderId: string | undefined,
     customerEmail: string | undefined
@@ -132,7 +133,7 @@ export default function OrderDetailsScreen() {
     }
   };
 
-  // פונקציה לעדכון סטטוס הזמנה
+  // Function to update order status
   const updateOrderStatus = async () => {
     if (!selectedStatus) {
       Alert.alert("Error", "Please select a status.");
@@ -179,7 +180,7 @@ export default function OrderDetailsScreen() {
       );
       setModalVisible(false);
 
-      // כאשר הסטטוס מתעדכן ל-delivered – נשלח מייל ביקורת
+
       if (newStatus === "delivered" && order && order.user?.email) {
         await sendReviewEmail(order._id, order.user.email);
       }
@@ -513,242 +514,3 @@ export default function OrderDetailsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
-  scrollView: { paddingBottom: 20 },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#6b4226",
-  },
-  subTitle: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 10,
-    color: "#6b4226",
-  },
-  status: { fontWeight: "bold", textTransform: "capitalize" },
-  pending: { color: "#FFA500" },
-  confirmed: { color: "#007bff" },
-  delivered: { color: "#28a745" },
-  cancelled: { color: "#d9534f" },
-  scrollContent: { paddingBottom: 120 },
-  itemContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  input: {
-    width: "100%",
-    height: 100,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 10,
-    backgroundColor: "#fff",
-    textAlignVertical: "top",
-    marginBottom: 10,
-    color: "#333",
-  },
-  itemImage: { width: 80, height: 80, borderRadius: 8, marginRight: 15 },
-  itemDetails: { flex: 1 },
-  itemName: { fontSize: 18, fontWeight: "bold", color: "#6b4226" },
-  itemQuantity: { fontSize: 16, color: "#6b4226" },
-  totalPrice: {
-    fontSize: 22,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginVertical: 15,
-    color: "#6b4226",
-  },
-  updateStatusButton: {
-    backgroundColor: "#6b4226",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  updateStatusText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  contactButton: {
-    backgroundColor: "#D2B48C",
-    padding: 12,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 10,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  contactText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalContent: {
-    backgroundColor: "#f9f3ea",
-    padding: 20,
-    borderRadius: 10,
-    width: "80%",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: "#6b4226",
-  },
-  modalButton: {
-    padding: 12,
-    backgroundColor: "#fff",
-    marginVertical: 5,
-    width: "100%",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  selectedStatus: { backgroundColor: "#D2B48C" },
-  modalButtonClose: {
-    padding: 12,
-    backgroundColor: "#d9534f",
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  modalButtonConfirm: {
-    padding: 12,
-    backgroundColor: "#6b4226",
-    marginTop: 10,
-    width: "100%",
-    alignItems: "center",
-    borderRadius: 8,
-  },
-  errorText: { fontSize: 18, color: "red", textAlign: "center", marginTop: 20 },
-  contactInfo: {
-    fontSize: 18,
-    textAlign: "center",
-    marginVertical: 10,
-    color: "#6b4226",
-  },
-
-  // Loading screen styles
-  loadingContainer: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f3ea",
-  },
-  loadingOverlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(249, 243, 234, 0.7)",
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: "#6b4226",
-    fontWeight: "600",
-  },
-  loadingHeader: {
-    alignItems: "center",
-    marginBottom: 15,
-  },
-  loadingScrollView: {
-    paddingBottom: 20,
-  },
-  loadingFooter: {
-    alignItems: "center",
-    marginTop: 10,
-  },
-  skeletonTitle: {
-    width: 200,
-    height: 30,
-    borderRadius: 4,
-    backgroundColor: "#D2B48C50",
-    marginBottom: 10,
-  },
-  skeletonSubtitle: {
-    width: 180,
-    height: 22,
-    borderRadius: 4,
-    backgroundColor: "#D2B48C40",
-    marginBottom: 8,
-  },
-  skeletonItem: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10,
-    shadowColor: "#00000015",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 2,
-  },
-  skeletonImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-    backgroundColor: "#D2B48C30",
-    marginRight: 15,
-  },
-  skeletonDetails: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  skeletonText: {
-    width: "100%",
-    height: 18,
-    borderRadius: 4,
-    backgroundColor: "#D2B48C40",
-    marginBottom: 10,
-  },
-  skeletonTextShort: {
-    width: "60%",
-    height: 14,
-    borderRadius: 4,
-    backgroundColor: "#D2B48C30",
-  },
-  skeletonPrice: {
-    width: 120,
-    height: 26,
-    borderRadius: 4,
-    backgroundColor: "#D2B48C60",
-    marginVertical: 15,
-  },
-  skeletonButton: {
-    width: "100%",
-    height: 48,
-    borderRadius: 8,
-    backgroundColor: "#6b422650",
-    marginBottom: 10,
-  },
-});

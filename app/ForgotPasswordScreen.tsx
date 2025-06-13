@@ -20,7 +20,7 @@ export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 📌 פונקציה לשליחת בקשת שחזור סיסמה
+
   const handleForgotPassword = async () => {
     if (!email) {
       Alert.alert("Error", "Please enter your email address.");
@@ -35,10 +35,10 @@ export default function ForgotPasswordScreen() {
         body: JSON.stringify({ email: email.toLowerCase().trim() }),
       });
 
-      const text = await response.text(); // קרא את התגובה כטקסט כדי לבדוק אותה
+      const text = await response.text(); // Get the raw response text
       console.log("🔹 Server raw response:", text);
 
-      // ננסה לנתח את התגובה ל-JSON
+
       let data;
       try {
         data = JSON.parse(text);

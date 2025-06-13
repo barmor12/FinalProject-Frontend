@@ -3,7 +3,6 @@ import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   Alert,
@@ -11,17 +10,18 @@ import {
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
-import { Picker } from "@react-native-picker/picker"; // Dropdown לבחירת עוגות
+import { Picker } from "@react-native-picker/picker"; // Dropdown to select cakes
 import config from "../config";
+import styles from "../app/styles/CreateOrderScreenStyles";
 
-// מבנה נתונים של עוגה
+// Cake data structure
 interface Cake {
   _id: string;
   name: string;
   price: number;
 }
 
-// מסך יצירת הזמנה חדשה
+// New order creation screen
 export default function CreateOrderScreen() {
   const [cakes, setCakes] = useState<Cake[]>([]);
   const [selectedCake, setSelectedCake] = useState<Cake | null>(null);
@@ -29,7 +29,7 @@ export default function CreateOrderScreen() {
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation<any>();
 
-  // **שליפת רשימת העוגות**
+  // **Fetch list of cakes**
   useEffect(() => {
     const fetchCakes = async () => {
       try {
@@ -43,7 +43,7 @@ export default function CreateOrderScreen() {
     fetchCakes();
   }, []);
 
-  // **פונקציה לשליחת ההזמנה**
+  // **Function to submit the order**
   const handlePlaceOrder = async () => {
     if (!selectedCake || quantity < 1) {
       Alert.alert("Error", "Please select a cake and enter a valid quantity.");
@@ -79,7 +79,7 @@ export default function CreateOrderScreen() {
 
       if (response.status === 201) {
         Alert.alert("Success", "Your order has been placed successfully!");
-        navigation.navigate("OrdersScreen"); // חזרה לרשימת ההזמנות
+        navigation.navigate("OrdersScreen"); // Navigate back to orders list
       } else {
         Alert.alert("Error", "Failed to place order.");
       }
@@ -95,7 +95,7 @@ export default function CreateOrderScreen() {
     <SafeAreaView style={styles.container}>
       <Text style={styles.title}>Create New Order</Text>
 
-      {/* תפריט בחירת עוגה */}
+      {/* Cake selection dropdown */}
       <Text style={styles.label}>Select a Cake:</Text>
       <View style={styles.pickerContainer}>
         <Picker
@@ -112,7 +112,7 @@ export default function CreateOrderScreen() {
         </Picker>
       </View>
 
-      {/* שדה כמות */}
+      {/* Quantity input field */}
       <Text style={styles.label}>Quantity:</Text>
       <TextInput
         style={styles.input}
@@ -124,14 +124,14 @@ export default function CreateOrderScreen() {
         }}
       />
 
-      {/* מחיר כולל */}
+      {/* Total price display */}
       {selectedCake && (
         <Text style={styles.totalPrice}>
           Total Price: ${(selectedCake.price * quantity).toFixed(2)}
         </Text>
       )}
 
-      {/* כפתור יצירת הזמנה */}
+      {/* Submit order button */}
       <TouchableOpacity
         style={styles.orderButton}
         onPress={handlePlaceOrder}
@@ -144,61 +144,3 @@ export default function CreateOrderScreen() {
     </SafeAreaView>
   );
 }
-
-// **עיצוב המסך**
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    backgroundColor: "#f9f3ea",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#6b4226",
-    marginTop: 10,
-  },
-  pickerContainer: {
-    borderWidth: 1,
-    borderColor: "#6b4226",
-    borderRadius: 8,
-    backgroundColor: "#fff",
-    marginTop: 5,
-    padding: 5,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#6b4226",
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 18,
-    backgroundColor: "#fff",
-    marginTop: 5,
-  },
-  totalPrice: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
-    marginVertical: 20,
-  },
-  orderButton: {
-    backgroundColor: "#28a745",
-    padding: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  orderButtonText: {
-    color: "#fff",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});

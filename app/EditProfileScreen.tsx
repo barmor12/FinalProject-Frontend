@@ -177,7 +177,7 @@ export default function EditProfileScreen() {
         {
           text: "OK",
           onPress: () => {
-            router.back(); // לדוגמה: מעבר למסך הפרופיל
+            router.back(); // Navigate back to the previous screen
           },
         },
       ]);

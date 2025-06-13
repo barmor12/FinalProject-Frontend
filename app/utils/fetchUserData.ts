@@ -3,27 +3,27 @@ import config from "../../config";
 
 export const fetchUserData = async () => {
   try {
-    // שליפת הטוקן מתוך AsyncStorage
+    // Fetch the token from AsyncStorage
     const token = await AsyncStorage.getItem("accessToken");
     if (!token) {
       console.warn("No access token found.");
       return null;
     }
 
-    // שליחת בקשה ל-Backend כדי להביא את פרטי המשתמש
+    // Send request to backend to retrieve user profile
     const response = await fetch(`${config.BASE_URL}/user/profile`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // הוספת הטוקן לכותרת Authorization
+        Authorization: `Bearer ${token}`, // Add token to Authorization header
       },
     });
 
-    // בדיקת הסטטוס של התגובה
+    // Check the response status
     if (!response.ok) {
       console.error("Failed to fetch user data:", response.status);
 
-      // אם המשתמש לא נמצא (לדוגמה, אם נמחק מהמערכת), יש להסיר את הטוקן מהאחסון ולבצע התנתקות
+      // If user not found (e.g., deleted from system), remove tokens and logout
       if (response.status === 404) {
         console.warn("User not found. Clearing stored tokens...");
         await AsyncStorage.removeItem("accessToken");
@@ -34,10 +34,10 @@ export const fetchUserData = async () => {
       return null;
     }
 
-    // המרת התגובה ל-JSON
+    // Parse response as JSON
     const data = await response.json();
 
-    // בדיקה שהמידע על המשתמש תקף
+    // Validate that user data is valid
     if (!data || !data._id) {
       console.warn("Invalid user data received. Clearing stored tokens...");
       await AsyncStorage.removeItem("accessToken");
@@ -45,8 +45,9 @@ export const fetchUserData = async () => {
       return null;
     }
 
-    return data; // החזרת פרטי המשתמש
+    return data; // Return user data
   } catch (error) {
+    // Handle fetch errors
     console.error("Error fetching user data:", error);
     return null;
   }

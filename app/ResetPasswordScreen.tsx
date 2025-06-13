@@ -21,7 +21,7 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 📌 פונקציה לאיפוס סיסמה
+
   const handleResetPassword = async () => {
     if (!email || !code || !newPassword || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields.");

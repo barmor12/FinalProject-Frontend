@@ -46,7 +46,7 @@ export default function LoginScreen() {
   } | null>(null);
   const [isAuthInProgress, setIsAuthInProgress] = useState(false);
 
-  // פונקציה לרענון ה-Access Token
+
   const refreshAccessToken = async () => {
     try {
       console.log("🔄 Refreshing access token...");
@@ -81,7 +81,7 @@ export default function LoginScreen() {
     }
   };
 
-  // פונקציה לאתחול האפליקציה: בודקת התחברות, מוודאת טעינת role, ומבצעת ניווט בטוח
+
   const initializeApp = async () => {
     let accessToken = await AsyncStorage.getItem("accessToken");
     const role = await AsyncStorage.getItem("role");
@@ -93,7 +93,7 @@ export default function LoginScreen() {
         if (decoded.userId) {
           await AsyncStorage.setItem("userId", decoded.userId);
         }
-        // בדיקה אם הטוקן פג תוקף
+
         if (decoded.exp * 1000 < Date.now()) {
           console.log("🔄 Token expired, refreshing...");
           const refreshed = await refreshAccessToken();

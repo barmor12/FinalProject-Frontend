@@ -4,13 +4,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 
 /**
- * מגדיר את ה־notification handler (קובע כיצד תוצג כל הודעה).
+ * Sets the notification handler (defines how each notification will be displayed).
  */
 export function registerNotifications() {
-  // כבר קבענו את ה־handler בהגדרה העליונה
+  // The handler was already set in the upper definition
 }
 
-// קבע את ה־handler להצגת ההודעה
+// Set the handler for displaying the notification
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -22,7 +22,7 @@ Notifications.setNotificationHandler({
 });
 
 /**
- * מבקש הרשאות דחיפת הודעות ושולח לטוקן לשרת
+ * Requests push notification permissions and sends the token to the server
  */
 export async function registerPushToken() {
   const { status: existing } = await Notifications.getPermissionsAsync();
@@ -54,7 +54,7 @@ export async function registerPushToken() {
 }
 
 /**
- * מתזמן הודעה בדחייה של 5 שניות (לדוגמה)
+ * Schedules a test notification with a 5-second delay (example)
  */
 export async function scheduleTestNotification() {
   await Notifications.scheduleNotificationAsync({
@@ -70,7 +70,7 @@ export async function scheduleTestNotification() {
 }
 
 /**
- * מאזין לקבלה ותגובה על הודעות
+ * Listens for notification reception and responses
  */
 export function setupNotificationListeners() {
   const sub1 = Notifications.addNotificationReceivedListener((notification) => {

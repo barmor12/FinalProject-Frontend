@@ -11,13 +11,13 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-// מונע סגירה אוטומטית של מסך הפתיחה
+// Prevents the splash screen from closing automatically
 SplashScreen.preventAutoHideAsync();
 
 export type RootStackParamList = {
   AdminOrdersScreen: { shouldRefresh?: boolean };
   OrderDetailsScreen: { orderId: string };
-  AdminUsersScreen: undefined; // אין פרמטרים למסך הזה
+  AdminUsersScreen: undefined; // No parameters for this screen
 };
 
 export default function RootLayout() {
@@ -32,17 +32,17 @@ export default function RootLayout() {
       <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
         <Stack
           screenOptions={{
-            headerShown: false, // מחיקת כותרת
+            headerShown: false, // Remove header
           }}
         >
-          {/* מסכי הרשמה ואימות */}
+          {/* Registration and verification screens */}
           <Stack.Screen name="SignUpScreen" />
           <Stack.Screen
             name="EmailVerificationScreen"
             options={{ title: "Verify Email" }}
           />
 
-          {/* כאן יש להשתמש ב-component */}
+          {/* Use a component here */}
           <Stack.Screen name="adminScreens/manageUsersScreen" />
           <Stack.Screen name="ProductDetailsScreen" />
           <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" />
@@ -56,11 +56,11 @@ export default function RootLayout() {
           <Stack.Screen name="adminScreens/adminOrdersScreen" />
           <Stack.Screen name="OrderDetailsScreen" />
 
-          {/* הטאבים נטענים תמיד */}
+          {/* Tabs are always loaded */}
           <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
           <Stack.Screen
             name="(admintabs)"
-            options={{ gestureEnabled: false }} // Disable swipe back for admin dashboard
+            options={{ gestureEnabled: false }} // Disable swipe-back gesture for admin dashboard
           />
         </Stack>
 
