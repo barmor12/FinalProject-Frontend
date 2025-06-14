@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Image,
   FlatList,
   TouchableOpacity,
@@ -46,6 +45,7 @@ export default function DashboardScreen() {
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
   // Sort order state for price sorting
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [activeFilters, setActiveFilters] = useState({ favorites: false, inStock: true });
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -85,6 +85,7 @@ export default function DashboardScreen() {
   const toggleShowFavorites = () => {
     setShowOnlyLiked((prev) => {
       const newVal = !prev;
+      setActiveFilters(prev => ({ ...prev, favorites: newVal }));
       if (newVal) {
         // Filter products to show only liked products
         setFilteredProducts(products.filter((p) => likedProducts.has(p._id)));
@@ -130,7 +131,7 @@ export default function DashboardScreen() {
         ...product,
         image: product.image?.url?.startsWith("http")
           ? product.image.url
-          : "https://via.placeholder.com/150",
+          : "https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png",
       }));
 
       setProducts(updatedProducts);
@@ -255,44 +256,18 @@ export default function DashboardScreen() {
     }
   };
 
-  // Render horizontal product card as a wide row with favorite button and navigation on press
-  const renderProductCardHorizontal = ({ item }: { item: Product }) => {
-    const isFavorite = likedProducts.has(item._id);
-    return (
-      <TouchableOpacity
-        onPress={() => {
-          if (item.stock > 0) {
-            navigateToProduct(item);
-          }
-        }}
-        style={styles.horizontalProductCard}
-      >
-        <Image source={{ uri: item.image }} style={styles.wideProductImage} />
-        <View style={styles.wideProductInfo}>
-          <View
-            style={{ flexDirection: "row", justifyContent: "space-between" }}
-          >
-            <Text style={styles.productName}>{item.name}</Text>
-            <TouchableOpacity
-              onPress={() => handleLike(item._id)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Ionicons
-                name={isFavorite ? "heart" : "heart-outline"}
-                size={24}
-                color={isFavorite ? "#d9534f" : "#ccc"}
-              />
-            </TouchableOpacity>
-          </View>
-          {item.stock <= 0 ? (
-            <Text style={styles.outOfStockText}>Out of Stock</Text>
-          ) : (
-            <Text style={styles.priceTextRight}>${item.price.toFixed(2)}</Text>
-          )}
-        </View>
-      </TouchableOpacity>
-    );
+  const handleInStockFilter = () => {
+    setActiveFilters(prev => ({ ...prev, inStock: !prev.inStock }));
+    const sortedInStock = [...products]
+      .filter((p) => p.stock > 0)
+      .sort((a, b) => {
+        const direction = sortOrder === "asc" ? 1 : -1;
+        return direction * (b.stock - a.stock);
+      });
+    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    setFilteredProducts(sortedInStock);
   };
+
   // Render vertical product card with like button (modern, favorite highlight)
   const renderProductCardVertical = ({ item }: { item: Product }) => {
     const isFavorite = likedProducts.has(item._id);
@@ -365,7 +340,7 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
       </View>
-      <View style={{ backgroundColor: "#fff3e6", padding: 20, borderRadius: 10, marginBottom: 10 }}>
+      <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
         <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
           Discover Delicious Cakes!
         </Text>
@@ -393,14 +368,19 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      <Text style={styles.title}> Bakey Cakes 🍰</Text>
       <View style={styles.filtersContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <TouchableOpacity
-            style={styles.filterChip}
+            style={[
+              styles.filterChip,
+              activeFilters.favorites && styles.activeFilterChip
+            ]}
             onPress={toggleShowFavorites}
           >
-            <Text style={styles.filterText}>❤️ Favorites</Text>
+            <Text style={[
+              styles.filterText,
+              activeFilters.favorites && styles.activeFilterText
+            ]}>❤️ Favorites</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.filterChip}
@@ -418,19 +398,16 @@ export default function DashboardScreen() {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => {
-              const sortedInStock = [...products]
-                .filter((p) => p.stock > 0)
-                .sort((a, b) => {
-                  const direction = sortOrder === "asc" ? 1 : -1;
-                  return direction * (b.stock - a.stock);
-                });
-              setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-              setFilteredProducts(sortedInStock);
-            }}
+            style={[
+              styles.filterChip,
+              activeFilters.inStock && styles.activeFilterChip
+            ]}
+            onPress={handleInStockFilter}
           >
-            <Text style={styles.filterText}>✅ In Stock</Text>
+            <Text style={[
+              styles.filterText,
+              activeFilters.inStock && styles.activeFilterText
+            ]}>✅ In Stock</Text>
           </TouchableOpacity>
         </ScrollView>
       </View>

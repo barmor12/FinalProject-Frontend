@@ -1,3 +1,5 @@
+/* eslint-disable no-undef */
+
 // Mock the expo-router
 jest.mock('expo-router', () => ({
     useRouter: () => ({

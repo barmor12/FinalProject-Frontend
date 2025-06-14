@@ -3,7 +3,6 @@ import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   FlatList,
   Image,
   TouchableOpacity,
@@ -113,7 +112,7 @@ export default function CheckoutScreen() {
         throw new Error("Failed to fetch addresses");
       }
 
-      const data: Address[] = await response.json(); 
+      const data: Address[] = await response.json();
       setAddresses(data);
 
 
@@ -229,21 +228,7 @@ export default function CheckoutScreen() {
     return discounted.toFixed(2);
   };
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
-      <Image
-        source={{ uri: item.cake.image.url }}
-        style={styles.itemImage}
-        resizeMode="cover"
-      />
 
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.cake.name}</Text>
-        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-        <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-      </View>
-    </View>
-  );
   const handlePlaceOrder = async () => {
     try {
       if (
@@ -308,9 +293,44 @@ export default function CheckoutScreen() {
         throw new Error(data.message || "Failed to place order");
       }
 
-      Alert.alert("Success", "Your order has been placed!", [
-        { text: "OK", onPress: () => router.replace("/OrdersScreen") },
-      ]);
+      // Log the response to see its structure
+      console.log('Order creation response:', data);
+
+      // Check if we have a valid order ID
+      if (!data._id) {
+        throw new Error("Order ID not found in response");
+      }
+
+      // Send invoice email with the order ID from the response
+      const invoiceResponse = await fetch(`${config.BASE_URL}/order/send-invoice`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          orderId: data._id, // Use data._id directly since that's likely the structure
+          items: cartItems,
+          total: calculateTotal(),
+          shippingMethod,
+          deliveryDate: formattedDate,
+          address: selectedAddress,
+          paymentMethod,
+          creditCard: selectedCard ? `**** **** **** ${selectedCard.cardNumber.slice(-4)}` : null,
+        }),
+      });
+
+      if (!invoiceResponse.ok) {
+        console.error("Failed to send invoice email");
+      }
+
+      Alert.alert(
+        "Success",
+        "Your order has been placed! A receipt has been sent to your email.",
+        [
+          { text: "OK", onPress: () => router.replace("/OrdersScreen") },
+        ]
+      );
     } catch (error) {
       console.error("Error placing order:", error);
       Alert.alert("Error", "Failed to place order. Please try again.");
@@ -390,17 +410,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      // Set the year to current year for all dates
-      const currentYearDate = new Date(selectedDate);
-      currentYearDate.setFullYear(new Date().getFullYear());
-      setDeliveryDate(currentYearDate);
-    }
-  };
+
 
   const toggleDatePicker = () => {
     setShowDatePicker(!showDatePicker);
