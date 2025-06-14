@@ -11,6 +11,7 @@ import {
   ScrollView,
   RefreshControl,
   SafeAreaView,
+  Linking,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,6 +20,7 @@ import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import styles from "../styles/ProfileScreenStyles";
+import { FontAwesome } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -264,6 +266,33 @@ export default function ProfileScreen() {
             <MaterialIcons name="logout" size={20} color="#fff" />
             <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
+
+          <Text style={styles.contactLabel}>Contact Us</Text>
+<View style={styles.contactButtonsContainer}>
+  <TouchableOpacity
+    onPress={() => {
+      const email = "mybakeyapp@gmail.com";
+      const subject = "Support Inquiry";
+      const body = "Hello, I need help with...";
+      const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      Linking.openURL(mailtoUrl);
+    }}
+    style={styles.iconButton}
+  >
+    <MaterialIcons name="email" size={24} color="#fff" />
+  </TouchableOpacity>
+
+  <TouchableOpacity
+    onPress={() => {
+      const message = "Hello, I need help with my order.";
+      const whatsappUrl = `https://wa.me/972509667461?text=${encodeURIComponent(message)}`;
+      Linking.openURL(whatsappUrl);
+    }}
+    style={styles.iconButton}
+  >
+    <FontAwesome name="whatsapp" size={24} color="#fff" />
+  </TouchableOpacity>
+</View>
         </View>
       </ScrollView>
     </SafeAreaView>

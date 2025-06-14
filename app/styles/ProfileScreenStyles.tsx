@@ -85,6 +85,24 @@ const styles = StyleSheet.create({
       fontWeight: "bold",
       marginLeft: 10,
     },
+    contactLabel: {
+      fontSize: 16,
+      fontWeight: "bold",
+      marginTop: 30,
+      marginBottom: 10,
+      textAlign: "center",
+      color: "#333",
+    },
+    contactButtonsContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      gap: 15,
+    },
+    iconButton: {
+      backgroundColor: "#d49a6a",
+      padding: 10,
+      borderRadius: 30,
+    },
   });
 
   export default styles;
