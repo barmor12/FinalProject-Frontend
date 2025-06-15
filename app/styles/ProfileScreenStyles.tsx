@@ -99,10 +99,57 @@ const styles = StyleSheet.create({
       gap: 15,
     },
     iconButton: {
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: "#d49a6a",
-      padding: 10,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
       borderRadius: 30,
+      marginHorizontal: 6,
     },
-  });
+    iconButtonText: {
+      color: "#fff",
+      fontSize: 14,
+      fontWeight: "600",
+      marginLeft: 6,
+    },
+  
 
+
+  contactInputSection: {
+    width: "90%",
+    marginTop: 15,
+    alignItems: "center",
+  },
+  contactInputLabel: {
+    alignSelf: "flex-start",
+    marginBottom: 5,
+    fontSize: 14,
+    color: "#5a3827",
+    fontWeight: "600",
+  },
+  contactInput: {
+    width: "100%",
+    height: 100,
+    backgroundColor: "#fff",
+    borderColor: "#ccc",
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    textAlignVertical: "top",
+    color: "#333",
+  },
+  sendButton: {
+    backgroundColor: "#d49a6a",
+    marginTop: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+  },
+  sendButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+    fontSize: 16,
+  },
+});
   export default styles;

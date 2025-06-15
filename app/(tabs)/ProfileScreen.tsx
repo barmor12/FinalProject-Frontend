@@ -12,6 +12,7 @@ import {
   RefreshControl,
   SafeAreaView,
   Linking,
+  TextInput,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -35,6 +36,25 @@ export default function ProfileScreen() {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [contactMessage, setContactMessage] = useState("");
+  const [contactMethod, setContactMethod] = useState<"email" | "whatsapp" | null>(null);
+
+  const handleSendContact = () => {
+    const fullMessage = contactMessage;
+
+    if (contactMethod === "email") {
+      const email = "mybakeyapp@gmail.com";
+      const subject = "Need Assistance";
+      const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(fullMessage)}`;
+      Linking.openURL(mailtoUrl);
+    } else if (contactMethod === "whatsapp") {
+      const whatsappUrl = `https://wa.me/972509667461?text=${encodeURIComponent(fullMessage)}`;
+      Linking.openURL(whatsappUrl);
+    }
+
+    setContactMessage("");
+    setContactMethod(null);
+  };
 
   useEffect(() => {
     fetchUserDataAndSetState();
@@ -268,31 +288,44 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <Text style={styles.contactLabel}>Contact Us</Text>
-<View style={styles.contactButtonsContainer}>
-  <TouchableOpacity
-    onPress={() => {
-      const email = "mybakeyapp@gmail.com";
-      const subject = "Support Inquiry";
-      const body = "Hello, I need help with...";
-      const mailtoUrl = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-      Linking.openURL(mailtoUrl);
-    }}
-    style={styles.iconButton}
-  >
-    <MaterialIcons name="email" size={24} color="#fff" />
-  </TouchableOpacity>
+          <View style={styles.contactButtonsContainer}>
+            <TouchableOpacity
+              onPress={() => setContactMethod("email")}
+              style={styles.iconButton}
+            >
+              <MaterialIcons name="email" size={20} color="#fff" />
+              <Text style={styles.iconButtonText}>Email</Text>
+            </TouchableOpacity>
 
-  <TouchableOpacity
-    onPress={() => {
-      const message = "Hello, I need help with my order.";
-      const whatsappUrl = `https://wa.me/972509667461?text=${encodeURIComponent(message)}`;
-      Linking.openURL(whatsappUrl);
-    }}
-    style={styles.iconButton}
-  >
-    <FontAwesome name="whatsapp" size={24} color="#fff" />
-  </TouchableOpacity>
-</View>
+            <TouchableOpacity
+              onPress={() => setContactMethod("whatsapp")}
+              style={styles.iconButton}
+            >
+              <FontAwesome name="whatsapp" size={20} color="#fff" />
+              <Text style={styles.iconButtonText}>WhatsApp</Text>
+            </TouchableOpacity>
+          </View>
+
+          {contactMethod && (
+            <View style={styles.contactInputSection}>
+              <Text style={styles.contactInputLabel}>Write your message below:</Text>
+              <TextInput
+                style={styles.contactInput}
+                multiline
+                numberOfLines={4}
+                value={contactMessage}
+                onChangeText={setContactMessage}
+                placeholder="Type your message here..."
+                placeholderTextColor="#aaa"
+              />
+              <TouchableOpacity
+                style={styles.sendButton}
+                onPress={handleSendContact}
+              >
+                <Text style={styles.sendButtonText}>Send</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
