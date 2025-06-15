@@ -16,7 +16,8 @@ const styles = StyleSheet.create({
     },
     inputWrapper: {
       position: "relative",
-      marginBottom: 20,
+      marginBottom: 24,
+      paddingTop: 12, // מוסיף רווח בין ה-label לטקסט הראשוני
     },
     floatingLabel: {
       position: "absolute",
@@ -41,23 +42,26 @@ const styles = StyleSheet.create({
       borderColor: "#6b4226",
       padding: 10,
       paddingTop: 24,
-      borderRadius: 8,
+      borderRadius: 10,
       backgroundColor: "#fff",
       color: "#6b4226",
       fontSize: 14,
-      marginBottom: 10,
+      minHeight: 48,
+      textAlignVertical: "center",
     },
     imagePicker: {
-      backgroundColor: "#d49a6a",
-      padding: 10,
-      borderRadius: 8,
+      backgroundColor: "#fff",
+      padding: 16,
+      borderRadius: 10,
       alignItems: "center",
+      borderWidth: 1,
+      borderColor: "#6b4226",
       marginBottom: 10,
     },
     imagePickerText: {
-      color: "#fff",
+      color: "#6b4226",
       fontSize: 16,
-      fontWeight: "bold",
+      fontWeight: "600",
     },
     imagePreview: {
       width: "100%",

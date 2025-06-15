@@ -61,16 +61,32 @@ const styles = StyleSheet.create({
     },
     button: {
       backgroundColor: "#6b4226",
-      padding: 15,
-      borderRadius: 10,
-      width: "80%",
+      paddingVertical: 14,
+      paddingHorizontal: 25,
+      borderRadius: 12,
+      width: "85%",
       alignItems: "center",
-      marginBottom: 10,
+      marginBottom: 12,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4, // אפקט עומק באנדרואיד
+      transform: [{ scale: 1 }],
+    
+    },
+    buttonGrid: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      justifyContent: "space-between",
+      width: "90%",
+      marginBottom: 20,
     },
     buttonText: {
       color: "#fff",
-      fontSize: 16,
-      fontWeight: "bold",
+      fontSize: 17,
+      fontWeight: "600",
+      letterSpacing: 0.5,
     },
     logoutButton: {
       backgroundColor: "#b22222",

@@ -521,6 +521,27 @@ export default function CheckoutScreen() {
                       color="#6b4226"
                     />
                   </TouchableOpacity>
+                  {/* Inline DateTimePicker instead of Modal */}
+                  {showDatePicker && (
+                    <DateTimePicker
+                      value={deliveryDate || new Date()}
+                      mode="date"
+                      display={Platform.OS === "android" ? "calendar" : "spinner"}
+                      onChange={(event, selectedDate) => {
+                        if (Platform.OS === "android") {
+                          setShowDatePicker(false);
+                        }
+                        if (selectedDate) {
+                          const currentYearDate = new Date(selectedDate);
+                          currentYearDate.setFullYear(new Date().getFullYear());
+                          setDeliveryDate(currentYearDate);
+                        }
+                      }}
+                      minimumDate={new Date()}
+                      maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                      locale="en-GB"
+                    />
+                  )}
                 </View>
               )}
 
@@ -859,63 +880,6 @@ export default function CheckoutScreen() {
           </View>
         </Modal>
 
-        {showDatePicker && (
-          <Modal
-            transparent={true}
-            animationType="fade"
-            visible={showDatePicker}
-            onRequestClose={() => setShowDatePicker(false)}
-          >
-            <TouchableOpacity
-              style={{
-                flex: 1,
-                backgroundColor: "rgba(0,0,0,0.6)",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              activeOpacity={1}
-              onPressOut={() => setShowDatePicker(false)}
-            >
-              <View
-                style={{
-                  backgroundColor: "#fff",
-                  padding: 20,
-                  borderRadius: 12,
-                  width: "85%",
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 18,
-                    fontWeight: "bold",
-                    color: "#5A3827",
-                    marginBottom: 10,
-                    textAlign: "center",
-                  }}
-                >
-                  Select Delivery Date
-                </Text>
-
-                <DateTimePicker
-                  value={deliveryDate || new Date()}
-                  mode="date"
-                  display="default"
-                  onChange={(event, selectedDate) => {
-                    if (event.type === "set" && selectedDate) {
-                      const currentYearDate = new Date(selectedDate);
-                      currentYearDate.setFullYear(new Date().getFullYear());
-                      setDeliveryDate(currentYearDate);
-                    }
-                    setShowDatePicker(false);
-                  }}
-                  minimumDate={new Date()}
-                  maximumDate={new Date(new Date().getFullYear(), 11, 31)}
-                  locale="en-GB"
-                />
-              </View>
-            </TouchableOpacity>
-          </Modal>
-        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

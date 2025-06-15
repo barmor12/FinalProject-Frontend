@@ -28,6 +28,7 @@ export default function AddProductScreenAdmin() {
   const [price, setPrice] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [stock, setStock] = useState("");
+  const [allergens, setAllergens] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -90,6 +91,7 @@ export default function AddProductScreenAdmin() {
       formData.append("price", price);
       formData.append("ingredients", ingredients);
       formData.append("stock", stock);
+      formData.append("allergens", allergens);
       const imageName =
         image
           .split("/")
@@ -133,7 +135,7 @@ export default function AddProductScreenAdmin() {
       {item === "image" && (
         <>
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Text style={styles.imagePickerText}>Pick an image</Text>
+            <Text style={styles.imagePickerText}>📸 Tap here to choose a cake image</Text>
           </TouchableOpacity>
           {imageLoading ? (
             <ActivityIndicator
@@ -176,7 +178,6 @@ export default function AddProductScreenAdmin() {
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="Name"
               placeholderTextColor="#aaa"
             />
           </View>
@@ -190,11 +191,13 @@ export default function AddProductScreenAdmin() {
               Description
             </Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { height: 100, textAlignVertical: "top", paddingTop: 32 }]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Description"
+              placeholder="Enter a detailed description..."
               placeholderTextColor="#aaa"
+              multiline
+              numberOfLines={4}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -211,7 +214,6 @@ export default function AddProductScreenAdmin() {
               keyboardType="numeric"
               value={cost}
               onChangeText={setCost}
-              placeholder="Cost"
               placeholderTextColor="#aaa"
             />
           </View>
@@ -229,7 +231,6 @@ export default function AddProductScreenAdmin() {
               keyboardType="numeric"
               value={price}
               onChangeText={setPrice}
-              placeholder="Price"
               placeholderTextColor="#aaa"
             />
           </View>
@@ -256,7 +257,22 @@ export default function AddProductScreenAdmin() {
               style={styles.input}
               value={ingredients}
               onChangeText={setIngredients}
-              placeholder="Ingredients"
+              placeholderTextColor="#aaa"
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text
+              style={[
+                styles.floatingLabel,
+                allergens ? styles.floatingLabelActive : null,
+              ]}
+            >
+              Allergens
+            </Text>
+            <TextInput
+              style={styles.input}
+              value={allergens}
+              onChangeText={setAllergens}
               placeholderTextColor="#aaa"
             />
           </View>
@@ -274,7 +290,6 @@ export default function AddProductScreenAdmin() {
               keyboardType="numeric"
               value={stock}
               onChangeText={setStock}
-              placeholder="Stock"
               placeholderTextColor="#aaa"
             />
           </View>
@@ -289,8 +304,8 @@ export default function AddProductScreenAdmin() {
         <View style={styles.container}>
           <Text style={styles.title}>Add New Product</Text>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            {renderItem({ item: "inputs" })}
             {renderItem({ item: "image" })}
+            {renderItem({ item: "inputs" })}
             {renderItem({ item: "submitButton" })}
           </ScrollView>
         </View>
@@ -298,4 +313,3 @@ export default function AddProductScreenAdmin() {
     </TouchableWithoutFeedback>
   );
 }
-

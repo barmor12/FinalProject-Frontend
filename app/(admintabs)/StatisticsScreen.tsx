@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from "react-native";
-import { LineChart, PieChart } from "react-native-chart-kit";
+import { LineChart, PieChart, BarChart } from "react-native-chart-kit";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -173,18 +173,21 @@ const StatisticsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Statistics</Text>
-          <TouchableOpacity
-            style={styles.reportButton}
-            onPress={generateFinancialReport}
-            disabled={isLoading}
-          >
-            <Text style={styles.reportButtonText}>
-              Generate Financial Report
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.headerRow}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.title}>📊 Business Analytics</Text>
+            
+          </View>
         </View>
+        <View style={{ alignItems: "center", marginVertical: 20 }}>
+                      <TouchableOpacity
+                        style={styles.reportButton}
+                        onPress={generateFinancialReport}
+                        disabled={isLoading}
+                      >
+                        <Text style={styles.reportButtonText}>📄 Generate Full Financial Report</Text>
+                      </TouchableOpacity>
+                    </View>
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
@@ -258,6 +261,29 @@ const StatisticsScreen = () => {
               />
             </View>
 
+            <View style={styles.chartContainer}>
+
+              <Text style={styles.chartTitle}>Monthly Revenue</Text>
+              <BarChart
+                  data={{
+                    labels: statistics.monthlyData.map((item) => item.month),
+                    datasets: [
+                      {
+                        data: statistics.monthlyData.map((item) => typeof item.count === "number"
+                          ? item.count * 10 // הנחה של הכפלה לייצוג רווח
+                          : 0
+                        ),
+                      },
+                    ],
+                  }}
+                  width={screenWidth - 65}
+                  height={220}
+                  chartConfig={chartConfig}
+                  style={styles.chart}
+                  fromZero
+                  showValuesOnTopOfBars yAxisLabel={""} yAxisSuffix={""}              />
+            </View>
+
             <View
               style={{
                 height: 1,
@@ -305,6 +331,36 @@ const StatisticsScreen = () => {
                 </View>
               ))}
             </View>
+
+            <View style={styles.chartContainer}>
+              <Text style={styles.chartTitle}>Top 3 Cakes (by Revenue)</Text>
+              {statistics.topProfitableCakes.filter(c => c.revenue > 0).length >= 1 ? (
+                <PieChart
+                  data={statistics.topProfitableCakes
+                    .filter(c => c.revenue > 0)
+                    .slice(0, 3)
+                    .map((cake, index) => ({
+                    name: cake.name,
+                    population: cake.revenue,
+                    color: ["#f39c12", "#e67e22", "#d35400"][index],
+                    legendFontColor: "#6d4226",
+                    legendFontSize: 12,
+                  }))}
+                  width={screenWidth - 40}
+                  height={220}
+                  chartConfig={chartConfig}
+                  accessor="population"
+                  backgroundColor="transparent"
+                  paddingLeft="15"
+                  absolute
+                />
+              ) : (
+                <Text style={{ textAlign: "center", color: "#999" }}>
+                  No data available for top 3 cakes.
+                </Text>
+              )}
+            </View>
+
           </>
         )}
       </ScrollView>

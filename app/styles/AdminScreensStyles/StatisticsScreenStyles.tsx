@@ -12,11 +12,17 @@ const styles = StyleSheet.create({
       justifyContent: "space-between",
       alignItems: "center",
     },
+    headerRow: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingBottom: 6,
+    },
     title: {
-      fontSize: 28,
+      fontSize: 24,
       fontWeight: "bold",
       color: "#4e2c17",
-      marginBottom: 10,
     },
     statsGrid: {
       flexDirection: "row",
@@ -131,16 +137,20 @@ const styles = StyleSheet.create({
       color: "#555",
     },
     reportButton: {
-      backgroundColor: "#8e5c3b",
-      paddingHorizontal: 12,
-      paddingVertical: 6,
-      borderRadius: 8,
-      elevation: 2,
+      backgroundColor: "#d35400",
+      paddingHorizontal: 18,
+      paddingVertical: 10,
+      borderRadius: 12,
+      elevation: 3,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 4,
     },
     reportButtonText: {
       color: "#fff",
-      fontSize: 13,
-      fontWeight: "600",
+      fontSize: 14,
+      fontWeight: "bold",
     },
   });
 

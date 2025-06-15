@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
+import { LineChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 import {
   View,
   Text,
@@ -253,6 +255,49 @@ export default function AdminDashboardScreen() {
             Total Revenue: ${stats.revenue.toFixed(2)}
           </Text>
         </View>
+
+        {/* Low Stock Alert */}
+        <View style={styles.alertBox}>
+          <Text style={styles.alertTitle}>⚠️ Low stock alert</Text>
+          <Text style={styles.alertContent}>Chocolate Cake: 2 left</Text>
+          <Text style={styles.alertContent}>Vanilla Cake: 1 left</Text>
+        </View>
+
+        {/* Revenue Line Chart */}
+        <Text style={styles.chartTitle}>Revenue Overview</Text>
+        <LineChart
+          data={{
+            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            datasets: [
+              {
+                data: [150, 200, 170, 250, 300, 280, 320],
+              },
+            ],
+          }}
+          width={350}
+          height={220}
+          chartConfig={{
+            backgroundColor: "#f9f3ea",
+            backgroundGradientFrom: "#f9f3ea",
+            backgroundGradientTo: "#fff",
+            decimalPlaces: 0,
+            color: (opacity = 1) => `rgba(107, 66, 38, ${opacity})`,
+            labelColor: (opacity = 1) => `rgba(107, 66, 38, ${opacity})`,
+            style: {
+              borderRadius: 16,
+            },
+            propsForDots: {
+              r: "6",
+              strokeWidth: "2",
+              stroke: "#6b4226",
+            },
+          }}
+          bezier
+          style={{
+            marginVertical: 8,
+            borderRadius: 16,
+          }}
+        />
 
         {/* Calendar View */}
         <View style={styles.calendarContainer}>

@@ -1,3 +1,4 @@
+
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
@@ -140,6 +141,32 @@ const styles = StyleSheet.create({
       textAlign: "center",
       marginTop: 10,
       fontSize: 14,
+    },
+    alertBox: {
+      backgroundColor: "#fff3cd",
+      borderLeftWidth: 5,
+      borderLeftColor: "#ffcc00",
+      padding: 15,
+      borderRadius: 10,
+      marginBottom: 20,
+    },
+    alertTitle: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: "#856404",
+      marginBottom: 6,
+    },
+    alertContent: {
+      fontSize: 16,
+      color: "#856404",
+    },
+    chartTitle: {
+      fontSize: 20,
+      fontWeight: "bold",
+      color: "#6b4226",
+      textAlign: "center",
+      marginBottom: 10,
+      marginTop: 20,
     },
   });
 
