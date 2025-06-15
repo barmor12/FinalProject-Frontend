@@ -133,7 +133,7 @@ export default function AdminPanelScreen() {
           <Text style={styles.title}>Admin Panel</Text>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button]}
             onPress={() => router.push("/adminScreens/adminOrdersScreen")}
           >
             <MaterialIcons name="list-alt" size={20} color="#fff" />
@@ -141,7 +141,7 @@ export default function AdminPanelScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button]}
             onPress={() =>
               router.push("/adminScreens/adminDiscountCodesScreen")
             }
@@ -150,7 +150,7 @@ export default function AdminPanelScreen() {
             <Text style={styles.buttonText}>Manage Discount Codes</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button]}
             onPress={() => router.push("/adminScreens/manageUsersScreen")}
           >
             <MaterialIcons name="people" size={20} color="#fff" />
@@ -158,7 +158,7 @@ export default function AdminPanelScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button]}
             onPress={() => router.push("/adminScreens/AdminRecipesScreen")}
           >
             <MaterialIcons name="restaurant-menu" size={20} color="#fff" />
@@ -166,7 +166,7 @@ export default function AdminPanelScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button]}
             onPress={() =>
               router.push("/adminScreens/AdminNotificationsScreen")
             }
@@ -176,7 +176,7 @@ export default function AdminPanelScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton, { marginTop: 40 }]}
+            style={[styles.button, styles.logoutButton]}
             onPress={handleLogout}
           >
             <MaterialIcons name="logout" size={20} color="#fff" />
