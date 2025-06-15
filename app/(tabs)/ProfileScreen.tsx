@@ -29,10 +29,12 @@ export default function ProfileScreen() {
     name: string;
     lastName: string;
     profilePic: string | number;
+    lastLogin?: string | null;
   }>({
     name: "",
     lastName: "",
     profilePic: require("../../assets/images/userIcon.png"),
+    lastLogin: null,
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -83,7 +85,9 @@ export default function ProfileScreen() {
         name: userData.firstName || "Guest",
         lastName: userData.lastName || "",
         profilePic: profilePicUri,
+        lastLogin: userData.lastLogin ?? null,
       });
+
     } catch (error) {
       console.error("❌ Error fetching user data:", error);
       Alert.alert("Error", "Failed to load user data.");
@@ -217,7 +221,8 @@ export default function ProfileScreen() {
         }
       >
         <View style={styles.container}>
-          <TouchableOpacity onPress={pickImage}>
+
+          <TouchableOpacity onPress={pickImage} style={{marginTop: 6}}>
             {user.profilePic ? (
               <Image
                 source={
@@ -232,13 +237,15 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={styles.userName}>
+          <Text style={[styles.userName, {marginTop: 6}]}>
             {user.name || "User"} {user.lastName || ""}
           </Text>
-          <Text style={styles.title}>Profile</Text>
+
+
+
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, {marginTop: 6}]}
             onPress={() => router.push("/EditProfileScreen")}
           >
             <MaterialIcons name="edit" size={20} color="#fff" />
@@ -246,7 +253,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, {marginTop: 6}]}
             onPress={() => router.push("/OrdersScreen")}
           >
             <MaterialIcons name="receipt-long" size={20} color="#fff" />
@@ -255,7 +262,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, {marginTop: 6}]}
             onPress={() => router.push("/CreditCardScreen")}
           >
             <MaterialIcons name="credit-card" size={20} color="#fff" />
@@ -264,7 +271,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, {marginTop: 6}]}
             onPress={() => router.push("/AddressScreen")}
           >
             <MaterialIcons name="location-pin" size={20} color="#fff" />
@@ -272,42 +279,67 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, {marginTop: 6}]}
             onPress={() => router.push("/AccountSecurityScreen")}
           >
             <MaterialIcons name="security" size={20} color="#fff" />
             <Text style={styles.buttonText}>Account Security</Text>
           </TouchableOpacity>
 
+
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton]}
+            style={[styles.button, styles.logoutButton, {marginTop: 100}]}
             onPress={handleLogout}
           >
             <MaterialIcons name="logout" size={20} color="#fff" />
             <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
 
-          <Text style={styles.contactLabel}>Contact Us</Text>
-          <View style={styles.contactButtonsContainer}>
-            <TouchableOpacity
-              onPress={() => setContactMethod("email")}
-              style={styles.iconButton}
-            >
-              <MaterialIcons name="email" size={20} color="#fff" />
-              <Text style={styles.iconButtonText}>Email</Text>
-            </TouchableOpacity>
+          <View style={styles.contactButtonsWrapper}>
+            <View style={styles.contactButtonsContainer}>
+              <TouchableOpacity
+                onPress={() => setContactMethod("email")}
+                style={styles.iconButton}
+              >
+                <MaterialIcons name="email" size={20} color="#fff" />
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => setContactMethod("whatsapp")}
-              style={styles.iconButton}
-            >
-              <FontAwesome name="whatsapp" size={20} color="#fff" />
-              <Text style={styles.iconButtonText}>WhatsApp</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setContactMethod("whatsapp")}
+                style={styles.iconButton}
+              >
+                <FontAwesome name="whatsapp" size={20} color="#fff" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => Linking.openURL("tel:0509667461")}
+                style={styles.iconButton}
+              >
+                <MaterialIcons name="phone" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
           </View>
 
           {contactMethod && (
-            <View style={styles.contactInputSection}>
+            <View style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.25)",
+              zIndex: 998
+            }} />
+          )}
+
+          {contactMethod && (
+            <View style={styles.contactModal}>
+              <TouchableOpacity
+                onPress={() => setContactMethod(null)}
+                style={styles.contactModalCloseButton}
+              >
+                <Ionicons name="close-circle" size={24} color="#d49a6a" />
+              </TouchableOpacity>
               <Text style={styles.contactInputLabel}>Write your message below:</Text>
               <TextInput
                 style={styles.contactInput}
@@ -326,9 +358,9 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           )}
+
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
