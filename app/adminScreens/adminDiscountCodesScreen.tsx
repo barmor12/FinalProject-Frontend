@@ -140,23 +140,33 @@ export default function AdminDiscountCodes() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <SafeAreaView style={styles.container}>
+        <View style={styles.headerContainer}>
+          <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
+          <Text style={styles.screenDescription}>Create, manage and monitor all active discount codes</Text>
+        </View>
         <Text style={styles.title}>Manage Discount Codes</Text>
 
-        <TextInput
-          placeholder="Code"
-          placeholderTextColor={"#aaa"}
-          style={styles.input}
-          value={code}
-          onChangeText={setCode}
-        />
-        <TextInput
-          placeholder="Discount %"
-          placeholderTextColor={"#aaa"}
-          keyboardType="numeric"
-          style={styles.input}
-          value={discount}
-          onChangeText={setDiscount}
-        />
+        <View style={styles.inputRow}>
+          <Ionicons name="key-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
+          <TextInput
+            placeholder="Code"
+            placeholderTextColor={"#aaa"}
+            style={styles.input}
+            value={code}
+            onChangeText={setCode}
+          />
+        </View>
+        <View style={styles.inputRow}>
+          <Ionicons name="pricetag-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
+          <TextInput
+            placeholder="Discount %"
+            placeholderTextColor={"#aaa"}
+            keyboardType="numeric"
+            style={styles.input}
+            value={discount}
+            onChangeText={setDiscount}
+          />
+        </View>
 
         {/* תאריך בורר */}
         <View style={styles.datePickerContainer}>
@@ -190,8 +200,15 @@ export default function AdminDiscountCodes() {
           <Text style={styles.buttonText}>Create Code</Text>
         </TouchableOpacity>
 
+        <View style={styles.summaryContainer}>
+          <Text style={styles.summaryText}>Total Codes: {codes.length}</Text>
+          <Text style={styles.summaryText}>
+            Active: {codes.filter((c) => c.isActive).length} | Inactive: {codes.filter((c) => !c.isActive).length}
+          </Text>
+        </View>
+
         {loading ? (
-          <ActivityIndicator size="large" color="#6b4226" />
+          <ActivityIndicator size="large" color="#b36b00" />
         ) : (
           <FlatList
             data={codes}

@@ -60,6 +60,7 @@ const styles = StyleSheet.create({
     },
     row: {
       flexDirection: "row",
+      justifyContent: "space-between",
       alignItems: "center",
       paddingVertical: 15,
       paddingHorizontal: 8,
@@ -70,6 +71,7 @@ const styles = StyleSheet.create({
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.2,
       elevation: 2,
+      gap: 8,
     },
     cell: {
       flex: 1,
@@ -78,6 +80,8 @@ const styles = StyleSheet.create({
       minWidth: 50,
       fontSize: 13,
       paddingHorizontal: 8,
+      alignItems: "center",
+      flexDirection: "column",
     },
     pending: { color: "#FFA500", fontWeight: "bold" },
     confirmed: { color: "#007bff", fontWeight: "bold" },

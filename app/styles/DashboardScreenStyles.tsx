@@ -31,7 +31,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: "#fff",
   },
-  SearchBtn: { backgroundColor: "#d49a6a", padding: 10, borderRadius: 8 },
+  SearchBtn: {
+    backgroundColor: "#ffcc99",
+    padding: 10,
+    borderRadius: 8,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+  },
   title: {
     fontSize: 22,
     fontWeight: "bold",
@@ -144,13 +153,14 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   filterChip: {
-    backgroundColor: "#fff",
+    backgroundColor: "#fffaf2",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     marginRight: 10,
     borderWidth: 1,
     borderColor: "#d49a6a",
+    elevation: 2,
   },
   filterText: {
     color: "#6b4226",
@@ -211,6 +221,13 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginVertical: 10,
     color: "#6b4226",
+  },
+  graphContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 3,
   },
 });
 

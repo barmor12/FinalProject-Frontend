@@ -73,6 +73,7 @@ const styles: { [key: string]: any } = StyleSheet.create({
     pending: { color: "#FFA500" },
     confirmed: { color: "#0066cc" },
     completed: { color: "#28a745" },
+    delivered: { color: "#28a745" },
     cancelled: { color: "#d9534f" },
     emptyMessage: {
       fontSize: 18,

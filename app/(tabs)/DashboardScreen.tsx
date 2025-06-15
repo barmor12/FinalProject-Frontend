@@ -170,6 +170,12 @@ export default function DashboardScreen() {
     }
   };
 
+  // Function to get the name of the best seller
+  const getBestSellerName = (): string => {
+    const sorted = [...products].sort((a, b) => b.stock - a.stock);
+    return sorted.length > 0 ? sorted[0].name : "N/A";
+  };
+
   // Fetch user data and products when component mounts
   useEffect(() => {
     fetchUserDataAndSetState();
@@ -318,114 +324,143 @@ export default function DashboardScreen() {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.leftHeader}>
-          <TouchableOpacity
-            onPress={() => router.push("/ProfileScreen")}
-            style={styles.profileContainer}
-          >
-            <Image
-              source={{ uri: user.profilePic }}
-              style={styles.profileImage}
-            />
-            <Text style={styles.userName}>{user.name}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.centerHeader} />
-        <View style={styles.rightHeader}>
-          <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-            <Ionicons
-              name={searchVisible ? "close" : "search"}
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </View>
-      </View>
-      <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
-        <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
-          Discover Delicious Cakes!
-        </Text>
-        <Text style={{ fontSize: 14, color: "#6b4226", textAlign: "center", marginTop: 6 }}>
-          Browse our collection, mark your favorites and order now 🍰
-        </Text>
-      </View>
-
-      {searchVisible && (
-        <View style={styles.searchBlock}>
-          <TextInput
-            style={styles.searchInputFull}
-            placeholder="Search by name, ingredient, or allergen..."
-            value={searchText}
-            onChangeText={handleSearch}
-            autoFocus
-            textAlign="left"
-          />
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
-            <Text style={{ marginRight: 8, color: "#6b4226" }}>🔍 Try typing:</Text>
-            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Chocolate</Text>
-            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Gluten</Text>
-            <Text style={{ marginRight: 8, color: "#d49a6a" }}>Nuts</Text>
-          </View>
-        </View>
-      )}
-
-      <View style={styles.filtersContainer}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilters.favorites && styles.activeFilterChip
-            ]}
-            onPress={toggleShowFavorites}
-          >
-            <Text style={[
-              styles.filterText,
-              activeFilters.favorites && styles.activeFilterText
-            ]}>❤️ Favorites</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.filterChip}
-            onPress={() => {
-              const newOrder = sortOrder === "asc" ? "desc" : "asc";
-              setSortOrder(newOrder);
-              const sorted = [...filteredProducts].sort((a, b) =>
-                newOrder === "asc" ? a.price - b.price : b.price - a.price
-              );
-              setFilteredProducts(sorted);
-            }}
-          >
-            <Text style={styles.filterText}>
-              {sortOrder === "asc" ? "⬆️ Price Low" : "⬇️ Price High"}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.filterChip,
-              activeFilters.inStock && styles.activeFilterChip
-            ]}
-            onPress={handleInStockFilter}
-          >
-            <Text style={[
-              styles.filterText,
-              activeFilters.inStock && styles.activeFilterText
-            ]}>✅ In Stock</Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </View>
-      <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
-        Explore Cakes
-      </Text>
-      <FlatList
-        data={filteredProducts}
-        keyExtractor={(item) => item._id}
-        renderItem={renderProductCardVertical}
-        numColumns={2}
-        columnWrapperStyle={{ justifyContent: "space-between" }}
+      <ScrollView
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
-      />
+        contentContainerStyle={{ paddingBottom: 80 }}
+      >
+        <View style={styles.header}>
+          <View style={styles.leftHeader}>
+            <TouchableOpacity
+              onPress={() => router.push("/ProfileScreen")}
+              style={styles.profileContainer}
+            >
+              <Image
+                source={{ uri: user.profilePic }}
+                style={styles.profileImage}
+              />
+              <Text style={styles.userName}>{user.name}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.centerHeader} />
+          <View style={styles.rightHeader}>
+            <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
+              <Ionicons
+                name={searchVisible ? "close" : "search"}
+                size={24}
+                color="#fff"
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
+          <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
+            Discover Delicious Cakes!
+          </Text>
+        </View>
+        <View style={{
+          backgroundColor: "#fffbe9",
+          borderWidth: 1.5,
+          borderColor: "#d49a6a",
+          padding: 16,
+          borderRadius: 10,
+          marginBottom: 10,
+          elevation: 3,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+        }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 6 }}>📊 Store Overview</Text>
+          <Text style={{ fontSize: 16, fontWeight: "bold", color: "#d9534f", marginBottom: 4 }}>
+            🍰 Best Seller: <Text style={{ textDecorationLine: "underline" }}>{getBestSellerName()}</Text>
+          </Text>
+          <Text style={{ fontSize: 14, color: "#6b4226" }}>📦 Total products: {products.length}</Text>
+          <Text style={{ fontSize: 14, color: "#6b4226" }}>❤️ Favorites saved: {likedProducts.size}</Text>
+        </View>
+
+        {/* Promo Card for Buyers */}
+        <View style={{ backgroundColor: "#f0f8ff", padding: 16, borderRadius: 10, marginBottom: 10, elevation: 3 }}>
+          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#0066cc", marginBottom: 4 }}>🎁 Special Offer</Text>
+          <Text style={{ fontSize: 16, color: "#004080" }}>Get 10% off your first order!</Text>
+          <Text style={{ fontSize: 14, color: "#004080" }}>Use code <Text style={{ fontWeight: "bold" }}>WELCOME10</Text> at checkout.</Text>
+        </View>
+
+        {searchVisible && (
+          <View style={styles.searchBlock}>
+            <TextInput
+              style={styles.searchInputFull}
+              placeholder="Search by name, ingredient, or allergen..."
+              value={searchText}
+              onChangeText={handleSearch}
+              autoFocus
+              textAlign="left"
+            />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+              <Text style={{ marginRight: 8, color: "#6b4226" }}>🔍 Try typing:</Text>
+              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Chocolate</Text>
+              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Gluten</Text>
+              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Nuts</Text>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.filtersContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                activeFilters.favorites && styles.activeFilterChip
+              ]}
+              onPress={toggleShowFavorites}
+            >
+              <Text style={[
+                styles.filterText,
+                activeFilters.favorites && styles.activeFilterText
+              ]}>❤️ Favorites</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.filterChip}
+              onPress={() => {
+                const newOrder = sortOrder === "asc" ? "desc" : "asc";
+                setSortOrder(newOrder);
+                const sorted = [...filteredProducts].sort((a, b) =>
+                  newOrder === "asc" ? a.price - b.price : b.price - a.price
+                );
+                setFilteredProducts(sorted);
+              }}
+            >
+              <Text style={styles.filterText}>
+                {sortOrder === "asc" ? "⬆️ Price Low" : "⬇️ Price High"}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.filterChip,
+                activeFilters.inStock && styles.activeFilterChip
+              ]}
+              onPress={handleInStockFilter}
+            >
+              <Text style={[
+                styles.filterText,
+                activeFilters.inStock && styles.activeFilterText
+              ]}>✅ In Stock</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+        <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
+          Explore Cakes
+        </Text>
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item._id}
+          renderItem={renderProductCardVertical}
+          numColumns={2}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
+          scrollEnabled={false}
+        />
+      </ScrollView>
     </SafeAreaView>
   );
 }

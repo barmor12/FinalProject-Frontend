@@ -181,7 +181,7 @@ export default function OrdersScreen() {
         showsHorizontalScrollIndicator={false}
         style={styles.filterScroll}
       >
-        {["all", "pending", "confirmed", "completed", "cancelled"].map(
+        {["all", "pending", "confirmed", "delivered", "cancelled"].map(
           (status) => (
             <TouchableOpacity
               key={status}

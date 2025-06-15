@@ -1,6 +1,33 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+  screenDescription: {
+    fontSize: 16,
+    color: "#6b4226",
+    textAlign: "center",
+  },
+  summaryContainer: {
+    backgroundColor: "#fff",
+    padding: 10,
+    marginBottom: 15,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 2,
+    alignItems: "center",
+  },
+  summaryText: {
+    fontSize: 16,
+    color: "#6b4226",
+    fontWeight: "600",
+  },
     container: {
       flex: 1,
       padding: 16,
@@ -80,6 +107,17 @@ const styles = StyleSheet.create({
     dateButtonText: {
       color: "#6b4226",
       fontSize: 16,
+    },
+    inputRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "#fff",
+      paddingHorizontal: 10,
+      paddingVertical: 8,
+      marginBottom: 10,
+      borderRadius: 8,
+      borderColor: "#ccc",
+      borderWidth: 1,
     },
   });
 

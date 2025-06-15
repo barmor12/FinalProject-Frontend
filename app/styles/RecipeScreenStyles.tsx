@@ -371,6 +371,25 @@ const styles = StyleSheet.create({
         color: '#fff',
         letterSpacing: 0.3,
     },
+    popularBadge: {
+        position: 'absolute',
+        top: 8,
+        left: 8,
+        backgroundColor: '#ffb703',
+        paddingHorizontal: 6,
+        paddingVertical: 3,
+        borderRadius: 6,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 3,
+    },
+    popularBadgeText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        color: '#fff',
+    },
 }); 
 
 export default styles;
