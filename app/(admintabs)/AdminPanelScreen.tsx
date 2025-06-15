@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
 import styles from "../styles/AdminScreensStyles/AdminPanelScreenStyles";
+import { MaterialIcons } from "@expo/vector-icons";
 
 export default function AdminPanelScreen() {
   const router = useRouter();
@@ -135,6 +136,7 @@ export default function AdminPanelScreen() {
             style={styles.button}
             onPress={() => router.push("/adminScreens/adminOrdersScreen")}
           >
+            <MaterialIcons name="list-alt" size={20} color="#fff" />
             <Text style={styles.buttonText}>Manage Orders</Text>
           </TouchableOpacity>
 
@@ -144,12 +146,14 @@ export default function AdminPanelScreen() {
               router.push("/adminScreens/adminDiscountCodesScreen")
             }
           >
+            <MaterialIcons name="discount" size={20} color="#fff" />
             <Text style={styles.buttonText}>Manage Discount Codes</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.button}
             onPress={() => router.push("/adminScreens/manageUsersScreen")}
           >
+            <MaterialIcons name="people" size={20} color="#fff" />
             <Text style={styles.buttonText}>Manage Users</Text>
           </TouchableOpacity>
 
@@ -157,6 +161,7 @@ export default function AdminPanelScreen() {
             style={styles.button}
             onPress={() => router.push("/adminScreens/AdminRecipesScreen")}
           >
+            <MaterialIcons name="restaurant-menu" size={20} color="#fff" />
             <Text style={styles.buttonText}>Manage Recipes</Text>
           </TouchableOpacity>
 
@@ -166,14 +171,16 @@ export default function AdminPanelScreen() {
               router.push("/adminScreens/AdminNotificationsScreen")
             }
           >
+            <MaterialIcons name="notifications" size={20} color="#fff" />
             <Text style={styles.buttonText}>Send Notifications</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton]}
+            style={[styles.button, styles.logoutButton, { marginTop: 40 }]}
             onPress={handleLogout}
           >
-            <Text style={styles.logoutText}>Log Out</Text>
+            <MaterialIcons name="logout" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Log Out</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
