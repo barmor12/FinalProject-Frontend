@@ -123,6 +123,16 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginTop: 4,
   },
+  lowStockLabel: {
+    fontSize: 13,
+    color: "#ff9900",
+    backgroundColor: "#fff0e6",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginTop: 4,
+    fontWeight: "bold",
+  },
   favoriteLabel: {
     marginTop: 6,
     fontSize: 12,

@@ -295,6 +295,8 @@ export default function DashboardScreen() {
             <Text style={styles.productName}>{item.name}</Text>
             {item.stock <= 0 ? (
               <Text style={styles.outOfStockLabel}>Out of Stock</Text>
+            ) : item.stock < 3 ? (
+              <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}

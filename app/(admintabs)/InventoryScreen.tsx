@@ -237,12 +237,17 @@ export default function InventoryScreen() {
           >
             <Image source={{ uri: item.image }} style={styles.productImage} />
             <Text style={styles.productName}>{item.name}</Text>
-            {parseInt(item.stock) > 0 && parseInt(item.stock) < 5 && (
+            {parseInt(item.stock) <= 0 ? (
+              <View style={styles.lowStockIndicator}>
+                <Ionicons name="close-circle" size={16} color="#d9534f" />
+                <Text style={styles.lowStockText}>Out of Stock</Text>
+              </View>
+            ) : parseInt(item.stock) < 3 ? (
               <View style={styles.lowStockIndicator}>
                 <Ionicons name="warning" size={16} color="#d9534f" />
                 <Text style={styles.lowStockText}>Low Stock: {item.stock}</Text>
               </View>
-            )}
+            ) : null}
             {isSelectionMode && selectedProducts.includes(item._id) && (
               <Ionicons name="checkmark-circle" size={24} color="green" />
             )}
