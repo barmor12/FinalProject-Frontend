@@ -104,7 +104,7 @@ export default function AddressScreen() {
         const newErrors: Record<string, string> = {};
 
         const nameRegex = /^[A-Za-zא-ת]{2,}\s[A-Za-zא-ת]{2,}$/;
-        const cityStreetRegex = /^[A-Za-zא-ת\s]{2,}$/;
+        const phoneRegex = /^[0-9]+$/;
 
         if (!formData.fullName.trim()) {
             newErrors.fullName = 'Full name is required';
@@ -114,18 +114,16 @@ export default function AddressScreen() {
 
         if (!formData.phone.trim()) {
             newErrors.phone = 'Phone number is required';
+        } else if (!phoneRegex.test(formData.phone.trim())) {
+            newErrors.phone = 'Phone number must contain only digits';
         }
 
         if (!formData.street.trim()) {
             newErrors.street = 'Street address is required';
-        } else if (!cityStreetRegex.test(formData.street.trim())) {
-            newErrors.street = 'Street must be at least 2 characters';
         }
 
         if (!formData.city.trim()) {
             newErrors.city = 'City is required';
-        } else if (!cityStreetRegex.test(formData.city.trim())) {
-            newErrors.city = 'City must be at least 2 characters';
         }
 
         setErrors(newErrors);
@@ -155,23 +153,29 @@ export default function AddressScreen() {
             const token = await AsyncStorage.getItem("accessToken");
             if (!token) return;
 
-            const response = await fetch(`${config.BASE_URL}/address`, {
-                method: "POST",
+            const url = isEditing
+                ? `${config.BASE_URL}/address/${editingAddressId}`
+                : `${config.BASE_URL}/address`;
+
+            const method = isEditing ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method,
                 headers: {
                     Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ ...formData, isDefault: false }),
+                body: JSON.stringify({ ...formData }),
             });
 
-            if (!response.ok) throw new Error("Failed to add address");
+            if (!response.ok) throw new Error(isEditing ? "Failed to update address" : "Failed to add address");
 
-            Alert.alert("Success", "Address added successfully!");
+            Alert.alert("Success", isEditing ? "Address updated successfully!" : "Address added successfully!");
             resetForm();
             await fetchAddresses();
         } catch (error) {
-            console.error("Error adding address:", error);
-            Alert.alert("Error", "Failed to add address.");
+            console.error("Error saving address:", error);
+            Alert.alert("Error", isEditing ? "Failed to update address." : "Failed to add address.");
         } finally {
             setLoading(false);
             setIsModalVisible(false);

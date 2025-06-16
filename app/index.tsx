@@ -340,6 +340,25 @@ export default function LoginScreen() {
             (data.accessToken && data.refreshToken) ||
             (data.tokens?.accessToken && data.tokens?.refreshToken)
           ) {
+            // Check for "isNewUser" flag in response
+            if (data.isNewUser) {
+              // Store tokens and user info
+              AsyncStorage.setItem("accessToken", data.accessToken || data.tokens.accessToken);
+              AsyncStorage.setItem("refreshToken", data.refreshToken || data.tokens.refreshToken);
+              AsyncStorage.setItem("userId", data.userId || "");
+              AsyncStorage.setItem("role", data.role || "user");
+              router.replace("/SetPasswordScreen");
+              return;
+            }
+            // Check if user is Google-authenticated but has no password
+            if (data.hasPassword === false) {
+              AsyncStorage.setItem("accessToken", data.accessToken || data.tokens.accessToken);
+              AsyncStorage.setItem("refreshToken", data.refreshToken || data.tokens.refreshToken);
+              AsyncStorage.setItem("userId", data.userId || "");
+              AsyncStorage.setItem("role", data.role || "user");
+              router.replace("/SetPasswordScreen");
+              return;
+            }
             const accessToken = data.accessToken || data.tokens.accessToken;
             const refreshToken = data.refreshToken || data.tokens.refreshToken;
             if (data.requires2FA && data.role !== "admin") {

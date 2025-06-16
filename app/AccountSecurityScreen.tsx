@@ -165,6 +165,28 @@ export default function AccountSecurityScreen() {
       return;
     }
 
+    const passwordValidations = {
+      length: newPassword.length >= 8,
+      lowercase: /[a-z]/.test(newPassword),
+      uppercase: /[A-Z]/.test(newPassword),
+      number: /\d/.test(newPassword),
+      special: /[@$!%*?&]/.test(newPassword),
+    };
+
+    if (
+      !passwordValidations.length ||
+      !passwordValidations.lowercase ||
+      !passwordValidations.uppercase ||
+      !passwordValidations.number ||
+      !passwordValidations.special
+    ) {
+      Alert.alert(
+        "Weak Password",
+        "Password must be at least 8 characters long and include lowercase, uppercase, number, and special character."
+      );
+      return;
+    }
+
     if (newPassword !== verifyPassword) {
       Alert.alert("Error", "New password and verify password must match.");
       return;
@@ -201,6 +223,7 @@ export default function AccountSecurityScreen() {
       }
 
       Alert.alert("Success", "Password updated successfully!");
+      router.push("/ProfileScreen");
     } catch (error) {
       console.error("❌ Error updating password:", error);
       Alert.alert("Error", "Something went wrong.");
