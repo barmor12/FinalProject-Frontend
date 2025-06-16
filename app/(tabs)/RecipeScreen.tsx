@@ -231,10 +231,10 @@ export default function RecipeScreen() {
                 : `${config.BASE_URL}/recipes/${recipe._id}/like`;
 
             // Call API to like/unlike recipe
+            // Use PUT to match backend, no body (like should not send category, etc.)
             const response = await fetch(endpoint, {
-                method: "POST",
+                method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 }
             });
