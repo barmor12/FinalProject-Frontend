@@ -510,8 +510,9 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              {/* Delivery Date Section - show for any shipping method */}
-              {shippingMethod !== "" && (
+              {/* Delivery Date Section - show only for Future Delivery, or Self Pickup with deliveryDate null */}
+              {(shippingMethod === "Future Delivery" ||
+                (shippingMethod === "Self Pickup" && deliveryDate === null)) && (
                 <View style={styles.sectionContainer}>
                   <Text style={styles.sectionTitle}>
                     {shippingMethod === "Self Pickup"
@@ -780,75 +781,133 @@ export default function CheckoutScreen() {
         </Modal>
 
         <Modal
-          transparent={true}
           visible={shippingModalVisible}
+          transparent
           animationType="slide"
+          onRequestClose={() => setShippingModalVisible(false)}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Choose Shipping Method</Text>
+          <View style={[styles.modalContainer, { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 }]}>
+            <Text style={[styles.modalTitle, { fontSize: 20, fontWeight: "700", color: "#6b4226", marginBottom: 20 }]}>Choose Shipping Method</Text>
 
-              {/* אפשרות למשלוח */}
+            {/* Option Button */}
+            {[
+              {
+                label: "Standard Delivery (2-3 Days)",
+                value: "Standard Delivery",
+                icon: "cube-outline",
+              },
+              {
+                label: "Future Delivery (Pick a Date)",
+                value: "Future Delivery",
+                icon: "calendar-outline",
+              },
+            ].map((option) => (
               <TouchableOpacity
+                key={option.value}
                 style={[
                   styles.modalButton,
-                  shippingMethod === "Standard Delivery (2-3 days)" &&
-                  styles.selectedOption,
+                  {
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 12,
+                    borderRadius: 10,
+                    backgroundColor: shippingMethod === option.value ? "#6b4226" : "#f4e3d7",
+                    marginBottom: 12,
+                  },
                 ]}
                 onPress={() => {
-                  setShippingMethod("Standard Delivery (2-3 days)");
+                  setShippingMethod(option.value);
+                  setDeliveryDate(option.value === "Standard Delivery" ? null : null);
                   setShippingModalVisible(false);
                 }}
               >
                 <Ionicons
-                  name="bicycle"
-                  size={24}
-                  color={shippingMethod === "Standard Delivery (2-3 days)" ? "#fff" : "#6b4226"}
+                  name={option.icon as any}
+                  size={22}
+                  color={shippingMethod === option.value ? "#fff" : "#6b4226"}
+                  style={{ marginRight: 10 }}
                 />
                 <Text
-                  style={[
-                    styles.modalText,
-                    shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOptionText,
-                  ]}
+                  style={{
+                    color: shippingMethod === option.value ? "#fff" : "#6b4226",
+                    fontWeight: "600",
+                    fontSize: 14,
+                  }}
                 >
-                  Standard Delivery (2-3 days)
+                  {option.label}
                 </Text>
               </TouchableOpacity>
+            ))}
 
-              {/* אפשרות לאיסוף עצמי */}
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  shippingMethod === "Self Pickup" && styles.selectedOption,
-                ]}
-                onPress={() => {
-                  setShippingMethod("Self Pickup");
-                  setShippingModalVisible(false);
-                }}
-              >
-                <Ionicons
-                  name="storefront-outline"
-                  size={24}
-                  color={shippingMethod === "Self Pickup" ? "#fff" : "#6b4226"}
-                />
-                <Text
-                  style={[
-                    styles.modalText,
-                    shippingMethod === "Self Pickup" && styles.selectedOptionText,
-                  ]}
-                >
-                  Self Pickup
-                </Text>
-              </TouchableOpacity>
+            {/* Self Pickup - Today */}
+            <TouchableOpacity
+              style={[
+                styles.modalButton,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#f4e3d7",
+                  marginBottom: 12,
+                },
+              ]}
+              onPress={() => {
+                setShippingMethod("Self Pickup");
+                setDeliveryDate(new Date());
+                setShippingModalVisible(false);
+              }}
+            >
+              <Ionicons
+                name="walk-outline"
+                size={22}
+                color="#6b4226"
+                style={{ marginRight: 10 }}
+              />
+              <Text style={{ color: "#6b4226", fontWeight: "600", fontSize: 14 }}>
+                Pick Up Today
+              </Text>
+            </TouchableOpacity>
 
-              {/* כפתור סגירה */}
-              <TouchableOpacity
-                style={styles.modalCloseButton}
-                onPress={() => setShippingModalVisible(false)}
-              >
-                <Text style={styles.modalCloseText}>Close</Text>
-              </TouchableOpacity>
-            </View>
+            {/* Self Pickup - Another Day */}
+            <TouchableOpacity
+              style={[
+                styles.modalButton,
+                {
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: 12,
+                  borderRadius: 10,
+                  backgroundColor: "#f4e3d7",
+                },
+              ]}
+              onPress={() => {
+                setShippingMethod("Self Pickup");
+                setDeliveryDate(null);
+                setShippingModalVisible(false);
+              }}
+            >
+              <Ionicons
+                name="calendar"
+                size={22}
+                color="#6b4226"
+                style={{ marginRight: 10 }}
+              />
+              <Text style={{ color: "#6b4226", fontWeight: "600", fontSize: 14 }}>
+                Pick Up Another Day
+              </Text>
+            </TouchableOpacity>
+
+            {/* Cancel Button */}
+            <TouchableOpacity
+              onPress={() => setShippingModalVisible(false)}
+              style={{
+                marginTop: 20,
+                alignItems: "center",
+              }}
+            >
+              <Text style={{ color: "#888", fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </Modal>
         <Modal
