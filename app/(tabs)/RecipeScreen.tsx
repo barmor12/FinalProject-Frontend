@@ -33,6 +33,7 @@ interface Recipe {
     likes?: number;
     isLiked?: boolean;
     createdAt?: string; // Date when the recipe was created
+    likedBy?: string[];
 }
 
 export default function RecipeScreen() {
@@ -43,7 +44,6 @@ export default function RecipeScreen() {
     const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [likedRecipes, setLikedRecipes] = useState<string[]>([]);
 
     // Simple focus effect that reloads everything when the screen is focused
     useFocusEffect(
@@ -55,16 +55,9 @@ export default function RecipeScreen() {
             setSearchVisible(false);
             setSearchText("");
 
-            // Load liked recipes and fetch recipes
+            // Only fetch recipes (no likedRecipes from AsyncStorage)
             const loadInitialData = async () => {
                 try {
-                    // Load liked recipes from storage
-                    const storedLikedRecipes = await AsyncStorage.getItem('likedRecipes');
-                    if (storedLikedRecipes) {
-                        setLikedRecipes(JSON.parse(storedLikedRecipes));
-                    }
-
-                    // Fetch recipes
                     await fetchRecipes();
                 } catch (error) {
                     console.error('Error loading initial data:', error);
@@ -109,10 +102,14 @@ export default function RecipeScreen() {
 
             const data = await response.json();
 
-            // Combine API data with local liked state
+            // Extract userId from token
+            const tokenData = JSON.parse(atob(token.split('.')[1]));
+            const userId = tokenData.userId;
+
+            // Combine API data with server likedBy state
             const recipesWithLikedState = data.map((recipe: Recipe) => ({
                 ...recipe,
-                isLiked: likedRecipes.includes(recipe._id)
+                isLiked: Array.isArray(recipe.likedBy) && recipe.likedBy.includes(userId)
             }));
 
             setRecipes(recipesWithLikedState);
@@ -205,14 +202,6 @@ export default function RecipeScreen() {
         });
     };
 
-    // Function to update local storage with liked recipes
-    const updateLikedRecipesStorage = async (newLikedRecipes: string[]) => {
-        try {
-            await AsyncStorage.setItem('likedRecipes', JSON.stringify(newLikedRecipes));
-        } catch (error) {
-            console.error('Error saving liked recipes:', error);
-        }
-    };
 
     const handleLike = async (recipe: Recipe, isDetailView: boolean = false) => {
         try {
@@ -224,14 +213,13 @@ export default function RecipeScreen() {
             }
 
             // Check if recipe is already liked - default to false if undefined
-            const isAlreadyLiked = likedRecipes.includes(recipe._id);
+            const isAlreadyLiked = recipe.isLiked === true;
 
             const endpoint = isAlreadyLiked
                 ? `${config.BASE_URL}/recipes/${recipe._id}/unlike`
                 : `${config.BASE_URL}/recipes/${recipe._id}/like`;
 
             // Call API to like/unlike recipe
-            // Use PUT to match backend, no body (like should not send category, etc.)
             const response = await fetch(endpoint, {
                 method: "PUT",
                 headers: {
@@ -241,19 +229,42 @@ export default function RecipeScreen() {
 
             if (!response.ok) {
                 const errorData = await response.json();
+
+                // במקרה של שגיאת 400 על unlike – כנראה שהלייק לא היה קיים
+                if (response.status === 400 && isAlreadyLiked && errorData.error?.includes("haven't liked")) {
+                    const updatedRecipes = filteredRecipes.map(r =>
+                        r._id === recipe._id
+                            ? {
+                                ...r,
+                                isLiked: false,
+                                likes: (r.likes || 1) - 1
+                            }
+                            : r
+                    );
+                    setFilteredRecipes(updatedRecipes);
+                    setRecipes(recipes.map(r =>
+                        r._id === recipe._id
+                            ? {
+                                ...r,
+                                isLiked: false,
+                                likes: (r.likes || 1) - 1
+                            }
+                            : r
+                    ));
+
+                    if (isDetailView && selectedRecipe && selectedRecipe._id === recipe._id) {
+                        setSelectedRecipe({
+                            ...selectedRecipe,
+                            isLiked: false,
+                            likes: (selectedRecipe.likes || 1) - 1
+                        });
+                    }
+
+                    return;
+                }
+
                 throw new Error(errorData.message || `Failed to ${isAlreadyLiked ? 'unlike' : 'like'} recipe`);
             }
-
-            // Update local liked recipes state
-            let newLikedRecipes;
-            if (isAlreadyLiked) {
-                newLikedRecipes = likedRecipes.filter(id => id !== recipe._id);
-            } else {
-                newLikedRecipes = [...likedRecipes, recipe._id];
-            }
-
-            setLikedRecipes(newLikedRecipes);
-            updateLikedRecipesStorage(newLikedRecipes);
 
             // Update UI
             const updatedRecipes = filteredRecipes.map(r =>
@@ -339,9 +350,9 @@ export default function RecipeScreen() {
                         }}
                     >
                         <Ionicons
-                            name={likedRecipes.includes(item._id) ? "heart" : "heart-outline"}
+                            name={item.isLiked ? "heart" : "heart-outline"}
                             size={12}
-                            color={likedRecipes.includes(item._id) ? "#ff4d6d" : "#6b4226"}
+                            color={item.isLiked ? "#ff4d6d" : "#6b4226"}
                         />
                         <Text style={styles.likeCount}>{item.likes || 0} likes</Text>
                     </TouchableOpacity>
@@ -492,9 +503,9 @@ export default function RecipeScreen() {
                                         onPress={() => handleLike(selectedRecipe, true)}
                                     >
                                         <Ionicons
-                                            name={selectedRecipe && likedRecipes.includes(selectedRecipe._id) ? "heart" : "heart-outline"}
+                                            name={selectedRecipe?.isLiked ? "heart" : "heart-outline"}
                                             size={24}
-                                            color={selectedRecipe && likedRecipes.includes(selectedRecipe._id) ? "#ff4d6d" : "#6b4226"}
+                                            color={selectedRecipe?.isLiked ? "#ff4d6d" : "#6b4226"}
                                         />
                                         <Text style={styles.modalLikeCount}>{selectedRecipe.likes || 0}</Text>
                                     </TouchableOpacity>
