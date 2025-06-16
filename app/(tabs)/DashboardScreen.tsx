@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,7 @@ export default function DashboardScreen() {
   const [searchVisible, setSearchVisible] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   // State variable to determine whether to display only liked products
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
@@ -70,13 +71,14 @@ export default function DashboardScreen() {
   const toggleSearch = () => {
     setSearchVisible((prev) => {
       if (!prev) {
-        setSearchText(""); // Reset only the text
+        setSearchText(""); // Reset search text when search is opened
       } else {
-        setSearchText("");
+        setSearchText(""); // Reset search text when search is closed
+        setFilteredProducts(products); // Reset filtered products to show all products
       }
       return !prev;
     });
-    // Removed setShowHorizontalScroll, as it is unused
+    setShowHorizontalScroll((prev) => !prev); // Toggle horizontal scroll visibility with search
   };
 
   // Toggle display of only liked products
@@ -111,7 +113,7 @@ export default function DashboardScreen() {
   };
 
   // Fetch product list and liked status, update filtered view
-  const fetchProducts = useCallback(async () => {
+  const fetchProducts = async () => {
     try {
       const token = await AsyncStorage.getItem("accessToken");
       const userId = await AsyncStorage.getItem("userId");
@@ -166,7 +168,7 @@ export default function DashboardScreen() {
         "Failed to fetch products or likes. Please try again later."
       );
     }
-  }, [showOnlyLiked, likedProducts]);
+  };
 
   // Function to get the name of the best seller
   const getBestSellerName = (): string => {
@@ -178,7 +180,7 @@ export default function DashboardScreen() {
   useEffect(() => {
     fetchUserDataAndSetState();
     fetchProducts();
-  }, [fetchProducts]);
+  }, []);
 
   // No need to refetch products on focus to preserve filters
   useFocusEffect(
@@ -276,7 +278,16 @@ export default function DashboardScreen() {
   const renderProductCardVertical = ({ item }: { item: Product }) => {
     const isFavorite = likedProducts.has(item._id);
     return (
-      <View style={styles.verticalCardContainer}>
+      <View
+        style={[
+          styles.verticalCardContainer,
+          isFavorite && {
+            backgroundColor: "#fff4f4",
+            borderColor: "#d9534f",
+            borderWidth: 1,
+          },
+        ]}
+      >
         <TouchableOpacity
           style={styles.verticalCardTouchable}
           onPress={() => {
@@ -295,6 +306,7 @@ export default function DashboardScreen() {
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}
+            {isFavorite && <Text style={styles.favoriteLabel}>❤️ Favorite</Text>}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -342,7 +354,6 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           </View>
         </View>
-
         {searchVisible && (
           <View style={styles.searchBlock}>
             <TextInput
@@ -361,7 +372,6 @@ export default function DashboardScreen() {
             </View>
           </View>
         )}
-
         <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
           <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
             Discover Delicious Cakes!
@@ -394,6 +404,7 @@ export default function DashboardScreen() {
           <Text style={{ fontSize: 16, color: "#004080" }}>Get 10% off your first order!</Text>
           <Text style={{ fontSize: 14, color: "#004080" }}>Use code <Text style={{ fontWeight: "bold" }}>WELCOME10</Text> at checkout.</Text>
         </View>
+
 
         <View style={styles.filtersContainer}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -449,11 +460,6 @@ export default function DashboardScreen() {
           columnWrapperStyle={{ justifyContent: "space-between" }}
           scrollEnabled={false}
         />
-        {searchText.trim() !== "" && filteredProducts.length === 0 && (
-          <Text style={{ textAlign: "center", color: "#6b4226", marginTop: 10 }}>
-            No results found for &quot;{searchText}&quot;
-          </Text>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
