@@ -19,7 +19,7 @@ const styles = StyleSheet.create({
       position: "relative",
       paddingTop: 20,
       paddingBottom: 10,
-      backgroundColor: "#f9f3ea",
+      backgroundColor: "#f4ede4",
       overflow: "visible",
       zIndex: 10,
     },
