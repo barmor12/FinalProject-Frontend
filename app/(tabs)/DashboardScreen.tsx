@@ -302,7 +302,10 @@ export default function DashboardScreen() {
             {item.stock <= 0 ? (
               <Text style={styles.outOfStockLabel}>Out of Stock</Text>
             ) : item.stock < 3 ? (
-              <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
+              <View>
+                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+                <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
+              </View>
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}
