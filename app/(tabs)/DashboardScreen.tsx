@@ -279,14 +279,7 @@ export default function DashboardScreen() {
     const isFavorite = likedProducts.has(item._id);
     return (
       <View
-        style={[
-          styles.verticalCardContainer,
-          isFavorite && {
-            backgroundColor: "#fff4f4",
-            borderColor: "#d9534f",
-            borderWidth: 1,
-          },
-        ]}
+        style={styles.verticalCardContainer}
       >
         <TouchableOpacity
           style={styles.verticalCardTouchable}
@@ -309,7 +302,6 @@ export default function DashboardScreen() {
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}
-            {isFavorite && <Text style={styles.favoriteLabel}>❤️ Favorite</Text>}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -395,7 +387,18 @@ export default function DashboardScreen() {
         }}>
           <Text style={{ fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 6 }}>📊 Store Overview</Text>
           <Text style={{ fontSize: 16, fontWeight: "bold", color: "#d9534f", marginBottom: 4 }}>
-            🍰 Best Seller: <Text style={{ textDecorationLine: "underline" }}>{getBestSellerName()}</Text>
+            🍰 Best Seller: 
+            <Text
+              style={{ textDecorationLine: "underline", color: "#6b4226" }}
+              onPress={() => {
+                const sorted = [...products].sort((a, b) => b.stock - a.stock);
+                if (sorted.length > 0) {
+                  navigateToProduct(sorted[0]);
+                }
+              }}
+            >
+              {getBestSellerName()}
+            </Text>
           </Text>
           <Text style={{ fontSize: 14, color: "#6b4226" }}>📦 Total products: {products.length}</Text>
           <Text style={{ fontSize: 14, color: "#6b4226" }}>❤️ Favorites saved: {likedProducts.size}</Text>

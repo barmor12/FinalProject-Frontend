@@ -16,6 +16,9 @@ import { fetchUserData } from "./utils/fetchUserData";
 import styles from "./styles/EditProfileStyles"; // Importing styles
 import BackButton from "../components/BackButton";
 
+const capitalizeFirstLetter = (str: string) =>
+  str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+
 export default function EditProfileScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
@@ -52,6 +55,8 @@ export default function EditProfileScreen() {
           lastName: userData.lastName || "Null",
           profilePic: profilePicUri,
         });
+        setFirstName(userData.firstName || "Guest");
+        setLastName(userData.lastName || "Null");
       } catch (error) {
         console.error("❌ Error fetching user data:", error);
         Alert.alert("Error", "Failed to load user data.");
@@ -161,8 +166,8 @@ export default function EditProfileScreen() {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            firstName,
-            lastName,
+            firstName: capitalizeFirstLetter(firstName.trim()),
+            lastName: capitalizeFirstLetter(lastName.trim()),
           }),
         }
       );
