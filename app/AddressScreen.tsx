@@ -22,11 +22,12 @@ import { router } from 'expo-router';
 
 interface Address {
     _id: string;
+    fullName: string;
+    phone: string;
     street: string;
     city: string;
     isDefault?: boolean;
 }
-
 export default function AddressScreen() {
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -102,8 +103,13 @@ export default function AddressScreen() {
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
+        const nameRegex = /^[A-Za-zא-ת]{2,}\s[A-Za-zא-ת]{2,}$/;
+        const cityStreetRegex = /^[A-Za-zא-ת\s]{2,}$/;
+
         if (!formData.fullName.trim()) {
             newErrors.fullName = 'Full name is required';
+        } else if (!nameRegex.test(formData.fullName.trim())) {
+            newErrors.fullName = 'Enter at least two words with 2+ letters each';
         }
 
         if (!formData.phone.trim()) {
@@ -112,10 +118,14 @@ export default function AddressScreen() {
 
         if (!formData.street.trim()) {
             newErrors.street = 'Street address is required';
+        } else if (!cityStreetRegex.test(formData.street.trim())) {
+            newErrors.street = 'Street must be at least 2 characters';
         }
 
         if (!formData.city.trim()) {
             newErrors.city = 'City is required';
+        } else if (!cityStreetRegex.test(formData.city.trim())) {
+            newErrors.city = 'City must be at least 2 characters';
         }
 
         setErrors(newErrors);
@@ -126,8 +136,8 @@ export default function AddressScreen() {
         setIsEditing(true);
         setEditingAddressId(address._id);
         setFormData({
-            fullName: '',
-            phone: '',
+            fullName: address.fullName || '',
+            phone: address.phone || '',
             street: address.street,
             city: address.city,
             isDefault: address.isDefault || false,

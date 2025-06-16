@@ -223,17 +223,17 @@ export default function EditProfileScreen() {
           <Text style={styles.inputLabel}>First Name</Text>
           <TextInput
             style={styles.input}
-            placeholder={user.firstName}
+            placeholder="Enter first name"
             placeholderTextColor={"#000"}
-            value={firstName}
+            value={firstName || ""}
             onChangeText={setFirstName}
           />
           <Text style={styles.inputLabel}>Last Name</Text>
           <TextInput
             style={styles.input}
+            placeholder="Enter last name"
             placeholderTextColor={"#000"}
-            placeholder={user.lastName}
-            value={lastName}
+            value={lastName || ""}
             onChangeText={setLastName}
           />
 

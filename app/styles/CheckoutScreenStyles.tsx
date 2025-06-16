@@ -232,8 +232,9 @@ const styles = StyleSheet.create({
     },
     modalText: {
       fontSize: 16,
-      color: "#7B6D63",
-      marginBottom: 10,
+      color: "#5A3827",
+      fontWeight: "bold",
+      marginBottom: 0,
     },
     modalCloseButton: {
       backgroundColor: "#D9534F",
@@ -260,6 +261,7 @@ const styles = StyleSheet.create({
       width: "100%",
       borderWidth: 1.5,
       borderColor: "#E5D3C2",
+      gap: 10,
     },
     addressItem: {
       padding: 12,

@@ -111,8 +111,11 @@ export default function CreditCardScreen() {
         }
 
         // Cardholder name validation
+        const nameRegex = /^[A-Za-zא-ת]{2,}\s[A-Za-zא-ת]{2,}$/;
         if (!formData.cardHolderName.trim()) {
             newErrors.cardHolderName = 'Please enter the cardholder name';
+        } else if (!nameRegex.test(formData.cardHolderName.trim())) {
+            newErrors.cardHolderName = 'Enter at least two words with 2+ letters each';
         }
 
         setErrors(newErrors);
@@ -449,7 +452,7 @@ export default function CreditCardScreen() {
                                 placeholder="1234 5678 9012 3456"
                                 keyboardType="numeric"
                                 maxLength={19}
-                                editable={!isEditing}
+                                editable={true}
                             />
                             {errors.cardNumber && (
                                 <Text style={styles.errorText}>{errors.cardNumber}</Text>

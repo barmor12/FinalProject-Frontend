@@ -414,6 +414,20 @@ export default function CheckoutScreen() {
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
         <ScrollView style={styles.scrollView}>
+          <TouchableOpacity onPress={() => router.back()} style={{ padding: 10, alignSelf: "flex-start" }}>
+            <View style={{
+              backgroundColor: "#d49a6a",
+              padding: 8,
+              borderRadius: 10,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 3,
+              elevation: 2,
+            }}>
+              <Ionicons name="arrow-back" size={24} color="#fff" />
+            </View>
+          </TouchableOpacity>
           <Text style={styles.title}>Checkout</Text>
           {loading ? (
             <ActivityIndicator
@@ -786,8 +800,17 @@ export default function CheckoutScreen() {
                   setShippingModalVisible(false);
                 }}
               >
-                <Ionicons name="bicycle" size={24} color="#6b4226" />
-                <Text style={styles.modalText}>
+                <Ionicons
+                  name="bicycle"
+                  size={24}
+                  color={shippingMethod === "Standard Delivery (2-3 days)" ? "#fff" : "#6b4226"}
+                />
+                <Text
+                  style={[
+                    styles.modalText,
+                    shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOptionText,
+                  ]}
+                >
                   Standard Delivery (2-3 days)
                 </Text>
               </TouchableOpacity>
@@ -803,8 +826,19 @@ export default function CheckoutScreen() {
                   setShippingModalVisible(false);
                 }}
               >
-                <Ionicons name="storefront-outline" size={24} color="#6b4226" />
-                <Text style={styles.modalText}>Self Pickup</Text>
+                <Ionicons
+                  name="storefront-outline"
+                  size={24}
+                  color={shippingMethod === "Self Pickup" ? "#fff" : "#6b4226"}
+                />
+                <Text
+                  style={[
+                    styles.modalText,
+                    shippingMethod === "Self Pickup" && styles.selectedOptionText,
+                  ]}
+                >
+                  Self Pickup
+                </Text>
               </TouchableOpacity>
 
               {/* כפתור סגירה */}
