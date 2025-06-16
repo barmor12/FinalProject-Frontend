@@ -16,6 +16,15 @@ const styles = StyleSheet.create({
       marginBottom: 10,
       color: "#6b4226",
     },
+    headerContainer: {
+      position: "relative",
+      paddingTop: 20,
+      paddingBottom: 10,
+      backgroundColor: "#f9f3ea",
+      overflow: "visible",
+      zIndex: 10,
+    },
+    
     status: { fontWeight: "bold", textTransform: "capitalize" },
     pending: { color: "#FFA500" },
     confirmed: { color: "#007bff" },

@@ -15,6 +15,14 @@ const styles = StyleSheet.create({
       textAlign: "center",
       marginBottom: 12,
     },
+    headerContainer: {
+      position: "relative",
+      paddingTop: 20,
+      paddingBottom: 10,
+      backgroundColor: "#f9f3ea",
+      overflow: "visible",
+      zIndex: 10,
+    },
     image: {
       width: "100%",
       height: 240,

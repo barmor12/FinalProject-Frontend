@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import styles from "../app/styles/ProductDetailsScreenStyles"
+import BackButton from "../components/BackButton";
 
 interface Product {
   _id: string;
@@ -133,6 +134,9 @@ export default function ProductDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.headerContainer}>
+        <BackButton />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Text style={styles.title}>{product.name}</Text>
         <Image
@@ -184,4 +188,3 @@ export default function ProductDetailsScreen() {
     </SafeAreaView>
   );
 }
-
