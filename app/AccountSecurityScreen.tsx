@@ -264,6 +264,12 @@ export default function AccountSecurityScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backButtonText}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Account Security</Text>
+      </View>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flexContainer}
@@ -272,8 +278,6 @@ export default function AccountSecurityScreen() {
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
         >
-          <Text style={styles.title}>Account Security</Text>
-
           <View style={styles.container}>
             <Text style={styles.sectionTitle}>Change Password</Text>
             <TextInput

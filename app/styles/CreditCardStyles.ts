@@ -1,6 +1,22 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
+    header: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingTop: 20,
+        paddingBottom: 20,
+        backgroundColor: "#f9f3ea",
+    },
+    headerTitle: {
+        fontSize: 24,
+        fontWeight: "bold",
+        color: "#6b4226",
+        textAlign: "center",
+        flex: 1,
+        marginRight: 32,
+    },
     container: {
         flex: 1,
         backgroundColor: '#f9f3ea',
@@ -15,6 +31,12 @@ export default StyleSheet.create({
     },
     cardList: {
         flex: 1,
+    },
+    backButton: {
+        backgroundColor: "#d49a6a",
+        paddingVertical: 6,
+        paddingHorizontal: 10,
+        borderRadius: 8,
     },
     cardContainer: {
         backgroundColor: '#fff',
@@ -163,4 +185,4 @@ export default StyleSheet.create({
         fontWeight: '600',
         marginLeft: 4,
     },
-}); 
+});

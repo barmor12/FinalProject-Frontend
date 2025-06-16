@@ -398,30 +398,36 @@ export default function RecipeScreen() {
                 <View style={styles.headerContent}>
                     <Text style={styles.title}>Recipe Book</Text>
                     <View style={styles.rightHeader}>
-                        {searchVisible && (
-                            <View style={styles.searchContainer}>
-                                <Ionicons name="search" size={18} color="#6b4226" style={styles.searchIcon} />
-                                <TextInput
-                                    style={styles.searchInput}
-                                    placeholder="Search recipes..."
-                                    placeholderTextColor="#b39981"
-                                    value={searchText}
-                                    onChangeText={handleSearch}
-                                    autoFocus
-                                />
-                                {searchText && (
-                                    <TouchableOpacity onPress={clearSearch} style={styles.clearSearchButton}>
-                                        <Ionicons name="close-circle" size={18} color="#6b4226" />
-                                    </TouchableOpacity>
-                                )}
-                            </View>
-                        )}
-                        <TouchableOpacity onPress={toggleSearch} style={styles.searchButton}>
-                            <Ionicons name={searchVisible ? "close" : "search"} size={22} color="#6b4226" />
+                        <TouchableOpacity onPress={toggleSearch} style={[styles.searchButton, {
+                            padding: 8,
+                            backgroundColor: "#f3e5d7",
+                            borderRadius: 24,
+                            marginLeft: 6,
+                        }]}>
+                            <Ionicons name={searchVisible ? "close" : "search"} size={26} color="#6b4226" />
                         </TouchableOpacity>
                     </View>
                 </View>
             </View>
+
+            {searchVisible && (
+                <View style={styles.searchContainer}>
+                    <Ionicons name="search" size={18} color="#6b4226" style={styles.searchIcon} />
+                    <TextInput
+                        style={styles.searchInput}
+                        placeholder="Search recipes..."
+                        placeholderTextColor="#b39981"
+                        value={searchText}
+                        onChangeText={handleSearch}
+                        autoFocus
+                    />
+                    {searchText && (
+                        <TouchableOpacity onPress={clearSearch} style={styles.clearSearchButton}>
+                            <Ionicons name="close-circle" size={18} color="#6b4226" />
+                        </TouchableOpacity>
+                    )}
+                </View>
+            )}
 
             {loading ? (
                 <View style={styles.loadingContainer}>

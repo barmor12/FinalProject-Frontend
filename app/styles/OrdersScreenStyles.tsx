@@ -2,13 +2,6 @@ import { StyleSheet } from "react-native";
 
 const styles: { [key: string]: any } = StyleSheet.create({
     container: { flex: 1, padding: 20, backgroundColor: "#f9f3ea" },
-    title: {
-      fontSize: 24,
-      fontWeight: "bold",
-      color: "#6b4226",
-      textAlign: "center",
-      marginBottom: 15,
-    },
     filterContainer: {
       flexDirection: "row",
       justifyContent: "space-around",
@@ -16,6 +9,7 @@ const styles: { [key: string]: any } = StyleSheet.create({
     },
     filterScroll: {
       marginBottom: 10,
+      paddingLeft: 12,
     },
     filterButton: {
       height: 45,
@@ -129,6 +123,20 @@ const styles: { [key: string]: any } = StyleSheet.create({
       color: "#fff",
       fontSize: 16,
       fontWeight: "bold",
+    },
+    headerContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingTop: 20,
+      paddingBottom: 20,
+      backgroundColor: '#f9f3ea',
+      position: 'relative',
+    },
+    headerTitle: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#6b4226',
     },
   });
 

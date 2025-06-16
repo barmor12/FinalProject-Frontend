@@ -16,6 +16,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { router } from "expo-router";
 import styles from "../styles/OrdersScreenStyles";
+import BackButton from "../../components/BackButton";
 
 interface Order {
   _id: string;
@@ -173,7 +174,10 @@ export default function OrdersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.title}>Your Orders</Text>
+      <View style={styles.headerContainer}>
+        <BackButton />
+        <Text style={styles.headerTitle}>Your Orders</Text>
+      </View>
 
       {/* Render horizontal filter buttons for order statuses */}
       <ScrollView
@@ -385,4 +389,3 @@ export default function OrdersScreen() {
     </SafeAreaView>
   );
 }
-

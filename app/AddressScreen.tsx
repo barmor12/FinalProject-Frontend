@@ -18,6 +18,7 @@ import { Ionicons } from '@expo/vector-icons';
 import styles from './styles/AddressStyles';
 import config from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 interface Address {
     _id: string;
@@ -309,7 +310,12 @@ export default function AddressScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>My Addresses</Text>
+            <View style={styles.header}>
+              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                <Ionicons name="arrow-back" size={20} color="#fff" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>My Addresses</Text>
+            </View>
             <FlatList
                 data={addresses}
                 renderItem={renderAddress}

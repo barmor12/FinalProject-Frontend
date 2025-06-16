@@ -142,7 +142,7 @@ export default function AdminDiscountCodes() {
       <SafeAreaView style={styles.container}>
         <View style={styles.headerContainer}>
           <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
-          <Text style={styles.screenDescription}>Create, manage and monitor all active discount codes</Text>
+
         </View>
         <Text style={styles.title}>Manage Discount Codes</Text>
 

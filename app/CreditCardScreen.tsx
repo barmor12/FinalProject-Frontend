@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import styles from './styles/CreditCardStyles';
 import config from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { router } from 'expo-router';
 
 interface CreditCard {
     id: string;
@@ -341,6 +342,7 @@ export default function CreditCardScreen() {
     const renderCard = ({ item }: { item: CreditCard }) => {
         console.log('Rendering card:', item);
         return (
+            
             <View style={styles.cardContainer}>
                 <View style={styles.cardHeader}>
                     <Image
@@ -399,7 +401,14 @@ export default function CreditCardScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>My Credit Cards</Text>
+            {/* Header Section */}
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Ionicons name="arrow-back" size={20} color="#fff" />
+                </TouchableOpacity>
+                <Text style={styles.headerTitle}>My Credit Cards</Text>
+            </View>
+
             <FlatList
                 data={cards}
                 renderItem={renderCard}

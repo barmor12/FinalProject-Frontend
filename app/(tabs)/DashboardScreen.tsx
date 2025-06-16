@@ -278,16 +278,7 @@ export default function DashboardScreen() {
   const renderProductCardVertical = ({ item }: { item: Product }) => {
     const isFavorite = likedProducts.has(item._id);
     return (
-      <View
-        style={[
-          styles.verticalCardContainer,
-          isFavorite && {
-            backgroundColor: "#fff4f4",
-            borderColor: "#d9534f",
-            borderWidth: 1,
-          },
-        ]}
-      >
+      <View style={styles.verticalCardContainer}>
         <TouchableOpacity
           style={styles.verticalCardTouchable}
           onPress={() => {
@@ -306,7 +297,6 @@ export default function DashboardScreen() {
             ) : (
               <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
             )}
-            {isFavorite && <Text style={styles.favoriteLabel}>❤️ Favorite</Text>}
           </View>
         </TouchableOpacity>
         <TouchableOpacity

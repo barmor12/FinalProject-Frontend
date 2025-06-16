@@ -14,6 +14,7 @@ import config from "../config";
 import { useRouter } from "expo-router";
 import { fetchUserData } from "./utils/fetchUserData";
 import styles from "./styles/EditProfileStyles"; // Importing styles
+import BackButton from "../components/BackButton";
 
 export default function EditProfileScreen() {
   const router = useRouter();
@@ -189,7 +190,10 @@ export default function EditProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Edit Profile</Text>
+      <View style={styles.headerContainer}>
+        <BackButton />
+        <Text style={styles.headerTitle}>Edit Profile</Text>
+      </View>
 
       {loading ? (
         <View style={styles.loadingContainer}>

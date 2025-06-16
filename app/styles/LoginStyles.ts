@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
     marginTop: 40,
   },
   title: {
-    fontSize: 28,
+    fontSize: 33,
     fontWeight: "800",
     color: "#3e2723",
     textAlign: "center",
@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 20,
     color: "#5d4037",
     textAlign: "center",
     marginBottom: 28,

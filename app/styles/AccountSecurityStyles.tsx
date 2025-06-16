@@ -11,8 +11,23 @@ export default StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     textAlign: "center",
-    marginVertical: 60,
-    marginBottom: 10,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 16,
+    paddingTop: 20,
+    paddingBottom: 20,
+    backgroundColor: "#f9f3ea",
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#000",
+    textAlign: "center",
+    flex: 1,
+    marginRight: 32, // ensures it's centered even with back button
   },
   sectionTitle: {
     fontSize: 18,
@@ -46,14 +61,10 @@ export default StyleSheet.create({
   },
   label: { fontSize: 16, fontWeight: "bold" },
   backButton: {
-    position: "absolute",
-    top: 10,
-    left: 10,
     backgroundColor: "#d49a6a",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 10,
-    zIndex: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
   },
   backButtonText: { fontSize: 16, fontWeight: "bold", color: "#fff" },
   deleteButton: {

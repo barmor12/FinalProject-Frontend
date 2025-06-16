@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  RefreshControl,
 } from "react-native";
 import { LineChart, PieChart, BarChart } from "react-native-chart-kit";
 import config from "../../config";
@@ -59,6 +60,12 @@ const StatisticsScreen = () => {
     orderStatusData: [],
     topProfitableCakes: [],
   });
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchStatistics();
+    setRefreshing(false);
+  };
 
   const fetchStatistics = useCallback(async () => {
     try {
@@ -140,6 +147,11 @@ const StatisticsScreen = () => {
     strokeWidth: 2,
     barPercentage: 0.5,
     useShadowColorFromDataset: false,
+    legendFontSize: 10,
+    legendTextStyle: {
+      marginRight: 10,
+      maxWidth: 100,
+    },
   };
   const statusColors: { [key: string]: string } = {
     delivered: "#4CAF50",
@@ -170,9 +182,16 @@ const StatisticsScreen = () => {
     ],
   };
 
+  const predefinedColors = ["#A0522D", "#CD853F", "#D2691E"];
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <View style={styles.headerRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <Text style={styles.title}>📊 Business Analytics</Text>
@@ -319,7 +338,7 @@ const StatisticsScreen = () => {
               <Text style={styles.chartTitle}>Top Profitable Cakes</Text>
               {statistics.topProfitableCakes?.map((cake, index) => (
                 <View key={index} style={styles.cakeItem}>
-                  <Text style={styles.cakeName}>{cake.name}</Text>
+                  <Text style={styles.cakeName} numberOfLines={1} ellipsizeMode="tail">{cake.name}</Text>
                   <View style={styles.cakeStats}>
                     <Text style={styles.cakeStat}>
                       Quantity: {cake.quantity}
@@ -340,18 +359,18 @@ const StatisticsScreen = () => {
                     .filter(c => c.revenue > 0)
                     .slice(0, 3)
                     .map((cake, index) => ({
-                    name: cake.name,
-                    population: cake.revenue,
-                    color: ["#f39c12", "#e67e22", "#d35400"][index],
-                    legendFontColor: "#6d4226",
-                    legendFontSize: 12,
-                  }))}
+                      name: cake.name,
+                      population: cake.revenue,
+                      color: predefinedColors[index % predefinedColors.length],
+                      legendFontColor: "#6d4226",
+                      legendFontSize: 10,
+                    }))}
                   width={screenWidth - 40}
                   height={220}
                   chartConfig={chartConfig}
                   accessor="population"
                   backgroundColor="transparent"
-                  paddingLeft="15"
+                  paddingLeft="5"
                   absolute
                 />
               ) : (

@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   ScrollView,
   SafeAreaView,
+  RefreshControl,
 } from "react-native";
 import { useNavigation, useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
@@ -16,6 +17,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { Calendar } from "react-native-calendars";
 import styles from "../styles/AdminScreensStyles/AdminDashboardScreenStyles";
+
+interface Order {
+  _id: string;
+  status: string;
+  totalPrice: number;
+  createdAt: string;
+  deliveryDate?: string;
+  user?: {
+    firstName: string;
+    lastName: string;
+  };
+}
 
 export default function AdminDashboardScreen() {
   const navigation = useNavigation<any>();
@@ -29,14 +42,22 @@ export default function AdminDashboardScreen() {
     revenue: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [allOrders, setAllOrders] = useState<any[]>([]);
-  const [displayedOrders, setDisplayedOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [allOrders, setAllOrders] = useState<Order[]>([]);
+  const [displayedOrders, setDisplayedOrders] = useState<Order[]>([]);
   const [selectedDate, setSelectedDate] = useState("");
   const [showCalendar] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(
     new Date().toISOString().slice(0, 7)
   ); // Format: YYYY-MM
+  const [lowStockProducts, setLowStockProducts] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [revenueData, setRevenueData] = useState<number[]>([]);
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
 
   const fetchData = async () => {
     try {
@@ -79,6 +100,20 @@ export default function AdminDashboardScreen() {
       setOrders(fetchedOrders);
       setAllOrders(fetchedOrders);
       setDisplayedOrders(fetchedOrders);
+
+      const revenuePerDay = Array(7).fill(0); // Sunday = 0
+      fetchedOrders.forEach((order: Order) => {
+        const date = new Date(order.createdAt);
+        const day = date.getDay(); // Sunday = 0, Monday = 1, ..., Saturday = 6
+        revenuePerDay[day] += order.totalPrice || 0;
+      });
+      setRevenueData(revenuePerDay);
+
+      // Fetch products and check for low stock
+      const productsResponse = await axios.get(`${config.BASE_URL}/cakes`);
+      const allProducts = productsResponse.data;
+      const lowStock = allProducts.filter((p: any) => p.stock < 3);
+      setLowStockProducts(lowStock);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {
@@ -160,7 +195,7 @@ export default function AdminDashboardScreen() {
     } = {};
 
     // Group orders by date
-    allOrders.forEach((order) => {
+    allOrders.forEach((order: Order) => {
       // Mark if order has a deliveryDate, or is pending (even if no deliveryDate)
       if (order.deliveryDate || order.status === "pending") {
         // Use deliveryDate if present, otherwise fallback to createdAt
@@ -218,7 +253,7 @@ export default function AdminDashboardScreen() {
 
   // Get orders for selected date
   const getOrdersForDate = (date: string) => {
-    return orders.filter((order) => {
+    return orders.filter((order: Order) => {
       try {
         if (!order.deliveryDate) return false;
         const orderDate = new Date(order.deliveryDate);
@@ -244,7 +279,12 @@ export default function AdminDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView
+        style={styles.scrollView}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Text style={styles.title}>Admin Dashboard</Text>
 
         {/* Stats Section */}
@@ -257,20 +297,25 @@ export default function AdminDashboardScreen() {
         </View>
 
         {/* Low Stock Alert */}
-        <View style={styles.alertBox}>
-          <Text style={styles.alertTitle}>⚠️ Low stock alert</Text>
-          <Text style={styles.alertContent}>Chocolate Cake: 2 left</Text>
-          <Text style={styles.alertContent}>Vanilla Cake: 1 left</Text>
-        </View>
+        {lowStockProducts.length > 0 && (
+          <View style={styles.alertBox}>
+            <Text style={styles.alertTitle}>⚠️ Low stock alert</Text>
+            {lowStockProducts.map((item) => (
+              <Text key={item._id} style={styles.alertContent}>
+                {item.name}: {item.stock} left
+              </Text>
+            ))}
+          </View>
+        )}
 
         {/* Revenue Line Chart */}
         <Text style={styles.chartTitle}>Revenue Overview</Text>
         <LineChart
           data={{
-            labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            labels: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
             datasets: [
               {
-                data: [150, 200, 170, 250, 300, 280, 320],
+                data: revenueData,
               },
             ],
           }}
@@ -340,7 +385,7 @@ export default function AdminDashboardScreen() {
             </Text>
             <ScrollView style={styles.selectedDateOrders}>
               {displayedOrders.length > 0 ? (
-                displayedOrders.map((order) => (
+                displayedOrders.map((order: Order) => (
                   <TouchableOpacity
                     key={order._id}
                     style={[
@@ -384,4 +429,3 @@ export default function AdminDashboardScreen() {
     </SafeAreaView>
   );
 }
-
