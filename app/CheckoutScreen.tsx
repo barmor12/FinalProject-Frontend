@@ -86,8 +86,6 @@ export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit'>('cash');
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
-  // New state for pickup option
-  const [selectedPickupOption, setSelectedPickupOption] = useState<"Pick Up Today" | "Pick Up Another Day" | null>(null);
 
   const router = useRouter();
 
@@ -415,10 +413,7 @@ export default function CheckoutScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
-        <ScrollView
-          keyboardShouldPersistTaps="handled"
-          style={styles.scrollView}
-        >
+        <ScrollView style={styles.scrollView}>
           <TouchableOpacity onPress={() => router.back()} style={{ padding: 10, alignSelf: "flex-start" }}>
             <View style={{
               backgroundColor: "#d49a6a",
@@ -515,44 +510,8 @@ export default function CheckoutScreen() {
                 </View>
               )}
 
-              {/* Pickup Option Buttons for Self Pickup */}
-              {shippingMethod === "Self Pickup" && (
-                <View style={{ marginTop: 10 }}>
-                  <Text style={styles.inputLabel}>Pickup Options:</Text>
-                  <TouchableOpacity
-                    style={[
-                      styles.optionButton,
-                      selectedPickupOption === "Pick Up Today" && styles.selectedOption,
-                    ]}
-                    onPress={() => setSelectedPickupOption("Pick Up Today")}
-                  >
-                    <Text style={[
-                      styles.optionButtonText,
-                      selectedPickupOption === "Pick Up Today" && { color: "#fff" }
-                    ]}>
-                      Pick Up Today
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.optionButton,
-                      selectedPickupOption === "Pick Up Another Day" && styles.selectedOption,
-                    ]}
-                    onPress={() => setSelectedPickupOption("Pick Up Another Day")}
-                  >
-                    <Text style={[
-                      styles.optionButtonText,
-                      selectedPickupOption === "Pick Up Another Day" && { color: "#fff" }
-                    ]}>
-                      Pick Up Another Day
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Delivery Date Section - show only for Future Delivery, or Self Pickup + Pick Up Another Day */}
-              {(shippingMethod === "Future Delivery" ||
-                (shippingMethod === "Self Pickup" && selectedPickupOption === "Pick Up Another Day")) && (
+              {/* Delivery Date Section - show for any shipping method */}
+              {shippingMethod !== "" && (
                 <View style={styles.sectionContainer}>
                   <Text style={styles.sectionTitle}>
                     {shippingMethod === "Self Pickup"
@@ -576,28 +535,43 @@ export default function CheckoutScreen() {
                       color="#6b4226"
                     />
                   </TouchableOpacity>
-                  {/* Inline DateTimePicker instead of Modal */}
+                  {/* DateTimePicker inside custom modal with OK/Cancel */}
                   {showDatePicker && (
-                    <View style={{ paddingBottom: 250 }}>
-                      <DateTimePicker
-                        value={deliveryDate || new Date()}
-                        mode="date"
-                        display={Platform.OS === "android" ? "calendar" : "spinner"}
-                        onChange={(event, selectedDate) => {
-                          if (Platform.OS === "android") {
-                            setShowDatePicker(false);
-                          }
-                          if (selectedDate) {
-                            const currentYearDate = new Date(selectedDate);
-                            currentYearDate.setFullYear(new Date().getFullYear());
-                            setDeliveryDate(currentYearDate);
-                          }
-                        }}
-                        minimumDate={new Date()}
-                        maximumDate={new Date(new Date().getFullYear(), 11, 31)}
-                        locale="en-GB"
-                      />
-                    </View>
+                    <Modal transparent={true} animationType="fade">
+                      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+                        <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
+                          <DateTimePicker
+                            value={deliveryDate || new Date()}
+                            mode="date"
+                            display={Platform.OS === "android" ? "calendar" : "spinner"}
+                            onChange={(event, selectedDate) => {
+                              if (selectedDate) {
+                                const currentYearDate = new Date(selectedDate);
+                                currentYearDate.setFullYear(new Date().getFullYear());
+                                setDeliveryDate(currentYearDate);
+                              }
+                            }}
+                            minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+                            maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                            locale="en-GB"
+                          />
+                          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+                            <TouchableOpacity
+                              onPress={() => setShowDatePicker(false)}
+                              style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#ccc", borderRadius: 5 }}
+                            >
+                              <Text style={{ fontWeight: "600" }}>Cancel</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                              onPress={() => setShowDatePicker(false)}
+                              style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#6b4226", borderRadius: 5 }}
+                            >
+                              <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      </View>
+                    </Modal>
                   )}
                 </View>
               )}
@@ -823,111 +797,72 @@ export default function CheckoutScreen() {
         </Modal>
 
         <Modal
+          transparent={true}
           visible={shippingModalVisible}
-          transparent
           animationType="slide"
-          onRequestClose={() => setShippingModalVisible(false)}
         >
-          <View style={[styles.modalContainer, { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 }]}>
-            <Text style={[styles.modalTitle, { fontSize: 20, fontWeight: "700", color: "#6b4226", marginBottom: 20 }]}>Choose Shipping Method</Text>
-
-            {/* Option Button */}
-            {[
-              {
-                label: "Standard Delivery (2-3 Days)",
-                value: "Standard Delivery",
-                icon: "cube-outline",
-              },
-              {
-                label: "Future Delivery (Pick a Date)",
-                value: "Future Delivery",
-                icon: "calendar-outline",
-              },
-            ].map((option) => (
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              <Text style={styles.modalHeaderText}>Choose Shipping Method</Text>
               <TouchableOpacity
-                key={option.value}
                 style={[
-                  styles.modalButton,
-                  {
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: 12,
-                    borderRadius: 10,
-                    backgroundColor: shippingMethod === option.value ? "#6b4226" : "#f4e3d7",
-                    marginBottom: 12,
-                  },
+                  styles.shippingMethodButton,
+                  shippingMethod === "Standard Delivery (2-3 days)" && styles.selectedOption,
                 ]}
                 onPress={() => {
-                  setShippingMethod(option.value);
-                  setDeliveryDate(null);
+                  setShippingMethod("Standard Delivery (2-3 days)");
                   setShippingModalVisible(false);
                 }}
               >
                 <Ionicons
-                  name={option.icon as any}
-                  size={22}
-                  color={shippingMethod === option.value ? "#fff" : "#6b4226"}
-                  style={{ marginRight: 10 }}
+                  name="bicycle"
+                  size={20}
+                  color={shippingMethod === "Standard Delivery (2-3 days)" ? "#fff" : "#6b4226"}
+                  style={styles.shippingMethodIcon}
                 />
                 <Text
-                  style={{
-                    color: shippingMethod === option.value ? "#fff" : "#6b4226",
-                    fontWeight: "600",
-                    fontSize: 14,
-                  }}
+                  style={[
+                    styles.shippingMethodText,
+                    { color: shippingMethod === "Standard Delivery (2-3 days)" ? "#fff" : "#6b4226" },
+                  ]}
                 >
-                  {option.label}
+                  Standard Delivery (2-3 days)
                 </Text>
               </TouchableOpacity>
-            ))}
 
-            {/* Self Pickup */}
-            <TouchableOpacity
-              style={[
-                styles.modalButton,
-                {
-                  flexDirection: "row",
-                  alignItems: "center",
-                  padding: 12,
-                  borderRadius: 10,
-                  backgroundColor: shippingMethod === "Self Pickup" ? "#6b4226" : "#f4e3d7",
-                  marginBottom: 12,
-                },
-              ]}
-              onPress={() => {
-                setShippingMethod("Self Pickup");
-                setSelectedPickupOption(null);
-                setDeliveryDate(null);
-                setShippingModalVisible(false);
-              }}
-            >
-              <Ionicons
-                name="storefront-outline"
-                size={22}
-                color={shippingMethod === "Self Pickup" ? "#fff" : "#6b4226"}
-                style={{ marginRight: 10 }}
-              />
-              <Text
-                style={{
-                  color: shippingMethod === "Self Pickup" ? "#fff" : "#6b4226",
-                  fontWeight: "600",
-                  fontSize: 14,
+              <TouchableOpacity
+                style={[
+                  styles.shippingMethodButton,
+                  shippingMethod === "Self Pickup" && styles.selectedOption,
+                ]}
+                onPress={() => {
+                  setShippingMethod("Self Pickup");
+                  setShippingModalVisible(false);
                 }}
               >
-                Self Pickup
-              </Text>
-            </TouchableOpacity>
+                <Ionicons
+                  name="storefront-outline"
+                  size={20}
+                  color={shippingMethod === "Self Pickup" ? "#fff" : "#6b4226"}
+                  style={styles.shippingMethodIcon}
+                />
+                <Text
+                  style={[
+                    styles.shippingMethodText,
+                    { color: shippingMethod === "Self Pickup" ? "#fff" : "#6b4226" },
+                  ]}
+                >
+                  Self Pickup
+                </Text>
+              </TouchableOpacity>
 
-            {/* Cancel Button */}
-            <TouchableOpacity
-              onPress={() => setShippingModalVisible(false)}
-              style={{
-                marginTop: 20,
-                alignItems: "center",
-              }}
-            >
-              <Text style={{ color: "#888", fontSize: 14 }}>Cancel</Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setShippingModalVisible(false)}
+                style={styles.modalCloseButtonRed}
+              >
+                <Text style={styles.modalCloseButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </Modal>
         <Modal
