@@ -5,18 +5,19 @@ import {
   Image,
   FlatList,
   TouchableOpacity,
-  Alert,
   TextInput,
   RefreshControl,
   ScrollView,
+  Modal,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
-import config from "../../config";
-import { fetchUserData } from "../utils/fetchUserData";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import config from "@/config";
 import styles from "../styles/DashboardScreenStyles";
+import { fetchUserData } from "../utils/fetchUserData";
 
 interface Product {
   _id: string;
@@ -46,6 +47,11 @@ export default function DashboardScreen() {
   // Sort order state for price sorting
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [activeFilters, setActiveFilters] = useState({ favorites: false, inStock: false });
+  // Add modal state for add-to-cart
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedQuantity, setSelectedQuantity] = useState(1);
+  // Cart state, for demonstration
+  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -278,9 +284,7 @@ export default function DashboardScreen() {
   const renderProductCardVertical = ({ item }: { item: Product }) => {
     const isFavorite = likedProducts.has(item._id);
     return (
-      <View
-        style={styles.verticalCardContainer}
-      >
+      <View style={styles.verticalCardContainer}>
         <TouchableOpacity
           style={styles.verticalCardTouchable}
           onPress={() => {
@@ -314,8 +318,74 @@ export default function DashboardScreen() {
             color={isFavorite ? "#d9534f" : "#ccc"}
           />
         </TouchableOpacity>
+        {/* Add to cart button, only if in stock */}
+        {item.stock > 0 && (
+          <TouchableOpacity
+            onPress={() => {
+              setSelectedProduct(item);
+              setSelectedQuantity(1);
+            }}
+            style={styles.addToCartButton}
+          >
+            <Ionicons name="cart" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
     );
+  };
+
+  // Cart update logic
+  const updateCart = (product: Product, quantity: number) => {
+    setCart((prevCart) => {
+      // Update quantity if product already exists, else add new
+      const idx = prevCart.findIndex((item) => item.product._id === product._id);
+      if (idx !== -1) {
+        const updated = [...prevCart];
+        updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + quantity };
+        return updated;
+      } else {
+        return [...prevCart, { product, quantity }];
+      }
+    });
+  };
+
+  // Add to cart logic using POST request (mirrors ProductDetailsScreen)
+  const handleAddToCart = async () => {
+    if (!selectedProduct) return;
+    try {
+      if (!selectedProduct._id) {
+        Alert.alert("Error", "Cake ID is missing.");
+        return;
+      }
+      if (selectedQuantity < 1) {
+        Alert.alert("Error", "Quantity must be at least 1.");
+        return;
+      }
+      const token = await AsyncStorage.getItem("accessToken");
+      if (!token) {
+        Alert.alert("Error", "You need to be logged in to add items to the cart.");
+        return;
+      }
+      const response = await fetch(`${config.BASE_URL}/cart/add`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ cakeId: selectedProduct._id, quantity: selectedQuantity }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        Alert.alert("Error", error.message || "Failed to add cake to cart");
+        return;
+      }
+      Alert.alert("Success", "🎉 Cake added to cart successfully!");
+      setSelectedProduct(null);
+      setSelectedQuantity(1);
+    } catch (error: any) {
+      Alert.alert("Error", "Something went wrong. Please try again.");
+      console.error("❌ addToCart error:", error);
+    }
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -466,6 +536,55 @@ export default function DashboardScreen() {
           columnWrapperStyle={{ justifyContent: "space-between" }}
           scrollEnabled={false}
         />
+        {/* Quantity modal for add to cart */}
+        {selectedProduct && (
+          <Modal visible={!!selectedProduct} transparent animationType="fade">
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <TouchableOpacity
+                  style={styles.closeModalButton}
+                  onPress={() => setSelectedProduct(null)}
+                >
+                  <Ionicons name="close" size={24} color="#000" />
+                </TouchableOpacity>
+                <Text style={styles.quantityTitle}>Select Quantity</Text>
+                <Text style={{ fontSize: 16, marginVertical: 8 }}>{selectedProduct.name}</Text>
+                <Text style={{ fontSize: 14, marginBottom: 12 }}>Price: ${selectedProduct.price.toFixed(2)}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+                  <TouchableOpacity
+                    style={styles.qtyControl}
+                    onPress={() => {
+                      const qty = Math.max(1, selectedQuantity - 1);
+                      if (qty <= selectedProduct.stock) {
+                        setSelectedQuantity(qty);
+                      }
+                    }}
+                  >
+                    <Text style={styles.qtyControlText}>-</Text>
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 18, marginHorizontal: 12 }}>{selectedQuantity}</Text>
+                  <TouchableOpacity
+                    style={styles.qtyControl}
+                    onPress={() => {
+                      const qty = selectedQuantity + 1;
+                      if (qty <= selectedProduct.stock) {
+                        setSelectedQuantity(qty);
+                      }
+                    }}
+                  >
+                    <Text style={styles.qtyControlText}>+</Text>
+                  </TouchableOpacity>
+                </View>
+                <TouchableOpacity
+                  style={styles.confirmAddButton}
+                  onPress={handleAddToCart}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>Add to Cart</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

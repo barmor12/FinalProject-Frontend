@@ -1,6 +1,103 @@
 import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
+  quickAddButton: {
+    backgroundColor: "#FF6B6B",
+    padding: 8,
+    borderRadius: 8,
+    marginTop: 10,
+  },
+  quickAddButtonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  quantityContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  qtyBtn: {
+    fontSize: 24,
+    padding: 10,
+  },
+  qtyText: {
+    fontSize: 18,
+  },
+  addToCartButton: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "#6b4226",
+    padding: 8,
+    borderRadius: 20,
+  },
+  quantityModal: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999,
+  },
+  quantityModalContent: {
+    backgroundColor: "#fff",
+    padding: 20,
+    borderRadius: 10,
+    width: "80%",
+    alignItems: "center",
+  },
+  quantityTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  confirmAddButton: {
+    backgroundColor: "#6b4226",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  qtyControl: {
+    backgroundColor: "#e1d5c9",
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  qtyControlText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#6b4226",
+  },
+  addToCartButtonText: {
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold",
+  },
   container: {
     flex: 1,
     padding: 15,
@@ -102,7 +199,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
-    minHeight: 250,
+    minHeight: 260,
     justifyContent: "space-between",
   },
   favoriteButtonTop: {
@@ -231,6 +328,11 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 16,
     elevation: 3,
+  },
+  closeModalButton: {
+    position: "absolute",
+    top: 10,
+    right: 10,
   },
 });
 
