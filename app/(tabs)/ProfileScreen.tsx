@@ -215,10 +215,11 @@ export default function ProfileScreen() {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.container}>
 
