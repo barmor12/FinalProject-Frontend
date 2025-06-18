@@ -6,12 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  StyleSheet,
   Alert,
   Modal,
   RefreshControl,
   TextInput,
-  Platform,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,8 +17,10 @@ import config from "../../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../_layout";
 import { useFocusEffect } from "expo-router";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminOrdersScreenStyles";
+import BackButton from "../../components/BackButton";
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -40,6 +40,43 @@ export default function AdminOrdersScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [statusDropdownVisible, setStatusDropdownVisible] = useState(false);
+  const router = useRouter();
+
+  // fetchOrders must be defined before use in hooks
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    setRefreshing(true);
+    const token = await AsyncStorage.getItem("accessToken");
+    if (!token) {
+      Alert.alert("Error", "Authorization token is required");
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${config.BASE_URL}/order/orders`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data: Order[] = await response.json();
+      setOrders(data);
+    } catch (error) {
+      console.error("❌ Error fetching orders:", error);
+      Alert.alert("Error", "Failed to fetch orders. Please try again.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   // ניצור מערך הזמנות מסוננות לפי פילטר
   const filteredOrders = filterStatus === "all"
@@ -93,47 +130,12 @@ export default function AdminOrdersScreen() {
         fetchOrders();
         navigation.setParams({ shouldRefresh: false });
       }
-    }, [shouldRefresh])
+    }, [shouldRefresh, fetchOrders, navigation])
   );
 
   useEffect(() => {
     fetchOrders();
-  }, []);
-
-  const fetchOrders = useCallback(async () => {
-    setLoading(true);
-    setRefreshing(true);
-    const token = await AsyncStorage.getItem("accessToken");
-    if (!token) {
-      Alert.alert("Error", "Authorization token is required");
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
-    try {
-      const response = await fetch(`${config.BASE_URL}/order/orders`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      const data: Order[] = await response.json();
-      setOrders(data);
-    } catch (error) {
-      console.error("❌ Error fetching orders:", error);
-      Alert.alert("Error", "Failed to fetch orders. Please try again.");
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  }, []);
+  }, [fetchOrders]);
 
   const deleteOrders = async (orderId: string) => {
     const token = await AsyncStorage.getItem("accessToken");
@@ -176,11 +178,6 @@ export default function AdminOrdersScreen() {
     setModalVisible(true);
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchOrders();
-    }, [fetchOrders])
-  );
   const updateOrderStatus = async () => {
     if (!selectedStatus) {
       Alert.alert("Error", "Please select a status.");
@@ -383,7 +380,8 @@ export default function AdminOrdersScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
+      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
       <Text style={styles.title}>Orders</Text>
 
       {/* 🔍 שדה חיפוש לפי שם לקוח */}

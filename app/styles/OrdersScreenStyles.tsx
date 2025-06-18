@@ -132,6 +132,7 @@ const styles: { [key: string]: any } = StyleSheet.create({
       paddingBottom: 20,
       backgroundColor: '#f9f3ea',
       position: 'relative',
+      // position relative is required for absolute BackButton
     },
     headerTitle: {
       fontSize: 24,

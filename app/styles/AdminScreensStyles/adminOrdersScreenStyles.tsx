@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: "#f9f3ea",
-      paddingTop: Platform.OS === 'ios' ? 20 : 40,
+      // paddingTop will be set via inline style in the component for consistency
       paddingHorizontal: 15,
     },
     title: {

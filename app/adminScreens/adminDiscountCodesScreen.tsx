@@ -17,6 +17,8 @@ import config from "../../config";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminDiscountCodesScreenStyles";
+import BackButton from "../../components/BackButton";
+import { useRouter } from "expo-router";
 
 interface DiscountCode {
   _id: string;
@@ -27,6 +29,8 @@ interface DiscountCode {
 }
 
 export default function AdminDiscountCodes() {
+  const router = useRouter();
+
   const [codes, setCodes] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [code, setCode] = useState("");
@@ -139,7 +143,8 @@ export default function AdminDiscountCodes() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
+        <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
         <View style={styles.headerContainer}>
           <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
 
@@ -220,4 +225,3 @@ export default function AdminDiscountCodes() {
     </TouchableWithoutFeedback>
   );
 }
-

@@ -45,7 +45,7 @@ export default function DashboardScreen() {
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
   // Sort order state for price sorting
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [activeFilters, setActiveFilters] = useState({ favorites: false, inStock: true });
+  const [activeFilters, setActiveFilters] = useState({ favorites: false, inStock: false });
 
   const handleSearch = (text: string) => {
     setSearchText(text);
@@ -263,15 +263,15 @@ export default function DashboardScreen() {
   };
 
   const handleInStockFilter = () => {
-    setActiveFilters(prev => ({ ...prev, inStock: !prev.inStock }));
-    const sortedInStock = [...products]
-      .filter((p) => p.stock > 0)
-      .sort((a, b) => {
-        const direction = sortOrder === "asc" ? 1 : -1;
-        return direction * (b.stock - a.stock);
-      });
-    setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
-    setFilteredProducts(sortedInStock);
+    const newInStock = !activeFilters.inStock;
+    setActiveFilters(prev => ({ ...prev, inStock: newInStock }));
+
+    if (newInStock) {
+      const filtered = products.filter((p) => p.stock > 0);
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts(products);
+    }
   };
 
   // Render vertical product card with like button (modern, favorite highlight)
@@ -292,16 +292,16 @@ export default function DashboardScreen() {
           <Image source={{ uri: item.image }} style={styles.productImage} />
           <View style={styles.productInfo}>
             <Text style={styles.productName}>{item.name}</Text>
-            {item.stock <= 0 ? (
-              <Text style={styles.outOfStockLabel}>Out of Stock</Text>
-            ) : item.stock < 3 ? (
-              <View>
-                <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
+            <View style={{ minHeight: 30, alignItems: 'center', justifyContent: 'center' }}>
+              {item.stock <= 0 ? (
+                <Text style={[styles.outOfStockLabel, { paddingHorizontal: 6 }]}>Out of Stock</Text>
+              ) : item.stock < 3 ? (
                 <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
-              </View>
-            ) : (
-              <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-            )}
+              ) : (
+                <Text style={{ color: 'transparent' }}>placeholder</Text>
+              )}
+            </View>
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -451,7 +451,7 @@ export default function DashboardScreen() {
               <Text style={[
                 styles.filterText,
                 activeFilters.inStock && styles.activeFilterText
-              ]}>✅ In Stock</Text>
+              ]}>📦 Stock</Text>
             </TouchableOpacity>
           </ScrollView>
         </View>

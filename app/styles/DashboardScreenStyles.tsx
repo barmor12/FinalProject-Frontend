@@ -88,6 +88,7 @@ const styles = StyleSheet.create({
 
   verticalCardContainer: {
     width: "48%",
+    height: 280,
     marginBottom: 16,
     position: "relative",
   },
@@ -101,6 +102,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
+    minHeight: 250,
+    justifyContent: "space-between",
   },
   favoriteButtonTop: {
     position: "absolute",

@@ -20,6 +20,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import styles from "../styles/AdminScreensStyles/ProductDetailsScreenAdminStyles";
+import BackButton from "../../components/BackButton";
 
 interface Product {
     _id: string;
@@ -225,15 +226,20 @@ export default function ProductDetailsScreen() {
     };
 
     return (
-        <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
             <SafeAreaView style={styles.container}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.container}
+                <BackButton />
+                <ScrollView
+                    contentContainerStyle={styles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
                 >
-                    <ScrollView contentContainerStyle={styles.scrollContent}>
-                        {isEditing ? (
-                            <View style={styles.editContainer}>
+                    <TouchableWithoutFeedback onPress={dismissKeyboard}>
+                        <View>
+                            {isEditing ? (
+                                <View style={styles.editContainer}>
                                 <Text style={styles.editLabel}>Product Name</Text>
                                 <TextInput
                                     style={styles.editInput}
@@ -384,11 +390,12 @@ export default function ProductDetailsScreen() {
                                     </View>
                                 </View>
                             </View>
-                        )}
-                    </ScrollView>
-                </KeyboardAvoidingView>
+                            )}
+                        </View>
+                    </TouchableWithoutFeedback>
+                </ScrollView>
             </SafeAreaView>
-        </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
     );
 }
 

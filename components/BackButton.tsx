@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
+import { TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
@@ -18,12 +18,13 @@ export default function BackButton({ onPress }: { onPress?: () => void }) {
 
 const styles = StyleSheet.create({
   backButton: {
-    backgroundColor: '#d49a6a',
+    position: "absolute",
+    top: Platform.OS === "ios" ? 50 : 40, // מיקום גבוה יותר גם באנדרואיד
+    left: 16,
+    backgroundColor: "#d49a6a",
     paddingVertical: 6,
     paddingHorizontal: 10,
     borderRadius: 8,
-    position: 'absolute',
-    left: 16,
     zIndex: 10,
   },
 });

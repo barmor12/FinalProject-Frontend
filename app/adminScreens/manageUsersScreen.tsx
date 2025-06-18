@@ -19,7 +19,8 @@ import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../_layout";
-import { router, useFocusEffect } from "expo-router";
+import BackButton from "../../components/BackButton";
+import { useRouter, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/manageUsersScreenStyles";
@@ -34,6 +35,7 @@ interface User {
 }
 
 export default function AdminUsersScreen() {
+  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
@@ -457,6 +459,7 @@ export default function AdminUsersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
       <Text style={styles.title}>Admin User Management</Text>
 
       <View style={styles.searchWrapper}>

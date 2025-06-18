@@ -2,7 +2,10 @@ import { StyleSheet } from "react-native";
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: "#f9f3ea" },
-    scrollContent: { padding: 16 },
+    scrollContent: {
+        padding: 16,
+        paddingTop: 100, // מקום לכפתור
+    },
     description: { fontSize: 16, color: "#6b4226", marginTop: 16, textAlign: "justify" },
     price: { fontSize: 18, fontWeight: "bold", color: "#6b4226", textAlign: "center" },
     deleteButton: {

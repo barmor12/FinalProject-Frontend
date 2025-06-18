@@ -147,7 +147,13 @@ export default function RecipeScreen() {
             }
 
             const recipeData = await response.json();
-            setSelectedRecipe(recipeData);
+            // Merge with latest like data from recipes state
+            const existingRecipe = recipes.find(r => r._id === recipeData._id);
+            setSelectedRecipe({
+                ...recipeData,
+                isLiked: existingRecipe?.isLiked ?? false,
+                likes: existingRecipe?.likes ?? 0
+            });
         } catch (error: any) {
             console.error("Error fetching recipe details:", error.message);
             Alert.alert("Error", error.message || "Failed to load recipe details");

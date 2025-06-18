@@ -7,9 +7,12 @@ const styles = StyleSheet.create({
     },
     header: {
       padding: 20,
+      paddingTop: 60, // במקום 20, כדי לאפשר מקום לכפתור
+      paddingBottom: 80, // כדי לא לדחוף את הכותרת על הכפתור
       backgroundColor: "#6b4226",
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
+      position: "relative",
     },
     headerTitle: {
       fontSize: 24,
@@ -70,13 +73,14 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderColor: "#e2d6c5",
       borderRadius: 8,
-      padding: 12,
+      padding: 16, // במקום 12
       fontSize: 16,
       color: "#333",
     },
     textArea: {
       height: 100,
       textAlignVertical: "top",
+      marginBottom: 8,
     },
     charCounter: {
       fontSize: 12,
@@ -88,7 +92,8 @@ const styles = StyleSheet.create({
     sendButton: {
       backgroundColor: "#6b4226",
       borderRadius: 8,
-      padding: 15,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
@@ -97,7 +102,8 @@ const styles = StyleSheet.create({
     testButton: {
       backgroundColor: "#28a745",
       borderRadius: 8,
-      padding: 15,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
@@ -114,18 +120,18 @@ const styles = StyleSheet.create({
     },
     recentSection: {
       padding: 20,
-      paddingTop: 0,
+      paddingTop: 10, // היה 0
     },
     notificationCard: {
       backgroundColor: "#fff",
-      borderRadius: 10,
-      padding: 15,
-      marginBottom: 15,
+      borderRadius: 12,
+      padding: 18,
+      marginBottom: 16,
       shadowColor: "#000",
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
-      shadowRadius: 2,
-      elevation: 2,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 3,
     },
     notificationHeader: {
       flexDirection: "row",

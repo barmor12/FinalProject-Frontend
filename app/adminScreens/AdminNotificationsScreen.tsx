@@ -17,8 +17,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import styles from "../styles/AdminScreensStyles/AdminNotificationsScreenStyles";
 // import useNotifications from '../hooks/useNotifications';
+import BackButton from "../../components/BackButton";
+import { useRouter } from "expo-router";
 
 export default function AdminNotificationsScreen() {
+  const router = useRouter();
+
   const [title, setTitle] = useState("");
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
@@ -171,13 +175,14 @@ export default function AdminNotificationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
         <ScrollView>
           <View style={styles.header}>
+            <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
             <Text style={styles.headerTitle}>Send Notifications</Text>
             <Text style={styles.headerSubtitle}>
               Send notifications to all customers about promotions, new
@@ -296,4 +301,3 @@ export default function AdminNotificationsScreen() {
     </SafeAreaView>
   );
 }
-

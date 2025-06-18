@@ -104,8 +104,43 @@ const StatisticsScreen = () => {
 
       if (!token) {
         Alert.alert("Error", "No access token found");
+        setIsLoading(false);
         return;
       }
+
+      // Prepare the payload including all required data and chart structures
+      const payload = {
+        totalOrders: statistics.totalOrders,
+        totalUsers: statistics.totalUsers,
+        totalRevenue: statistics.totalRevenue,
+        totalOrdersPrice: statistics.totalOrdersPrice,
+        monthlyData: statistics.monthlyData,
+        orderStatusData: statistics.orderStatusData,
+        topProfitableCakes: statistics.topProfitableCakes,
+        charts: {
+          monthlyRevenue: {
+            labels: statistics.monthlyData.map((item) => item.month),
+            data: statistics.monthlyData.map((item) => typeof item.count === "number"
+              ? item.count * 10
+              : 0),
+          },
+          monthlyOrders: {
+            labels: statistics.monthlyData.map((item) => item.month),
+            data: statistics.monthlyData.map((item) => item.count || 0),
+          },
+          orderStatus: statistics.orderStatusData.map((item) => ({
+            status: item.status,
+            count: item.count,
+          })),
+          top3Cakes: statistics.topProfitableCakes
+            .filter(c => c.revenue > 0)
+            .slice(0, 3)
+            .map(cake => ({
+              name: cake.name,
+              revenue: cake.revenue,
+            })),
+        },
+      };
 
       const response = await fetch(
         `${config.BASE_URL}/statistics/financial-report`,
@@ -115,18 +150,18 @@ const StatisticsScreen = () => {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
+          body: JSON.stringify(payload),
         }
       );
-
-      const data = await response.json();
 
       if (response.ok) {
         Alert.alert(
           "Success",
-          "Financial report has been sent to your email address.",
+          "Financial report PDF has been generated and sent to your email address.",
           [{ text: "OK" }]
         );
       } else {
+        const data = await response.json();
         Alert.alert(
           "Error",
           data.message || "Failed to generate financial report"

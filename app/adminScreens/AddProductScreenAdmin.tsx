@@ -19,6 +19,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 import styles from "../styles/AdminScreensStyles/AddProductScreenAdminStyles";
+import BackButton from "../../components/BackButton";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function AddProductScreenAdmin() {
   const router = useRouter();
@@ -28,7 +30,6 @@ export default function AddProductScreenAdmin() {
   const [price, setPrice] = useState("");
   const [ingredients, setIngredients] = useState("");
   const [stock, setStock] = useState("");
-  const [allergens, setAllergens] = useState("");
   const [image, setImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [imageLoading, setImageLoading] = useState(false);
@@ -91,7 +92,6 @@ export default function AddProductScreenAdmin() {
       formData.append("price", price);
       formData.append("ingredients", ingredients);
       formData.append("stock", stock);
-      formData.append("allergens", allergens);
       const imageName =
         image
           .split("/")
@@ -135,7 +135,8 @@ export default function AddProductScreenAdmin() {
       {item === "image" && (
         <>
           <TouchableOpacity style={styles.imagePicker} onPress={pickImage}>
-            <Text style={styles.imagePickerText}>📸 Tap here to choose a cake image</Text>
+            <Ionicons name="image-outline" size={24} color="#6b4226" />
+            <Text style={styles.imagePickerText}>Choose Cake Image</Text>
           </TouchableOpacity>
           {imageLoading ? (
             <ActivityIndicator
@@ -264,22 +265,6 @@ export default function AddProductScreenAdmin() {
             <Text
               style={[
                 styles.floatingLabel,
-                allergens ? styles.floatingLabelActive : null,
-              ]}
-            >
-              Allergens
-            </Text>
-            <TextInput
-              style={styles.input}
-              value={allergens}
-              onChangeText={setAllergens}
-              placeholderTextColor="#aaa"
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text
-              style={[
-                styles.floatingLabel,
                 stock ? styles.floatingLabelActive : null,
               ]}
             >
@@ -301,6 +286,7 @@ export default function AddProductScreenAdmin() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#f9f3ea" }}>
+        <BackButton />
         <View style={styles.container}>
           <Text style={styles.title}>Add New Product</Text>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>

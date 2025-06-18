@@ -15,6 +15,8 @@ import { router, useFocusEffect } from "expo-router";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/AdminScreensStyles/AdminRecipesScreenStyles";
+import BackButton from "../../components/BackButton";
+import { useRouter } from "expo-router";
 
 interface Recipe {
     _id: string;
@@ -32,6 +34,7 @@ interface Recipe {
 }
 
 export default function AdminRecipesScreen() {
+    const router = useRouter();
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
     const [isEditing, setIsEditing] = useState(false);
@@ -184,7 +187,8 @@ export default function AdminRecipesScreen() {
     }
 
     return (
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
+            <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
             <View style={styles.header}>
                 <Text style={styles.title}>Manage Recipes</Text>
                 <TouchableOpacity
@@ -234,4 +238,3 @@ export default function AdminRecipesScreen() {
         </SafeAreaView>
     );
 }
-
