@@ -10,6 +10,7 @@ import {
   Platform,
   SafeAreaView,
   ImageBackground,
+  Linking,
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
@@ -32,6 +33,7 @@ export default function SignUpScreen() {
     number: false,
     special: false,
   });
+  const [acceptedPolicy, setAcceptedPolicy] = useState(false);
   type RequirementKey =
     | "length"
     | "lowercase"
@@ -127,7 +129,7 @@ export default function SignUpScreen() {
       source={require("../assets/bg-login.jpg")}
       style={{ flex: 1 }}
       resizeMode="cover"
-      blurRadius={3}
+      blurRadius={10}
     >
       <KeyboardAvoidingView
         style={styles.container}
@@ -223,7 +225,43 @@ export default function SignUpScreen() {
               onChangeText={setConfirmPassword}
             />
 
-            <TouchableOpacity style={styles.button} onPress={handleSignUp}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
+              <TouchableOpacity
+                onPress={() => setAcceptedPolicy(!acceptedPolicy)}
+                style={{
+                  height: 22,
+                  width: 22,
+                  borderRadius: 4,
+                  borderWidth: 1,
+                  borderColor: '#ccc',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 10,
+                  backgroundColor: acceptedPolicy ? '#ba4c4c' : '#fff',
+                }}
+              >
+                {acceptedPolicy && (
+                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>✓</Text>
+                )}
+              </TouchableOpacity>
+              <Text style={{ flex: 1, color: '#333' }}>
+                I have read and agree to the{' '}
+                <Text
+                  style={{ color: '#ba4c4c', textDecorationLine: 'underline' }}
+                  onPress={() =>
+                    Linking.openURL('https://barmor12.github.io/Bakey/bakey_privacy_policy_modern.html')
+                  }
+                >
+                  Privacy Policy
+                </Text>
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.button, { opacity: acceptedPolicy ? 1 : 0.5 }]}
+              onPress={handleSignUp}
+              disabled={!acceptedPolicy}
+            >
               <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
             <Text style={styles.loginText}>
