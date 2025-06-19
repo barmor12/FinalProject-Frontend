@@ -397,20 +397,19 @@ export default function LoginScreen() {
   }, [response]);
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={{ flex: 1 }}
-    >
-      <ImageBackground
-        source={require("../assets/bg-login.jpg")}
+    <View style={{ flex: 1 }}>
+      <View style={styles.backgroundOverlay} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
-        resizeMode="cover"
       >
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
-          keyboardShouldPersistTaps="handled"
+        <ImageBackground
+          source={require("../assets/bg-login.jpg")}
+          style={{ flex: 1 }}
+          resizeMode="cover"
         >
-          <View style={styles.container}>
+          <View style={{ flex: 1, justifyContent: "center" }}>
+            <View style={styles.container}>
             <View style={styles.inputContainer}>
               <Text style={styles.inputLabel}>Email</Text>
               <TextInput
@@ -581,9 +580,10 @@ export default function LoginScreen() {
                 </View>
               </KeyboardAvoidingView>
             </Modal>
+            </View>
           </View>
-        </ScrollView>
-      </ImageBackground>
-    </KeyboardAvoidingView>
+        </ImageBackground>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
