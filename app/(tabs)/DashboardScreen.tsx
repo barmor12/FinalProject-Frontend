@@ -38,7 +38,8 @@ export default function DashboardScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchVisible, setSearchVisible] = useState(false);
-  const [searchText, setSearchText] = useState("");
+  // New searchTerm state
+  const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
@@ -53,34 +54,18 @@ export default function DashboardScreen() {
   // Cart state, for demonstration
   const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
 
+  // Handle search input and update searchTerm state
   const handleSearch = (text: string) => {
-    setSearchText(text);
-    let searched = products;
-
-    if (text.trim() !== "") {
-      const lowerText = text.toLowerCase();
-      searched = searched.filter(
-        (product) =>
-          product.name.toLowerCase().includes(lowerText) ||
-          product.ingredients.some((ing) => ing.toLowerCase().includes(lowerText))
-      );
-    }
-
-    setFilteredProducts(
-      showOnlyLiked
-        ? searched.filter((product) => likedProducts.has(product._id))
-        : searched
-    );
+    setSearchTerm(text);
   };
 
   // Toggle the search input visibility
   const toggleSearch = () => {
     setSearchVisible((prev) => {
       if (!prev) {
-        setSearchText(""); // Reset search text when search is opened
+        setSearchTerm(""); // Reset search term when search is opened
       } else {
-        setSearchText(""); // Reset search text when search is closed
-        setFilteredProducts(products); // Reset filtered products to show all products
+        setSearchTerm(""); // Reset search term when search is closed
       }
       return !prev;
     });
@@ -92,13 +77,6 @@ export default function DashboardScreen() {
     setShowOnlyLiked((prev) => {
       const newVal = !prev;
       setActiveFilters(prev => ({ ...prev, favorites: newVal }));
-      if (newVal) {
-        // Filter products to show only liked products
-        setFilteredProducts(products.filter((p) => likedProducts.has(p._id)));
-      } else {
-        // Show all products
-        setFilteredProducts(products);
-      }
       return newVal;
     });
   };
@@ -196,14 +174,47 @@ export default function DashboardScreen() {
     }, [])
   );
 
-  useEffect(() => {
-    // Update filteredProducts whenever the products list, likedProducts, or "liked" mode changes
-    setFilteredProducts(
-      showOnlyLiked
-        ? products.filter((p) => likedProducts.has(p._id))
-        : products
+  // Helper: filter products by searchTerm
+  const filterBySearchTerm = (productsList: Product[], term: string) => {
+    if (!term.trim()) return productsList;
+    const lowerText = term.toLowerCase();
+    return productsList.filter(
+      (product) =>
+        product.name.toLowerCase().includes(lowerText) ||
+        product.ingredients.some((ing) => ing.toLowerCase().includes(lowerText))
     );
-  }, [products, likedProducts, showOnlyLiked]);
+  };
+
+  // Helper: filter by favorites
+  const filterByFavorites = (productsList: Product[]) => {
+    return showOnlyLiked
+      ? productsList.filter((product) => likedProducts.has(product._id))
+      : productsList;
+  };
+
+  // Helper: filter by in-stock
+  const filterByInStock = (productsList: Product[]) => {
+    return activeFilters.inStock
+      ? productsList.filter((p) => p.stock > 0)
+      : productsList;
+  };
+
+  // Helper: sort by price
+  const sortByPrice = (productsList: Product[]) => {
+    return [...productsList].sort((a, b) =>
+      sortOrder === "asc" ? a.price - b.price : b.price - a.price
+    );
+  };
+
+  // Compose all filters
+  useEffect(() => {
+    let filtered = products;
+    filtered = filterBySearchTerm(filtered, searchTerm);
+    filtered = filterByFavorites(filtered);
+    filtered = filterByInStock(filtered);
+    filtered = sortByPrice(filtered);
+    setFilteredProducts(filtered);
+  }, [products, likedProducts, showOnlyLiked, searchTerm, activeFilters.inStock, sortOrder]);
 
   // Refresh products and user data on pull-to-refresh
   const onRefresh = async () => {
@@ -268,16 +279,14 @@ export default function DashboardScreen() {
     }
   };
 
+  // Stock filter button handler: toggles inStock filter, preserves searchTerm, does not reset state
   const handleInStockFilter = () => {
-    const newInStock = !activeFilters.inStock;
-    setActiveFilters(prev => ({ ...prev, inStock: newInStock }));
-
-    if (newInStock) {
-      const filtered = products.filter((p) => p.stock > 0);
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts(products);
-    }
+    setActiveFilters(prev => {
+      const newInStock = !prev.inStock;
+      // Only update inStock property, don't touch other filters
+      return { ...prev, inStock: newInStock };
+    });
+    // Do not reset filteredProducts here, let useEffect handle filtering and searchTerm
   };
 
   // Render vertical product card with like button (modern, favorite highlight)
@@ -424,7 +433,7 @@ export default function DashboardScreen() {
             <TextInput
               style={styles.searchInputFull}
               placeholder="Search by name, ingredient, or allergen..."
-              value={searchText}
+              value={searchTerm}
               onChangeText={handleSearch}
               autoFocus
               textAlign="left"
@@ -501,10 +510,6 @@ export default function DashboardScreen() {
               onPress={() => {
                 const newOrder = sortOrder === "asc" ? "desc" : "asc";
                 setSortOrder(newOrder);
-                const sorted = [...filteredProducts].sort((a, b) =>
-                  newOrder === "asc" ? a.price - b.price : b.price - a.price
-                );
-                setFilteredProducts(sorted);
               }}
             >
               <Text style={styles.filterText}>
@@ -528,14 +533,21 @@ export default function DashboardScreen() {
         <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
           Explore Cakes
         </Text>
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={(item) => item._id}
-          renderItem={renderProductCardVertical}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          scrollEnabled={false}
-        />
+        {/* Show "No results found" if no filtered products after search/filtering */}
+        {filteredProducts.length === 0 ? (
+          <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 16 }}>
+            No results found
+          </Text>
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={(item) => item._id}
+            renderItem={renderProductCardVertical}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            scrollEnabled={false}
+          />
+        )}
         {/* Quantity modal for add to cart */}
         {selectedProduct && (
           <Modal visible={!!selectedProduct} transparent animationType="fade">
