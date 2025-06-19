@@ -104,32 +104,47 @@ export default function AddressScreen() {
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
 
+        // Full name: at least two words, each at least 2 letters (Hebrew or English)
         const nameRegex = /^[A-Za-zא-ת]{2,}\s[A-Za-zא-ת]{2,}$/;
-        const phoneRegex = /^[0-9]+$/;
+        // Phone: at least 7 digits
+        const phoneRegex = /^[0-9]{7,}$/;
 
         if (!formData.fullName.trim()) {
             newErrors.fullName = 'Full name is required';
         } else if (!nameRegex.test(formData.fullName.trim())) {
-            newErrors.fullName = 'Enter at least two words with 2+ letters each';
+            newErrors.fullName = 'Enter full name (at least 2 words, 2+ letters each)';
         }
 
         if (!formData.phone.trim()) {
             newErrors.phone = 'Phone number is required';
         } else if (!phoneRegex.test(formData.phone.trim())) {
-            newErrors.phone = 'Phone number must contain only digits';
+            newErrors.phone = 'Phone number must contain at least 7 digits';
         }
 
         if (!formData.street.trim()) {
             newErrors.street = 'Street address is required';
+        } else if (formData.street.trim().length < 4) {
+            newErrors.street = 'Street must be at least 4 characters';
         }
 
         if (!formData.city.trim()) {
             newErrors.city = 'City is required';
+        } else if (formData.city.trim().length < 4) {
+            newErrors.city = 'City must be at least 4 characters';
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    // Show validation errors as user edits the fields
+    useEffect(() => {
+        // Only show errors if modal is open (editing/adding)
+        if (isModalVisible) {
+            validateForm();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData, isModalVisible]);
 
     const handleEdit = (address: Address) => {
         setIsEditing(true);
