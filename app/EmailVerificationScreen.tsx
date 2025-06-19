@@ -1,11 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import { useSearchParams } from "expo-router/build/hooks";
 import config from "../config";
 
 export default function EmailVerificationScreen() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
   const [loading, setLoading] = useState(true);
@@ -37,6 +35,7 @@ export default function EmailVerificationScreen() {
           setMessage(data.message || "Verification failed. Please try again.");
         }
       } catch (error) {
+        console.log(error);
         setMessage("Something went wrong. Please try again later.");
       } finally {
         setLoading(false);

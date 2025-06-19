@@ -226,7 +226,8 @@ export default function OrderDetailsScreen() {
         </View>
 
         <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#6b4226" />
+          <ActivityIndicator testID="loading-indicator"
+            size="large" color="#6b4226" />
           <Text style={styles.loadingText}>Loading order details...</Text>
         </View>
       </SafeAreaView>
@@ -238,14 +239,14 @@ export default function OrderDetailsScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "#f9f3ea" }]}>
-      <Header title={`Order #${order._id.slice(-6)}`}  />
-      <Text style={styles.subTitle}>
+      <Header title={`Order #${order._id.slice(-6)}`} />
+      <Text testID="customer-text" style={styles.subTitle}>
         Customer:{" "}
         {order.user
           ? `${order.user.firstName} ${order.user.lastName}`
           : "Deleted User"}
       </Text>
-      <Text style={styles.subTitle}>
+      <Text testID="status-text" style={styles.subTitle}>
         Status:{" "}
         <Text style={[styles.status, styles[order.status]]}>
           {order.status}
@@ -265,6 +266,7 @@ export default function OrderDetailsScreen() {
           elevation: 3,
         }}
       >
+
         <Text
           style={[styles.subTitle, { fontWeight: "bold", marginBottom: 5 }]}
         >
@@ -274,8 +276,8 @@ export default function OrderDetailsScreen() {
           {order.shippingMethod
             ? order.shippingMethod
             : order.address
-            ? "Standard Delivery (2-3 days)"
-            : "Self Pickup"}
+              ? "Standard Delivery (2-3 days)"
+              : "Self Pickup"}
         </Text>
 
         <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
@@ -285,8 +287,8 @@ export default function OrderDetailsScreen() {
           {order.deliveryDate
             ? new Date(order.deliveryDate).toLocaleDateString()
             : order.shippingMethod === "Self Pickup"
-            ? "Pickup date not selected"
-            : "Delivery date not selected"}
+              ? "Pickup date not selected"
+              : "Delivery date not selected"}
         </Text>
 
         <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
@@ -332,12 +334,14 @@ export default function OrderDetailsScreen() {
         ))}
       </ScrollView>
 
-      <Text style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
+      <Text testID="total-text" style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
 
       {/* Only show update status and send message if user exists */}
       {order.user && (
         <>
           <TouchableOpacity
+            testID="update-status-button"
+
             style={styles.updateStatusButton}
             onPress={() => setModalVisible(true)}
           >
@@ -345,6 +349,7 @@ export default function OrderDetailsScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
+            testID="send-message-button"
             style={styles.updateStatusButton}
             onPress={() => setMessageModalVisible(true)}
           >
@@ -355,6 +360,8 @@ export default function OrderDetailsScreen() {
 
       <TouchableOpacity
         style={styles.contactButton}
+        testID="view-contact-button"
+
         onPress={() => setContactModalVisible(true)}
       >
         <Text style={styles.contactText}>View Contact Details</Text>
@@ -366,12 +373,14 @@ export default function OrderDetailsScreen() {
         selectedStatus={selectedStatus}
         setSelectedStatus={setSelectedStatus}
         onConfirm={updateOrderStatus}
+
       />
 
       <Modal
         transparent={true}
         visible={contactModalVisible}
         animationType="slide"
+
         onRequestClose={() => setContactModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
@@ -398,6 +407,7 @@ export default function OrderDetailsScreen() {
             </Text>
             <TouchableOpacity
               style={styles.modalButtonClose}
+              testID="close-contact-button"
               onPress={() => setContactModalVisible(false)}
             >
               <Text>Close</Text>
@@ -416,6 +426,7 @@ export default function OrderDetailsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Send Message to Customer</Text>
             <TextInput
+              testID="manager-message-input"
               style={styles.input}
               placeholder="Enter your message..."
               multiline
@@ -423,6 +434,7 @@ export default function OrderDetailsScreen() {
               onChangeText={setManagerMessage}
             />
             <TouchableOpacity
+              testID="send-manager-message-button"
               style={styles.modalButtonConfirm}
               onPress={async () => {
                 if (!managerMessage.trim()) {
@@ -478,8 +490,10 @@ export default function OrderDetailsScreen() {
               <Text style={styles.updateStatusText}>Send</Text>
             </TouchableOpacity>
             <TouchableOpacity
+              testID="close-manager-message-button"
               style={styles.modalButtonClose}
               onPress={() => setMessageModalVisible(false)}
+
             >
               <Text style={styles.updateStatusText}>Close</Text>
             </TouchableOpacity>

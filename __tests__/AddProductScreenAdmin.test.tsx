@@ -6,121 +6,121 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 jest.mock('expo-image-picker');
 jest.mock('@react-native-async-storage/async-storage', () => ({
-    getItem: jest.fn(),
+  getItem: jest.fn(),
 }));
 
 global.fetch = jest.fn(() =>
-    Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+  Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
 ) as jest.Mock;
 
 describe('AddProductScreenAdmin', () => {
-    beforeEach(() => {
-        jest.clearAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('should not submit if fields are missing', () => {
+    const { getByTestId } = render(<AddProductScreenAdmin />);
+    fireEvent.press(getByTestId('submit-button'));
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it('should submit when all fields are filled', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('mocked_token');
+
+    const { getByTestId, getByText } = render(<AddProductScreenAdmin />);
+
+    fireEvent.changeText(getByTestId('name-input'), 'עוגת גבינה');
+    fireEvent.changeText(getByTestId('description-input'), 'טעימה מאוד');
+    fireEvent.changeText(getByTestId('cost-input'), '10');
+    fireEvent.changeText(getByTestId('price-input'), '20');
+    fireEvent.changeText(getByTestId('ingredients-input'), 'גבינה, סוכר');
+    fireEvent.changeText(getByTestId('stock-input'), '5');
+
+    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: 'file://mocked-image.jpg' }],
     });
 
-    it('should not submit if fields are missing', () => {
-        const { getByText } = render(<AddProductScreenAdmin />);
-        fireEvent.press(getByText('Add Product'));
-        expect(fetch).not.toHaveBeenCalled();
+    await waitFor(() => fireEvent.press(getByText('Choose Cake Image')));
+    await waitFor(() => fireEvent.press(getByTestId('submit-button')));
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('should not submit if token is missing', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null);
+
+    const { getByTestId, getByText } = render(<AddProductScreenAdmin />);
+
+    fireEvent.changeText(getByTestId('name-input'), 'עוגת שוקולד');
+    fireEvent.changeText(getByTestId('description-input'), 'טעים מאוד');
+    fireEvent.changeText(getByTestId('cost-input'), '10');
+    fireEvent.changeText(getByTestId('price-input'), '20');
+    fireEvent.changeText(getByTestId('ingredients-input'), 'קקאו, סוכר');
+    fireEvent.changeText(getByTestId('stock-input'), '4');
+
+    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: 'file://mocked-image.jpg' }],
     });
 
-    it('should submit when all fields are filled', async () => {
-        (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('mocked_token');
+    await waitFor(() => fireEvent.press(getByText('Choose Cake Image')));
+    await waitFor(() => fireEvent.press(getByTestId('submit-button')));
 
-        const { getByText, getByPlaceholderText } = render(<AddProductScreenAdmin />);
+    expect(fetch).not.toHaveBeenCalled();
+  });
 
-        fireEvent.changeText(getByPlaceholderText('Name'), 'עוגת גבינה');
-        fireEvent.changeText(getByPlaceholderText('Description'), 'טעימה מאוד');
-        fireEvent.changeText(getByPlaceholderText('Cost'), '10');
-        fireEvent.changeText(getByPlaceholderText('Price'), '20');
-        fireEvent.changeText(getByPlaceholderText('Ingredients'), 'גבינה, סוכר');
-        fireEvent.changeText(getByPlaceholderText('Stock'), '5');
+  it('should show error if cost or price are invalid numbers', async () => {
+    const { getByTestId, getByText } = render(<AddProductScreenAdmin />);
 
-        (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
-            canceled: false,
-            assets: [{ uri: 'file://mocked-image.jpg' }],
-        });
+    fireEvent.changeText(getByTestId('name-input'), 'בדיקה');
+    fireEvent.changeText(getByTestId('description-input'), 'שגיאה');
+    fireEvent.changeText(getByTestId('cost-input'), 'abc');
+    fireEvent.changeText(getByTestId('price-input'), '20');
+    fireEvent.changeText(getByTestId('ingredients-input'), 'מים, סוכר');
+    fireEvent.changeText(getByTestId('stock-input'), '5');
 
-        await waitFor(() => fireEvent.press(getByText('Pick an image')));
-        await waitFor(() => fireEvent.press(getByText('Add Product')));
-
-        expect(fetch).toHaveBeenCalledTimes(1);
+    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: 'file://mocked-image.jpg' }],
     });
 
-    it('should not submit if token is missing', async () => {
-        (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce(null);
+    await waitFor(() => fireEvent.press(getByText('Choose Cake Image')));
+    await waitFor(() => fireEvent.press(getByTestId('submit-button')));
 
-        const { getByText, getByPlaceholderText } = render(<AddProductScreenAdmin />);
+    expect(fetch).not.toHaveBeenCalled();
+  });
 
-        fireEvent.changeText(getByPlaceholderText('Name'), 'עוגת שוקולד');
-        fireEvent.changeText(getByPlaceholderText('Description'), 'טעים מאוד');
-        fireEvent.changeText(getByPlaceholderText('Cost'), '10');
-        fireEvent.changeText(getByPlaceholderText('Price'), '20');
-        fireEvent.changeText(getByPlaceholderText('Ingredients'), 'קקאו, סוכר');
-        fireEvent.changeText(getByPlaceholderText('Stock'), '4');
+  it('should show error if price is lower than cost', async () => {
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('mocked_token');
 
-        (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
-            canceled: false,
-            assets: [{ uri: 'file://mocked-image.jpg' }],
-        });
+    const { getByTestId, getByText } = render(<AddProductScreenAdmin />);
 
-        await waitFor(() => fireEvent.press(getByText('Pick an image')));
-        await waitFor(() => fireEvent.press(getByText('Add Product')));
+    fireEvent.changeText(getByTestId('name-input'), 'בדיקה');
+    fireEvent.changeText(getByTestId('description-input'), 'בדיקה');
+    fireEvent.changeText(getByTestId('cost-input'), '30');
+    fireEvent.changeText(getByTestId('price-input'), '20');
+    fireEvent.changeText(getByTestId('ingredients-input'), 'חמאה');
+    fireEvent.changeText(getByTestId('stock-input'), '4');
 
-        expect(fetch).not.toHaveBeenCalled();
+    (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: 'file://mocked-image.jpg' }],
     });
 
-    it('should show error if cost or price are invalid numbers', async () => {
-      const { getByText, getByPlaceholderText } = render(<AddProductScreenAdmin />);
+    await waitFor(() => fireEvent.press(getByText('Choose Cake Image')));
+    await waitFor(() => fireEvent.press(getByTestId('submit-button')));
 
-      fireEvent.changeText(getByPlaceholderText('Name'), 'בדיקה');
-      fireEvent.changeText(getByPlaceholderText('Description'), 'שגיאה');
-      fireEvent.changeText(getByPlaceholderText('Cost'), 'abc');
-      fireEvent.changeText(getByPlaceholderText('Price'), '20');
-      fireEvent.changeText(getByPlaceholderText('Ingredients'), 'מים, סוכר');
-      fireEvent.changeText(getByPlaceholderText('Stock'), '5');
+    expect(fetch).not.toHaveBeenCalled();
+  });
 
-      (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
-        canceled: false,
-        assets: [{ uri: 'file://mocked-image.jpg' }],
-      });
+  it('should show profit information when cost and price are valid', () => {
+    const { getByTestId, getByText } = render(<AddProductScreenAdmin />);
 
-      await waitFor(() => fireEvent.press(getByText('Pick an image')));
-      await waitFor(() => fireEvent.press(getByText('Add Product')));
+    fireEvent.changeText(getByTestId('cost-input'), '10');
+    fireEvent.changeText(getByTestId('price-input'), '20');
 
-      expect(fetch).not.toHaveBeenCalled();
-    });
-
-    it('should show error if price is lower than cost', async () => {
-      (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce('mocked_token');
-
-      const { getByText, getByPlaceholderText } = render(<AddProductScreenAdmin />);
-
-      fireEvent.changeText(getByPlaceholderText('Name'), 'בדיקה');
-      fireEvent.changeText(getByPlaceholderText('Description'), 'בדיקה');
-      fireEvent.changeText(getByPlaceholderText('Cost'), '30');
-      fireEvent.changeText(getByPlaceholderText('Price'), '20');
-      fireEvent.changeText(getByPlaceholderText('Ingredients'), 'חמאה');
-      fireEvent.changeText(getByPlaceholderText('Stock'), '4');
-
-      (ImagePicker.launchImageLibraryAsync as jest.Mock).mockResolvedValueOnce({
-        canceled: false,
-        assets: [{ uri: 'file://mocked-image.jpg' }],
-      });
-
-      await waitFor(() => fireEvent.press(getByText('Pick an image')));
-      await waitFor(() => fireEvent.press(getByText('Add Product')));
-
-      expect(fetch).not.toHaveBeenCalled();
-    });
-
-    it('should show profit information when cost and price are valid', () => {
-      const { getByPlaceholderText, getByText } = render(<AddProductScreenAdmin />);
-
-      fireEvent.changeText(getByPlaceholderText('Cost'), '10');
-      fireEvent.changeText(getByPlaceholderText('Price'), '20');
-
-      expect(getByText('Profit per unit: $10.00')).toBeTruthy();
-      expect(getByText('Profit margin: 50.0%')).toBeTruthy();
-    });
+    expect(getByText('Profit per unit: $10.00')).toBeTruthy();
+    expect(getByText('Profit margin: 50.0%')).toBeTruthy();
+  });
 });

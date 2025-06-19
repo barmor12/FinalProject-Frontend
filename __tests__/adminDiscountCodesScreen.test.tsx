@@ -1,19 +1,20 @@
 import React from "react";
 import { render, fireEvent, waitFor, act } from "@testing-library/react-native";
-
+import AdminDiscountCodes from "@/app/adminScreens/adminDiscountCodesScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 jest.mock("react-native", () => {
   const RN = jest.requireActual("react-native");
   RN.Platform.OS = "ios";
   return RN;
 });
 
-import AdminDiscountCodes from "@/app/adminScreens/adminDiscountCodesScreen";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
   getItem: jest.fn(),
 }));
 
+// Mock fetch with a default implementation
 global.fetch = jest.fn(() =>
   Promise.resolve({
     ok: true,
@@ -31,15 +32,35 @@ global.fetch = jest.fn(() =>
 ) as jest.Mock;
 
 describe("AdminDiscountCodes Screen", () => {
+  let rendered: ReturnType<typeof render>;
+
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock implementations
+    (AsyncStorage.getItem as jest.Mock).mockResolvedValue("mocked_token");
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: () =>
+        Promise.resolve([
+          {
+            _id: "1",
+            code: "TESTCODE",
+            discountPercentage: 20,
+            isActive: true,
+            expiryDate: new Date().toISOString(),
+          },
+        ]),
+    });
+  });
+
+  afterEach(() => {
+    rendered?.unmount();
   });
 
   it("renders discount codes list", async () => {
-    let getByText!: (text: string) => any;
-    await act(async () => {
-      ({ getByText } = render(<AdminDiscountCodes />));
-    });
+    rendered = render(<AdminDiscountCodes />);
+    const { getByText } = rendered;
+
     await waitFor(() => {
       expect(getByText("Code: TESTCODE")).toBeTruthy();
       expect(getByText("Discount: 20%")).toBeTruthy();
@@ -48,27 +69,27 @@ describe("AdminDiscountCodes Screen", () => {
   });
 
   it("does not allow creating a code with missing fields", async () => {
-    let getByText!: (text: string) => any;
+    rendered = render(<AdminDiscountCodes />);
+    const { getByText } = rendered;
+
     await act(async () => {
-      ({ getByText } = render(<AdminDiscountCodes />));
+      fireEvent.press(getByText("Create Code"));
     });
-    fireEvent.press(getByText("Create Code"));
+
     expect(fetch).toHaveBeenCalledTimes(1); // initial fetch only
   });
 
   it("allows creating a new discount code", async () => {
-    (AsyncStorage.getItem as jest.Mock).mockResolvedValueOnce("mocked_token");
+    rendered = render(<AdminDiscountCodes />);
+    const { getByPlaceholderText, getByText } = rendered;
 
-    let getByPlaceholderText: (text: string) => any = () => null as any;
-    let getByText: (text: string) => any = () => null as any;
-
+    // Fill in the form
     await act(async () => {
-      ({ getByPlaceholderText, getByText } = render(<AdminDiscountCodes />));
+      fireEvent.changeText(getByPlaceholderText("Code"), "NEWCODE");
+      fireEvent.changeText(getByPlaceholderText("Discount %"), "15");
     });
 
-    fireEvent.changeText(getByPlaceholderText("Code"), "NEWCODE");
-    fireEvent.changeText(getByPlaceholderText("Discount %"), "15");
-
+    // Mock the POST and subsequent fetch responses
     (fetch as jest.Mock)
       .mockResolvedValueOnce({
         ok: true,
@@ -88,8 +109,14 @@ describe("AdminDiscountCodes Screen", () => {
           ]),
       }); // fetchCodes response
 
-    await waitFor(() => fireEvent.press(getByText("Create Code")));
+    // Submit the form
+    await act(async () => {
+      fireEvent.press(getByText("Create Code"));
+    });
 
-    expect(fetch).toHaveBeenCalledTimes(3); // initial fetch, POST, fetchCodes
+    // Wait for all promises to resolve
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledTimes(3); // initial fetch, POST, fetchCodes
+    });
   });
 });

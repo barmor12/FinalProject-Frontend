@@ -1,26 +1,21 @@
-import * as Notifications from "expo-notifications";
-/**
- * Defines the notification handler (determines how each notification is displayed).
- */
-export function registerNotifications() {
-  // Already set the handler in the top-level configuration
-}
-import { Subscription } from "expo-notifications";
-import { Tabs } from "expo-router";
+
 import React, { useState, useEffect } from "react";
 import { View, Text, Platform, StyleSheet } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, Tabs } from "expo-router";
 import config from "../../config";
 import {
   registerPushToken,
-  scheduleTestNotification,
   setupNotificationListeners,
 } from "../utils/notifications";
+export function registerNotifications() {
+  // Already set the handler in the top-level configuration
+}
+
 
 export default function TabLayout() {
-  const [role, setRole] = useState<string | null>(null);
+  const [, setRole] = useState<string | null>(null);
   const [cartItemCount, setCartItemCount] = useState(0);
   const [loading, setLoading] = useState(true);
 

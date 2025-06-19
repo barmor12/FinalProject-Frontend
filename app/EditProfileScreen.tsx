@@ -92,6 +92,7 @@ export default function EditProfileScreen() {
       setUser({ ...user, profilePic: result.assets[0].uri });
       await handleUpdateProfilePic(result.assets[0].uri);
     } catch (error) {
+      console.log("fail to update profile", error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
@@ -138,6 +139,7 @@ export default function EditProfileScreen() {
 
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
+      console.log("fail update profile", error);
       Alert.alert("Error", "Something went wrong.");
     } finally {
       setIsUploading(false);
@@ -210,6 +212,7 @@ export default function EditProfileScreen() {
                 <ActivityIndicator size="large" color="#0000ff" />
               ) : (
                 <Image
+                  testID="profile-image"
                   source={
                     typeof user.profilePic === "string"
                       ? { uri: user.profilePic }

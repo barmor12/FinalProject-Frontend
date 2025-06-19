@@ -5,6 +5,10 @@ export const requestMediaLibraryPermissionsAsync = jest.fn(() =>
 export const launchImageLibraryAsync = jest.fn(() =>
     Promise.resolve({
         canceled: false,
-        assets: [{ uri: "file://mocked-image.jpg" }],
+        assets: [
+            {
+                uri: "mock-image.jpg",
+            },
+        ],
     })
 );

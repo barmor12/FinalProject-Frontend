@@ -1,4 +1,7 @@
 /* eslint-disable no-undef */
+global.fetch = jest.fn(() =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
+);
 
 // Mock the expo-router
 jest.mock('expo-router', () => ({

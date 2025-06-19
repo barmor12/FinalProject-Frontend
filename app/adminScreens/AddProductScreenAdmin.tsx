@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  StyleSheet,
   ActivityIndicator,
   Image,
   Keyboard,
@@ -16,10 +15,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 import styles from "../styles/AdminScreensStyles/AddProductScreenAdminStyles";
-import BackButton from "../../components/BackButton";
 import Header from "../../components/Header";
 import { Ionicons } from "@expo/vector-icons";
 
@@ -157,6 +154,7 @@ export default function AddProductScreenAdmin() {
           style={styles.submitButton}
           onPress={handleSubmit}
           disabled={uploading}
+          testID="submit-button"
         >
           {uploading ? (
             <ActivityIndicator size="small" color="#fff" />
@@ -181,6 +179,7 @@ export default function AddProductScreenAdmin() {
               value={name}
               onChangeText={setName}
               placeholderTextColor="#aaa"
+              testID="name-input"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -200,6 +199,7 @@ export default function AddProductScreenAdmin() {
               placeholderTextColor="#aaa"
               multiline
               numberOfLines={4}
+              testID="description-input"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -217,6 +217,7 @@ export default function AddProductScreenAdmin() {
               value={cost}
               onChangeText={setCost}
               placeholderTextColor="#aaa"
+              testID="cost-input"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -234,6 +235,7 @@ export default function AddProductScreenAdmin() {
               value={price}
               onChangeText={setPrice}
               placeholderTextColor="#aaa"
+              testID="price-input"
             />
           </View>
           {cost && price && (
@@ -260,6 +262,7 @@ export default function AddProductScreenAdmin() {
               value={ingredients}
               onChangeText={setIngredients}
               placeholderTextColor="#aaa"
+              testID="ingredients-input"
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -277,6 +280,7 @@ export default function AddProductScreenAdmin() {
               value={stock}
               onChangeText={setStock}
               placeholderTextColor="#aaa"
+              testID="stock-input"
             />
           </View>
         </>
@@ -287,7 +291,7 @@ export default function AddProductScreenAdmin() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#f9f3ea" }}>
-        <Header title="Add New Product"  />
+        <Header title="Add New Product" />
         <View style={styles.container}>
 
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>

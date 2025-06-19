@@ -1,3 +1,4 @@
+// src/app/SignUpScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -8,15 +9,14 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   ImageBackground,
   Linking,
+  Image
 } from "react-native";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
 import * as ImagePicker from "expo-image-picker";
-import { Image } from "react-native";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -34,12 +34,6 @@ export default function SignUpScreen() {
     special: false,
   });
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
-  type RequirementKey =
-    | "length"
-    | "lowercase"
-    | "uppercase"
-    | "number"
-    | "special";
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -48,19 +42,22 @@ export default function SignUpScreen() {
       aspect: [1, 1],
       quality: 0.7,
     });
-
     if (!result.canceled) {
       setProfileImage(result.assets[0].uri);
     }
   };
+
   const handleSignUp = async () => {
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
-
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+    // שולחים רק אם מדיניות מאושרת
+    if (!acceptedPolicy) {
       return;
     }
 
@@ -69,60 +66,44 @@ export default function SignUpScreen() {
     formData.append("lastName", lastName);
     formData.append("email", email.toLowerCase().trim());
     formData.append("password", password);
-
     if (profileImage) {
       const fileName = profileImage.split("/").pop() || "profile.jpg";
       const match = /\.(\w+)$/.exec(fileName);
       const fileType = match ? `image/${match[1]}` : `image`;
-
       formData.append("profileImage", {
         uri: profileImage,
         name: fileName,
         type: fileType,
-      } as any); // אם אתה מקבל טעות על זה, תשתמש ב־any
+      } as any);
     }
 
     try {
       const response = await fetch(`${config.BASE_URL}/auth/register`, {
         method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
         body: formData,
       });
-
       const data = await response.json().catch(() => null);
-
       if (response.ok) {
         Alert.alert("Success", "Account created! Please verify via email.");
         router.push("/");
       } else {
         Alert.alert("Error", data?.error || "Registration Failed");
       }
-    } catch (error) {
-      console.error("Error:", error);
+    } catch {
       Alert.alert("Error", "Something went wrong.");
     }
   };
 
   const checkPasswordStrength = (value: string) => {
-    const updatedReqs = {
+    setPasswordRequirements({
       length: value.length >= 8,
       lowercase: /[a-z]/.test(value),
       uppercase: /[A-Z]/.test(value),
       number: /\d/.test(value),
       special: /[@$!%*?&]/.test(value),
-    };
-    setPasswordRequirements(updatedReqs);
+    });
   };
-
-  const requirementList: { label: string; key: RequirementKey }[] = [
-    { label: "At least 8 characters", key: "length" },
-    { label: "Lowercase letter", key: "lowercase" },
-    { label: "Uppercase letter", key: "uppercase" },
-    { label: "Number", key: "number" },
-    { label: "Special character", key: "special" },
-  ];
 
   return (
     <ImageBackground
@@ -135,97 +116,60 @@ export default function SignUpScreen() {
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView
-          contentContainerStyle={{
-            alignItems: "center",
-            paddingHorizontal: 20,
-            paddingBottom: 40,
-          }}
-        >
+        <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40 }}>
           <View style={{ width: "100%", maxWidth: 360 }}>
             <Text style={styles.title}>Create an Account</Text>
-            <Text style={styles.subtitle}>
-              Join us and order your first cake with us
-            </Text>
+            <Text style={styles.subtitle}>Join us and order your first cake with us</Text>
 
             <TouchableOpacity onPress={pickImage} style={styles.imageCircle}>
               {profileImage ? (
-                <Image
-                  source={{ uri: profileImage }}
-                  style={styles.imageCircle}
-                />
+                <Image source={{ uri: profileImage }} style={styles.imageCircle} />
               ) : (
-                <Image
-                  source={require("../assets/images/profile-user.png")}
-                  style={styles.imageCircle}
-                />
+                <Image source={require("../assets/images/profile-user.png")} style={styles.imageCircle} />
               )}
             </TouchableOpacity>
             <Text style={styles.imagePickerText}>Tap to add profile picture</Text>
 
             <Text style={styles.inputLabel}>First Name</Text>
-            <TextInput
-              style={styles.input}
-              value={firstName}
-              placeholderTextColor="#000"
-              onChangeText={setFirstName}
-            />
+            <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} testID="firstName-input" />
             <Text style={styles.inputLabel}>Last Name</Text>
-            <TextInput
-              style={styles.input}
-              value={lastName}
-              placeholderTextColor="#000"
-              onChangeText={setLastName}
-            />
+            <TextInput style={styles.input} value={lastName} onChangeText={setLastName} testID="lastName-input" />
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={styles.input}
               value={email}
-              placeholderTextColor="#000"
               keyboardType="email-address"
               onChangeText={setEmail}
+              testID="email-input"
             />
             <Text style={styles.inputLabel}>Password</Text>
             <TextInput
-              placeholderTextColor="#000"
-              secureTextEntry
               style={styles.input}
+              secureTextEntry
               value={password}
-              onChangeText={(text) => {
-                setPassword(text);
-                checkPasswordStrength(text);
+              onChangeText={(t) => {
+                setPassword(t);
+                checkPasswordStrength(t);
               }}
+              testID="password-input"
             />
             <View style={styles.passwordContainer}>
-              {requirementList.map((item) => (
-                <View key={item.key} style={styles.requirementItem}>
-                  <Text style={styles.requirementIcon}>
-                    {passwordRequirements[item.key] ? "✔️" : "❌"}
-                  </Text>
-                  <Text
-                    style={[
-                      styles.requirementText,
-                      {
-                        color: passwordRequirements[item.key] ? "green" : "red",
-                      },
-                    ]}
-                  >
-                    {item.label}
-                  </Text>
-                </View>
+              {Object.entries(passwordRequirements).map(([key, ok]) => (
+                <Text key={key}>
+                  {ok ? "✔️" : "❌"} {key}
+                </Text>
               ))}
             </View>
-
             <Text style={styles.inputLabel}>Confirm Password</Text>
             <TextInput
               style={styles.input}
-              placeholderTextColor="#000"
               secureTextEntry
               value={confirmPassword}
               onChangeText={setConfirmPassword}
+              testID="confirmPassword-input"
             />
 
-            <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 16 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 16 }}>
               <TouchableOpacity
                 onPress={() => setAcceptedPolicy(!acceptedPolicy)}
                 style={{
@@ -233,23 +177,28 @@ export default function SignUpScreen() {
                   width: 22,
                   borderRadius: 4,
                   borderWidth: 1,
-                  borderColor: '#ccc',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  borderColor: "#ccc",
+                  alignItems: "center",
+                  justifyContent: "center",
                   marginRight: 10,
-                  backgroundColor: acceptedPolicy ? '#ba4c4c' : '#fff',
+                  backgroundColor: acceptedPolicy ? "#ba4c4c" : "#fff",
                 }}
               >
-                {acceptedPolicy && (
-                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>✓</Text>
-                )}
+                {acceptedPolicy && <Text style={{ color: "#fff", fontWeight: "bold" }}>✓</Text>}
               </TouchableOpacity>
-              <Text style={{ flex: 1, color: '#333' }}>
-                I have read and agree to the{' '}
+
+              {/* כאן הוספנו onPress כדי שהבדיקה תוכל ללחוץ על הטקסט */}
+              <Text
+                style={{ flex: 1, color: "#333" }}
+                onPress={() => setAcceptedPolicy(!acceptedPolicy)}
+              >
+                I have read and agree to the{" "}
                 <Text
-                  style={{ color: '#ba4c4c', textDecorationLine: 'underline' }}
+                  style={{ color: "#ba4c4c", textDecorationLine: "underline" }}
                   onPress={() =>
-                    Linking.openURL('https://barmor12.github.io/Bakey/bakey_privacy_policy_modern.html')
+                    Linking.openURL(
+                      "https://barmor12.github.io/Bakey/bakey_privacy_policy_modern.html"
+                    )
                   }
                 >
                   Privacy Policy
@@ -261,15 +210,14 @@ export default function SignUpScreen() {
               style={[styles.button, { opacity: acceptedPolicy ? 1 : 0.5 }]}
               onPress={handleSignUp}
               disabled={!acceptedPolicy}
+              testID="signup-button"
             >
               <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
+
             <Text style={styles.loginText}>
               Already has account?{" "}
-              <Text
-                style={styles.loginLink}
-                onPress={() => router.replace("/")}
-              >
+              <Text style={styles.loginLink} onPress={() => router.replace("/")}>
                 Log In
               </Text>
             </Text>

@@ -3,7 +3,6 @@ import * as ImageManipulator from "expo-image-manipulator";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Image,
   Alert,
@@ -19,9 +18,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
-import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import styles from "../styles/ProfileScreenStyles";
-import { FontAwesome } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -135,6 +133,7 @@ export default function ProfileScreen() {
       setUser({ ...user, profilePic: manipResult.uri });
       await uploadImage(manipResult.uri);
     } catch (error) {
+      console.log(error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
@@ -223,7 +222,7 @@ export default function ProfileScreen() {
       >
         <View style={styles.container}>
 
-          <TouchableOpacity onPress={pickImage} style={{marginTop: 6}}>
+          <TouchableOpacity onPress={pickImage} >
             {user.profilePic ? (
               <Image
                 source={
@@ -238,7 +237,7 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={[styles.userName, {marginTop: 6}]}>
+          <Text style={[styles.userName, { marginTop: 6 }]}>
             {user.name || "User"} {user.lastName || ""}
           </Text>
 
@@ -246,7 +245,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={[styles.button, {marginTop: 6}]}
+            style={[styles.button, { marginTop: 6 }]}
             onPress={() => router.push("/EditProfileScreen")}
           >
             <MaterialIcons name="edit" size={20} color="#fff" />
@@ -254,7 +253,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, {marginTop: 6}]}
+            style={[styles.button, { marginTop: 6 }]}
             onPress={() => router.push("/OrdersScreen")}
           >
             <MaterialIcons name="receipt-long" size={20} color="#fff" />
@@ -263,7 +262,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={[styles.button, {marginTop: 6}]}
+            style={[styles.button, { marginTop: 6 }]}
             onPress={() => router.push("/CreditCardScreen")}
           >
             <MaterialIcons name="credit-card" size={20} color="#fff" />
@@ -272,7 +271,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={[styles.button, {marginTop: 6}]}
+            style={[styles.button, { marginTop: 6 }]}
             onPress={() => router.push("/AddressScreen")}
           >
             <MaterialIcons name="location-pin" size={20} color="#fff" />
@@ -280,7 +279,7 @@ export default function ProfileScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.button, {marginTop: 6}]}
+            style={[styles.button, { marginTop: 6 }]}
             onPress={() => router.push("/AccountSecurityScreen")}
           >
             <MaterialIcons name="security" size={20} color="#fff" />
@@ -289,7 +288,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton, {marginTop: 100}]}
+            style={[styles.button, styles.logoutButton, { marginTop: 30 }]}
             onPress={handleLogout}
           >
             <MaterialIcons name="logout" size={20} color="#fff" />

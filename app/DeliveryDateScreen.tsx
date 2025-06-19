@@ -47,7 +47,7 @@ export default function DeliveryDateScreen() {
       <Text style={styles.title}>Select Delivery Date</Text>
       <DatePicker date={date} onDateChange={setDate} />
       {loading ? (
-        <ActivityIndicator size="large" color="#6b4226" />
+        <ActivityIndicator testID="loading-indicator" size="large" color="#6b4226" />
       ) : (
         <Button title="Check Availability" onPress={checkDateAvailability} />
       )}
