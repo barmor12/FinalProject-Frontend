@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -39,6 +40,7 @@ export default function AdminNotificationsScreen() {
       sentTo: number;
     }>
   >([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Get the notification functions
   // const { sendTestNotification } = useNotifications();
@@ -78,6 +80,12 @@ export default function AdminNotificationsScreen() {
       console.error("Error fetching recent notifications:", error);
       Alert.alert("Error", "Failed to fetch recent notifications");
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchRecentNotifications();
+    setRefreshing(false);
   };
 
   const sendNotification = async () => {
@@ -176,14 +184,18 @@ export default function AdminNotificationsScreen() {
 
   return (
     <SafeAreaView style={[styles.container]}>
+      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <ScrollView>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
           <View style={styles.header}>
-            <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
-            <Text style={styles.headerTitle}>Send Notifications</Text>
+            <Text style={[styles.headerTitle, { textAlign: "center" }]}>Send Notifications</Text>
             <Text style={styles.headerSubtitle}>
               Send notifications to all customers about promotions, new
               products, or important updates.

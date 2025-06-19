@@ -229,8 +229,9 @@ const StatisticsScreen = () => {
       >
         <View style={styles.headerRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Text style={styles.title}>📊 Business Analytics</Text>
-            
+            <View style={{ width: "100%", alignItems: "center", marginBottom: 10 }}>
+              <Text style={[styles.title, { fontSize: 26, textAlign: "center" }]}>📊 Business Analytics</Text>
+            </View>
           </View>
         </View>
         <View style={{ alignItems: "center", marginVertical: 20 }}>

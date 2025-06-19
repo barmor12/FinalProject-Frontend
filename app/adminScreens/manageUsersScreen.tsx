@@ -498,6 +498,8 @@ export default function AdminUsersScreen() {
             ...(filteredUsers.length === 0 && { flex: 1 }),
           }}
           ListEmptyComponent={<NoResults />}
+          onRefresh={fetchUsers}
+          refreshing={loading}
         />
       )}
       <Modal

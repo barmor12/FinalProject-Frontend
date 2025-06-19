@@ -190,7 +190,9 @@ export default function AdminRecipesScreen() {
         <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
             <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
             <View style={styles.header}>
-                <Text style={styles.title}>Manage Recipes</Text>
+                <View style={{ flex: 1, alignItems: 'center' }}>
+                    <Text style={styles.title}>Manage Recipes</Text>
+                </View>
                 <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => router.push("/adminScreens/AddRecipeScreen")}

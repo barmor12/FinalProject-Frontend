@@ -7,18 +7,27 @@ const styles = StyleSheet.create({
     },
     header: {
       padding: 20,
-      paddingTop: 60, // במקום 20, כדי לאפשר מקום לכפתור
-      paddingBottom: 80, // כדי לא לדחוף את הכותרת על הכפתור
+      paddingTop: 40, // Reduced from 80 to align below the back button
+      paddingBottom: 40, // כדי לא לדחוף את הכותרת על הכפתור
       backgroundColor: "#6b4226",
       borderBottomLeftRadius: 20,
       borderBottomRightRadius: 20,
       position: "relative",
+    },
+    backButtonWrapper: {
+      position: "absolute",
+      top: 10, // Adjusted to be visually above header text
+      left: 10,
+      marginLeft: 10,
+      marginTop: 5,
+      zIndex: 20,
     },
     headerTitle: {
       fontSize: 24,
       fontWeight: "bold",
       color: "#fff",
       marginBottom: 10,
+      marginTop: 0, // Reduced top margin to align below back button
     },
     headerSubtitle: {
       fontSize: 14,

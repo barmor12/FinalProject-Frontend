@@ -17,6 +17,7 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import styles from "../app/styles/OrderDetailsScreenStyles"; // Importing styles
+import BackButton from "../components/BackButton";
 
 interface Cake {
   _id: string;
@@ -236,6 +237,7 @@ export default function OrderDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <BackButton />
       <Text style={styles.title}>Order #{order._id.slice(-6)}</Text>
       <Text style={styles.subTitle}>
         Customer:{" "}
