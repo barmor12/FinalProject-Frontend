@@ -51,13 +51,14 @@ describe("CreditCardScreen", () => {
     });
 
     it("loads and displays credit cards", async () => {
-        const { findByText } = render(<CreditCardScreen />);
+        const { getByText } = render(<CreditCardScreen />);
 
         // מחכים למופע של הכרטיס הראשון
-        expect(await findByText("**** **** **** 5678")).toBeTruthy();
-        expect(await findByText("John Doe")).toBeTruthy();
-        expect(await findByText("12/25")).toBeTruthy();
-
+        await waitFor(() => {
+            expect(getByText("**** **** **** 5678")).toBeTruthy();
+            expect(getByText("John Doe")).toBeTruthy();
+            expect(getByText("12/25")).toBeTruthy();
+        });
         // וגם לוודא שבוצעה קריאת GET נכונה
         await waitFor(() =>
             expect(global.fetch).toHaveBeenCalledWith(
