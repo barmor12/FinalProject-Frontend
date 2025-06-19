@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import Header from "../components/Header";
 import styles from './styles/AddressStyles';
 import config from '@/config';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -324,12 +325,7 @@ export default function AddressScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-              <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                <Ionicons name="arrow-back" size={20} color="#fff" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>My Addresses</Text>
-            </View>
+            <Header title="My Addresses" />
             <FlatList
                 data={addresses}
                 renderItem={renderAddress}

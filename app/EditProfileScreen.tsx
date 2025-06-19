@@ -14,7 +14,7 @@ import config from "../config";
 import { useRouter } from "expo-router";
 import { fetchUserData } from "./utils/fetchUserData";
 import styles from "./styles/EditProfileStyles"; // Importing styles
-import BackButton from "../components/BackButton";
+import Header from "../components/Header";
 
 const capitalizeFirstLetter = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -195,10 +195,7 @@ export default function EditProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerContainer}>
-        <BackButton />
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-      </View>
+      <Header title="Edit Profile" />
 
       {loading ? (
         <View style={styles.loadingContainer}>

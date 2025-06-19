@@ -17,6 +17,7 @@ import config from "../config";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles, { placeholderColor } from "./styles/AccountSecurityStyles";
+import Header from "../components/Header";
 
 export default function AccountSecurityScreen() {
   const router = useRouter();
@@ -287,12 +288,7 @@ export default function AccountSecurityScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Account Security</Text>
-      </View>
+      <Header title="Account Security" />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flexContainer}

@@ -14,6 +14,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
@@ -21,6 +22,8 @@ import { useFocusEffect, useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import styles from "../app/styles/CheckoutScreenStyles" // Import your styles
+import Header from "../components/Header";
+// Use the Header component at the top of the screen
 
 interface CartItem {
   _id: string;
@@ -88,6 +91,13 @@ export default function CheckoutScreen() {
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
 
   const router = useRouter();
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await Promise.all([fetchCartItems(), fetchAddresses(), fetchCreditCards()]);
+    setRefreshing(false);
+  };
 
   const formatDate = (date: Date) => {
     const day = date.getDate().toString().padStart(2, "0");
@@ -408,27 +418,18 @@ export default function CheckoutScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Header title="Checkout" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
       >
-        <ScrollView style={styles.scrollView}>
-          <TouchableOpacity onPress={() => router.back()} style={{ padding: 10, alignSelf: "flex-start" }}>
-            <View style={{
-              backgroundColor: "#d49a6a",
-              padding: 8,
-              borderRadius: 10,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.2,
-              shadowRadius: 3,
-              elevation: 2,
-            }}>
-              <Ionicons name="arrow-back" size={24} color="#fff" />
-            </View>
-          </TouchableOpacity>
-          <Text style={styles.title}>Checkout</Text>
+        <ScrollView
+          style={styles.scrollView}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+          }
+        >
           {loading ? (
             <ActivityIndicator
               size="large"

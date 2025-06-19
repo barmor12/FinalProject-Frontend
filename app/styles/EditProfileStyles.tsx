@@ -3,9 +3,8 @@ import { StyleSheet } from "react-native";
 export default StyleSheet.create({
   container: {
     flexGrow: 1,
-    alignItems: "center",
     backgroundColor: "#f9f3ea",
-    paddingVertical: 100,
+    paddingVertical: 40,
     paddingHorizontal: 20,
   },
   loadingContainer: {
@@ -21,33 +20,6 @@ export default StyleSheet.create({
     marginVertical: 10,
   },
 
-  backButton: {
-    backgroundColor: "#d49a6a",
-    paddingVertical: 6,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    position: "absolute",
-    left: 16,
-    zIndex: 10,
-  },
-  headerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 20,
-    paddingBottom: 20,
-    backgroundColor: "#f9f3ea",
-    position: "relative",
-    overflow: "visible",
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#6b4226",
-    textAlign: "center",
-    flex: 1,
-    marginRight: 32,
-  },
   imageContainer: {
     alignItems: "center",
     marginBottom: 20,
