@@ -99,6 +99,28 @@ const styles = StyleSheet.create({
     selectedDifficultyText: {
       color: "#fff",
     },
+    categoryButtonsWrapper: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+    },
+    categoryButton: {
+      padding: 10,
+      borderRadius: 8,
+      backgroundColor: "#f9f3ea",
+      margin: 5,
+      alignItems: "center",
+    },
+    selectedCategory: {
+      backgroundColor: "#6b4226",
+    },
+    categoryText: {
+      color: "#6b4226",
+      fontWeight: "600",
+    },
+    selectedCategoryText: {
+      color: "#fff",
+    },
     saveButton: {
       backgroundColor: "#6b4226",
       padding: 15,

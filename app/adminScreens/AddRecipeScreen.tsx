@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   SafeAreaView,
   ScrollView,
   TextInput,
@@ -39,6 +38,7 @@ interface Recipe {
   difficulty: "Easy" | "Medium" | "Hard";
   makingTime: string;
   image: string | null;
+  category: string;
 }
 
 export default function AddRecipeScreen() {
@@ -51,10 +51,15 @@ export default function AddRecipeScreen() {
     difficulty: "Easy",
     makingTime: "",
     image: null,
+    category: "Cakes",
   });
   const [uploading, setUploading] = useState(false);
   const [hours, setHours] = useState<string>("");
   const [minutes, setMinutes] = useState<string>("");
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
 
   const pickImage = async () => {
     try {
@@ -65,8 +70,15 @@ export default function AddRecipeScreen() {
         quality: 0.8,
       });
 
-      if (!result.canceled) {
-        setRecipe({ ...recipe, image: result.assets[0].uri });
+      if (!result.canceled && result.assets.length > 0) {
+        const selectedAsset = result.assets[0];
+        if (selectedAsset.uri) {
+          setRecipe({ ...recipe, image: selectedAsset.uri });
+        } else {
+          Alert.alert("Error", "Invalid image selection");
+        }
+      } else {
+        Alert.alert("Cancelled", "Image selection was cancelled");
       }
     } catch (error) {
       console.error("Error picking image:", error);
@@ -75,8 +87,38 @@ export default function AddRecipeScreen() {
   };
 
   const validateRecipe = () => {
+    const scrollAndAlert = (title: string, msg: string) => {
+      scrollToTop();
+      Alert.alert(title, msg);
+    };
+
     if (!recipe.image) {
-      Alert.alert("Error", "Recipe image is required");
+      scrollAndAlert("Missing Field", "Please upload a recipe image");
+      return false;
+    }
+
+    if (!recipe.name.trim()) {
+      scrollAndAlert("Missing Field", "Recipe name is required");
+      return false;
+    }
+
+    if (!recipe.description.trim()) {
+      scrollAndAlert("Missing Field", "Recipe description is required");
+      return false;
+    }
+
+    if (!recipe.servings.trim()) {
+      scrollAndAlert("Missing Field", "Number of servings is required");
+      return false;
+    }
+
+    if (recipe.ingredients.length === 0) {
+      scrollAndAlert("Missing Field", "At least one ingredient is required");
+      return false;
+    }
+
+    if (recipe.instructions.length === 0) {
+      scrollAndAlert("Missing Field", "At least one instruction is required");
       return false;
     }
 
@@ -89,7 +131,7 @@ export default function AddRecipeScreen() {
       minutesNum < 0 ||
       minutesNum > 59
     ) {
-      Alert.alert("Error", "Invalid time format");
+      scrollAndAlert("Invalid Time", "Please enter a valid time (0–59 minutes)");
       return false;
     }
 
@@ -114,15 +156,26 @@ export default function AddRecipeScreen() {
       formData.append("name", recipe.name);
       formData.append("description", recipe.description);
       formData.append("servings", recipe.servings);
-      formData.append("ingredients", JSON.stringify(recipe.ingredients));
+      const ingredientsWithUnit = recipe.ingredients.map((i) => ({
+        ...i,
+        unit: i.unit || "unit",
+      }));
+      formData.append("ingredients", JSON.stringify(ingredientsWithUnit));
       formData.append("instructions", JSON.stringify(recipe.instructions));
       formData.append("difficulty", recipe.difficulty);
       formData.append("makingTime", makingTime);
-      formData.append("image", {
-        uri: recipe.image!,
-        type: "image/jpeg",
-        name: "recipe.jpg",
-      } as any);
+      formData.append("category", recipe.category);
+      if (recipe.image) {
+        const cleanUri = recipe.image!;
+        const imageUriParts = cleanUri.split(".");
+        const fileType = imageUriParts[imageUriParts.length - 1];
+
+        formData.append("image", {
+          uri: cleanUri,
+          type: `image/${fileType}`,
+          name: `recipe.${fileType}`,
+        } as any);
+      }
       console.log("name", recipe.name);
       console.log("description", recipe.description);
       console.log("servings", recipe.servings);
@@ -165,7 +218,7 @@ export default function AddRecipeScreen() {
         if (parts.length < 2) return null;
         const amount = parts[0];
         const name = parts.slice(1).join(" ");
-        return { name, amount, unit: "unit" };
+        return { name, amount, unit: "" };
       })
       .filter(Boolean) as Ingredient[];
 
@@ -198,7 +251,7 @@ export default function AddRecipeScreen() {
           <View style={{ width: 40 }} />
         </View>
 
-        <ScrollView style={styles.scrollView}>
+        <ScrollView ref={scrollViewRef} style={styles.scrollView}>
           <View style={styles.form}>
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Recipe Image</Text>
@@ -256,6 +309,31 @@ export default function AddRecipeScreen() {
                 placeholderTextColor="#6b4226"
                 keyboardType="numeric"
               />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Category</Text>
+              <View style={styles.categoryButtonsWrapper}>
+                {["Cakes", "Cookies", "Pastries", "Bread", "Cupcakes"].map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    style={[
+                      styles.categoryButton,
+                      recipe.category === cat && styles.selectedCategory,
+                    ]}
+                    onPress={() => setRecipe({ ...recipe, category: cat })}
+                  >
+                    <Text
+                      style={[
+                        styles.categoryText,
+                        recipe.category === cat && styles.selectedCategoryText,
+                      ]}
+                    >
+                      {cat}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
 
             <View style={styles.inputGroup}>
@@ -356,4 +434,3 @@ export default function AddRecipeScreen() {
     </SafeAreaView>
   );
 }
-
