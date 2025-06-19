@@ -223,6 +223,7 @@ const StatisticsScreen = () => {
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.container}
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -374,7 +375,7 @@ const StatisticsScreen = () => {
               <Text style={styles.chartTitle}>Top Profitable Cakes</Text>
               {statistics.topProfitableCakes?.map((cake, index) => (
                 <View key={index} style={styles.cakeItem}>
-                  <Text style={styles.cakeName} numberOfLines={1} ellipsizeMode="tail">{cake.name}</Text>
+                  <Text style={styles.cakeName} numberOfLines={2} ellipsizeMode="tail">{cake.name}</Text>
                   <View style={styles.cakeStats}>
                     <Text style={styles.cakeStat}>
                       Quantity: {cake.quantity}
@@ -387,28 +388,60 @@ const StatisticsScreen = () => {
               ))}
             </View>
 
-            <View style={styles.chartContainer}>
+            <View style={[styles.chartContainer, { marginBottom: 80 }]}>
               <Text style={styles.chartTitle}>Top 3 Cakes (by Revenue)</Text>
               {statistics.topProfitableCakes.filter(c => c.revenue > 0).length >= 1 ? (
-                <PieChart
-                  data={statistics.topProfitableCakes
-                    .filter(c => c.revenue > 0)
-                    .slice(0, 3)
-                    .map((cake, index) => ({
-                      name: cake.name,
-                      population: cake.revenue,
-                      color: predefinedColors[index % predefinedColors.length],
-                      legendFontColor: "#6d4226",
-                      legendFontSize: 10,
-                    }))}
-                  width={screenWidth - 40}
-                  height={220}
-                  chartConfig={chartConfig}
-                  accessor="population"
-                  backgroundColor="transparent"
-                  paddingLeft="5"
-                  absolute
-                />
+                <>
+                  <PieChart
+                    data={statistics.topProfitableCakes
+                      .filter(c => c.revenue > 0)
+                      .slice(0, 3)
+                      .map((cake, index) => ({
+                        name: cake.name,
+                        population: cake.revenue,
+                        color: predefinedColors[index % predefinedColors.length],
+                        legendFontColor: "#6d4226",
+                        legendFontSize: 10,
+                      }))}
+                    width={screenWidth - 20}
+                    height={220}
+                    chartConfig={chartConfig}
+                    accessor="population"
+                    backgroundColor="transparent"
+                    paddingLeft="5"
+                    absolute
+                    hasLegend={false}
+                    style={{ alignSelf: "center", justifyContent: "center", alignItems: "center" }}
+                  />
+                  <View style={{ marginTop: 10 }}>
+                    {statistics.topProfitableCakes
+                      .filter(c => c.revenue > 0)
+                      .slice(0, 3)
+                      .map((cake, index) => (
+                        <View
+                          key={index}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <View
+                            style={{
+                              width: 12,
+                              height: 12,
+                              borderRadius: 6,
+                              backgroundColor: predefinedColors[index % predefinedColors.length],
+                              marginRight: 8,
+                            }}
+                          />
+                          <Text style={{ fontSize: 12, color: "#6d4226", flexShrink: 1 }}>
+                            {cake.name} — ${cake.revenue.toFixed(2)}
+                          </Text>
+                        </View>
+                      ))}
+                  </View>
+                </>
               ) : (
                 <Text style={{ textAlign: "center", color: "#999" }}>
                   No data available for top 3 cakes.

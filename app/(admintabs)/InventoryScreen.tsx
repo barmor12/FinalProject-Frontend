@@ -9,6 +9,7 @@ import {
   Alert,
   TextInput,
   RefreshControl,
+  Keyboard,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -183,46 +184,59 @@ export default function InventoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.addButton} onPress={navigateToAddProduct}>
-          <Ionicons name="add-circle-outline" size={28} color="#6b4226" />
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.selectButton} onPress={toggleSelectionMode}>
-          <Ionicons
-            name={isSelectionMode ? "close-circle-outline" : "checkbox-outline"}
-            size={28}
-            color={isSelectionMode ? "red" : "#6b4226"}
+      <View style={{ marginBottom: 10 }}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search products..."
+            placeholderTextColor="#999"
+            value={searchText}
+            onChangeText={handleSearch}
+            returnKeyType="search"
           />
-        </TouchableOpacity>
-
-        {isSelectionMode && selectedProducts.length > 0 && (
-          <TouchableOpacity style={styles.deleteButton} onPress={deleteSelectedProducts}>
-            <Ionicons name="trash-outline" size={28} color="red" />
-          </TouchableOpacity>
-        )}
-
-        <View style={styles.rightHeader}>
-          {searchVisible && (
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search..."
-              value={searchText}
-              onChangeText={handleSearch}
-              autoFocus
-            />
-          )}
-          <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-            <Ionicons
-              name={searchVisible ? "close" : "search"}
-              size={24}
-              color="#fff"
-            />
+          <TouchableOpacity
+            onPress={() => {
+              setSearchText("");
+              setFilteredProducts(products);
+              setSearchVisible(false);
+              Keyboard.dismiss();
+            }}
+            style={styles.SearchBtn}
+          >
+            <Ionicons name="close" size={20} color="#fff" />
           </TouchableOpacity>
         </View>
+
+        <View style={styles.topActionsContainer}>
+          <TouchableOpacity style={styles.addButton} onPress={navigateToAddProduct}>
+            <Ionicons name="add-circle-outline" size={28} color="#6b4226" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.selectButton} onPress={toggleSelectionMode}>
+            <Ionicons
+              name={isSelectionMode ? "close-circle-outline" : "checkbox-outline"}
+              size={28}
+              color={isSelectionMode ? "red" : "#6b4226"}
+            />
+          </TouchableOpacity>
+
+          {isSelectionMode && selectedProducts.length > 0 && (
+            <TouchableOpacity style={styles.deleteButton} onPress={deleteSelectedProducts}>
+              <Ionicons name="trash-outline" size={28} color="red" />
+            </TouchableOpacity>
+          )}
+        </View>
+        {isSelectionMode && (
+          <Text style={styles.selectionModeNote}>
+            Selection mode enabled. Tap multiple products to delete them.
+          </Text>
+        )}
       </View>
 
       <Text style={styles.title}>All Cakes</Text>
+      {filteredProducts.length === 0 && searchText.trim() !== "" && (
+        <Text style={styles.noResultsText}>No products found.</Text>
+      )}
       <FlatList
         data={filteredProducts}
         keyExtractor={(item) => item._id}
@@ -261,4 +275,3 @@ export default function InventoryScreen() {
     </SafeAreaView>
   );
 }
-

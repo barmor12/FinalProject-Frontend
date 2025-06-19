@@ -250,6 +250,14 @@ const styles = StyleSheet.create({
       color: '#6b4226',
       fontSize: 14,
     },
+    noResultsText: {
+      textAlign: "center",
+      color: "#999",
+      fontSize: 16,
+      marginTop: 20,
+      fontStyle: "italic",
+      marginHorizontal: 20,
+    },
   });
 
   

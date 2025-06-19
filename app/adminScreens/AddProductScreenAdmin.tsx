@@ -20,6 +20,7 @@ import * as FileSystem from "expo-file-system";
 import { useRouter } from "expo-router";
 import styles from "../styles/AdminScreensStyles/AddProductScreenAdminStyles";
 import BackButton from "../../components/BackButton";
+import Header from "../../components/Header";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function AddProductScreenAdmin() {
@@ -286,9 +287,9 @@ export default function AddProductScreenAdmin() {
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
       <SafeAreaView style={{ flex: 1, backgroundColor: "#f9f3ea" }}>
-        <BackButton />
+        <Header title="Add New Product"  />
         <View style={styles.container}>
-          <Text style={styles.title}>Add New Product</Text>
+
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {renderItem({ item: "image" })}
             {renderItem({ item: "inputs" })}

@@ -86,6 +86,21 @@ const styles = StyleSheet.create({
       borderWidth: 1,
       borderColor: "#f1e7dc",
     },
+    finalChartContainer: {
+      marginHorizontal: 16,
+      marginVertical: 10,
+      marginBottom: 40, // מוסיף רווח בסוף
+      backgroundColor: "#fffdf9",
+      borderRadius: 14,
+      padding: 18,
+      shadowColor: "#000",
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.1,
+      shadowRadius: 6,
+      elevation: 4,
+      borderWidth: 1,
+      borderColor: "#f1e7dc",
+    },
     chartTitle: {
       fontSize: 17,
       fontWeight: "bold",
@@ -127,10 +142,15 @@ const styles = StyleSheet.create({
       fontWeight: "bold",
       color: "#6d4226",
       marginBottom: 6,
+      width: "100%",
+      flexShrink: 1,
+      flexWrap: "wrap",
+      textAlign: "left",
     },
     cakeStats: {
       flexDirection: "row",
       justifyContent: "space-between",
+      flexWrap : "wrap",
     },
     cakeStat: {
       fontSize: 14,
