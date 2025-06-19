@@ -461,6 +461,8 @@ export default function RecipeScreen() {
                 </View>
             ) : (
                 <FlatList
+                    refreshing={loading}
+                    onRefresh={fetchRecipes}
                     data={filteredRecipes}
                     renderItem={renderRecipeCard}
                     keyExtractor={(item) => item._id}

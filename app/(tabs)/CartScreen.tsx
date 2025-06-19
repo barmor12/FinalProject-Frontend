@@ -471,6 +471,8 @@ export default function CartScreen() {
           data={cartItems}
           keyExtractor={(item) => item._id}
           renderItem={renderCartItem}
+          refreshing={loading}
+          onRefresh={fetchCartItems}
         />
       )}
 
