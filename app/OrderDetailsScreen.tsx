@@ -17,7 +17,8 @@ import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import styles from "../app/styles/OrderDetailsScreenStyles"; // Importing styles
-import BackButton from "../components/BackButton";
+import Header from "../components/Header";
+import StatusUpdateModal from "../components/StatusUpdateModal";
 
 interface Cake {
   _id: string;
@@ -236,9 +237,8 @@ export default function OrderDetailsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <BackButton />
-      <Text style={styles.title}>Order #{order._id.slice(-6)}</Text>
+    <SafeAreaView style={[styles.container, { backgroundColor: "#f9f3ea" }]}>
+      <Header title={`Order #${order._id.slice(-6)}`}  />
       <Text style={styles.subTitle}>
         Customer:{" "}
         {order.user
@@ -360,44 +360,13 @@ export default function OrderDetailsScreen() {
         <Text style={styles.contactText}>View Contact Details</Text>
       </TouchableOpacity>
 
-      <Modal
-        transparent={true}
+      <StatusUpdateModal
         visible={modalVisible}
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Update Order Status</Text>
-            {["pending", "confirmed", "delivered", "cancelled"].map(
-              (status) => (
-                <TouchableOpacity
-                  key={status}
-                  style={[
-                    styles.modalButton,
-                    selectedStatus === status && styles.selectedStatus,
-                  ]}
-                  onPress={() => setSelectedStatus(status)}
-                >
-                  <Text>{status}</Text>
-                </TouchableOpacity>
-              )
-            )}
-            <TouchableOpacity
-              style={styles.modalButtonConfirm}
-              onPress={updateOrderStatus}
-            >
-              <Text>Confirm</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.modalButtonClose}
-              onPress={() => setModalVisible(false)}
-            >
-              <Text>Close</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        onClose={() => setModalVisible(false)}
+        selectedStatus={selectedStatus}
+        setSelectedStatus={setSelectedStatus}
+        onConfirm={updateOrderStatus}
+      />
 
       <Modal
         transparent={true}
@@ -415,9 +384,14 @@ export default function OrderDetailsScreen() {
               Phone: {order.address?.phone || "N/A"}
             </Text>
             <Text style={styles.contactInfo}>
-              Address: {order.address?.street || "N/A"},{" "}
-              {order.address?.city || "N/A"}, {order.address?.zipCode || "N/A"},{" "}
-              {order.address?.country || "N/A"}
+              Address: {[
+                order.address?.street,
+                order.address?.city,
+                order.address?.zipCode,
+                order.address?.country,
+              ]
+                .filter(Boolean)
+                .join(", ")}
             </Text>
             <Text style={styles.contactInfo}>
               Email: {order.user?.email || "N/A"}

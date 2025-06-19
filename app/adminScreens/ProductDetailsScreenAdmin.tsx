@@ -20,7 +20,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import styles from "../styles/AdminScreensStyles/ProductDetailsScreenAdminStyles";
-import BackButton from "../../components/BackButton";
+import Header from "../../components/Header";
 
 interface Product {
     _id: string;
@@ -231,7 +231,7 @@ export default function ProductDetailsScreen() {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <SafeAreaView style={styles.container}>
-                <BackButton />
+                <Header title=""  />
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"

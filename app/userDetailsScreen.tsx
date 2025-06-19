@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Header from "../components/Header";
 import {
   View,
   Text,
@@ -124,8 +125,9 @@ export default function UserDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Header title="👤 User Details"  />
       <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
-        <Text style={styles.title}>👤 User Details</Text>
+        {/* <Text style={styles.title}>👤 User Details</Text> */}
 
         {loadingUser ? (
           <ActivityIndicator size="large" color="#6b4226" />

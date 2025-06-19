@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     Alert,
     Image,
+    RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
@@ -17,6 +18,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/AdminScreensStyles/AdminRecipesScreenStyles";
 import BackButton from "../../components/BackButton";
 import { useRouter } from "expo-router";
+import Header from "../../components/Header";
 
 interface Recipe {
     _id: string;
@@ -40,6 +42,7 @@ export default function AdminRecipesScreen() {
     const [isEditing, setIsEditing] = useState(false);
     const [editedRecipe, setEditedRecipe] = useState<Partial<Recipe>>({});
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
 
     useEffect(() => {
         fetchRecipes();
@@ -82,6 +85,12 @@ export default function AdminRecipesScreen() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleRefresh = async () => {
+        setRefreshing(true);
+        await fetchRecipes();
+        setRefreshing(false);
     };
 
     const handleEdit = (recipe: Recipe) => {
@@ -188,20 +197,14 @@ export default function AdminRecipesScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
-            <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
-            <View style={styles.header}>
-                <View style={{ flex: 1, alignItems: 'center' }}>
-                    <Text style={styles.title}>Manage Recipes</Text>
-                </View>
-                <TouchableOpacity
-                    style={styles.addButton}
-                    onPress={() => router.push("/adminScreens/AddRecipeScreen")}
-                >
-                    <Ionicons name="add" size={24} color="#fff" />
-                </TouchableOpacity>
-            </View>
+            <Header title="Manage Recipes"  />
 
-            <ScrollView style={styles.scrollView}>
+            <ScrollView
+                style={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+                }
+            >
                 <View style={styles.recipeGrid}>
                     {recipes.map((recipe) => (
                         <TouchableOpacity

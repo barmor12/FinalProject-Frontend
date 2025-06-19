@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import Header from "../../components/Header";
 import {
   View,
   Text,
@@ -144,19 +145,19 @@ export default function AdminDiscountCodes() {
 
   return (
     <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <SafeAreaView style={[styles.container, { flex: 1 }]}>
-        <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
+      <SafeAreaView style={[styles.container, { flex: 1, backgroundColor: "#f9f3ea" }]}>
+        <Header title="Manage Discount Codes" />
         <ScrollView
-          style={{ flex: 1 }}
+          contentContainerStyle={{ paddingBottom: 20 }}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={fetchCodes} />
           }
-          contentContainerStyle={{ paddingBottom: 20 }}
+          keyboardShouldPersistTaps="handled"
         >
           <View style={styles.headerContainer}>
             <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
           </View>
-          <Text style={styles.title}>Manage Discount Codes</Text>
+          {/* <Text style={styles.title}>Manage Discount Codes</Text> */}
 
           <View style={styles.inputRow}>
             <Ionicons name="key-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
@@ -216,7 +217,9 @@ export default function AdminDiscountCodes() {
             </Text>
           </View>
 
-          {codes.map((item) => renderCode({ item }))}
+          {codes.map((item) => (
+            <View key={item._id}>{renderCode({ item })}</View>
+          ))}
         </ScrollView>
       </SafeAreaView>
     </TouchableWithoutFeedback>

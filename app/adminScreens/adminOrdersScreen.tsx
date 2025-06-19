@@ -20,7 +20,7 @@ import { useFocusEffect } from "expo-router";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminOrdersScreenStyles";
-import BackButton from "../../components/BackButton";
+import Header from "../../components/Header";
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -381,8 +381,7 @@ export default function AdminOrdersScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
-      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
-      <Text style={styles.title}>Orders</Text>
+      <Header title="Orders" />
 
       {/* 🔍 שדה חיפוש לפי שם לקוח */}
       <TextInput

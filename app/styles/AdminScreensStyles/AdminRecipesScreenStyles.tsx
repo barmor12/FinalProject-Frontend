@@ -15,7 +15,7 @@ const styles = StyleSheet.create({
         justifyContent: "space-between",
         alignItems: "center",
         padding: 20,
-        backgroundColor: "#fff",
+        backgroundColor: "#f9f3ea",
         borderBottomWidth: 1,
         borderBottomColor: "#e0e0e0",
     },

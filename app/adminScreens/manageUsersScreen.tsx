@@ -20,6 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../_layout";
 import BackButton from "../../components/BackButton";
+import Header from "../../components/Header";
 import { useRouter, useFocusEffect } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -459,9 +460,7 @@ export default function AdminUsersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
-      <Text style={styles.title}>Admin User Management</Text>
-
+      <Header title="User Management" />
       <View style={styles.searchWrapper}>
         <MaterialIcons
           name="search"

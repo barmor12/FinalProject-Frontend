@@ -17,8 +17,9 @@ import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import styles from "../styles/AdminScreensStyles/AdminNotificationsScreenStyles";
+import Header from "../../components/Header";
 // import useNotifications from '../hooks/useNotifications';
-import BackButton from "../../components/BackButton";
+// import BackButton from "../../components/BackButton";
 import { useRouter } from "expo-router";
 
 export default function AdminNotificationsScreen() {
@@ -184,7 +185,7 @@ export default function AdminNotificationsScreen() {
 
   return (
     <SafeAreaView style={[styles.container]}>
-      <BackButton onPress={() => router.push("/(admintabs)/AdminPanelScreen")} />
+      <Header title="Admin Notifications"  />
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
@@ -195,7 +196,6 @@ export default function AdminNotificationsScreen() {
           }
         >
           <View style={styles.header}>
-            <Text style={[styles.headerTitle, { textAlign: "center" }]}>Send Notifications</Text>
             <Text style={styles.headerSubtitle}>
               Send notifications to all customers about promotions, new
               products, or important updates.
