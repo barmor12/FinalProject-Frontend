@@ -46,11 +46,14 @@ const styles = StyleSheet.create({
   },
   addToCartButton: {
     position: "absolute",
-    bottom: 10,
-    right: 10,
+    bottom: -10, // Lower the button further down (was 15)
+    right: 5,
     backgroundColor: "#6b4226",
-    padding: 8,
-    borderRadius: 20,
+    width: 45,
+    height: 45,
+    borderRadius: 22.5,
+    justifyContent: "center",
+    alignItems: "center",
   },
   quantityModal: {
     position: "absolute",
