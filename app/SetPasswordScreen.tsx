@@ -16,6 +16,7 @@ import styles from "../app/styles/LoginStyles";
 
 import config from "../config";
 import { BlurView } from "expo-blur";
+import BackButton from "../components/BackButton";
 
 export default function SetPasswordScreen() {
   const [password, setPassword] = useState("");
@@ -130,7 +131,19 @@ export default function SetPasswordScreen() {
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
-          <ScrollView contentContainerStyle={styles.container}>
+          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
+            <View style={{ position: "absolute", top: 60, left: 20, zIndex: 1 }}>
+              <BackButton
+                onPress={async () => {
+                  await AsyncStorage.removeItem("accessToken");
+                  await AsyncStorage.removeItem("refreshToken");
+                  await AsyncStorage.removeItem("isPasswordSet");
+                  await AsyncStorage.removeItem("role");
+                  await AsyncStorage.removeItem("userId");
+                  router.replace("/");
+                }}
+              />
+            </View>
             <Text
               style={{
                 fontSize: 35,

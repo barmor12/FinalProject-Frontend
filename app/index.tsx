@@ -120,15 +120,43 @@ export default function LoginScreen() {
       }
     }
 
-    // Only navigate if both accessToken and role exist
+    // Always fetch user data from server to get isPasswordSet
     const finalAccessToken = await AsyncStorage.getItem("accessToken");
-    const finalRole = await AsyncStorage.getItem("role");
-    if (finalAccessToken && finalRole) {
-      console.log("🔄 User is logged in, navigating...");
-      if (finalRole === "admin") {
-        router.replace("/(admintabs)/AdminDashboardScreen");
-      } else {
-        router.replace("/(tabs)/DashboardScreen");
+    if (finalAccessToken) {
+      try {
+        const response = await fetch(`${config.BASE_URL}/auth/me`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${finalAccessToken}`,
+          },
+        });
+        const data = await response.json();
+        if (response.ok) {
+          // Store userId/role again if needed
+          if (data.userId) await AsyncStorage.setItem("userId", data.userId);
+          if (data.role) await AsyncStorage.setItem("role", data.role);
+          // Main logic: redirect based on isPasswordSet
+          if (!data.isPasswordSet) {
+            router.replace("/SetPasswordScreen");
+          } else if (data.role === "admin") {
+            router.replace("/(admintabs)/AdminDashboardScreen");
+          } else {
+            router.replace("/(tabs)/DashboardScreen");
+          }
+        } else {
+          // If error, fallback to login
+          await AsyncStorage.removeItem("accessToken");
+          await AsyncStorage.removeItem("refreshToken");
+          await AsyncStorage.removeItem("userId");
+          await AsyncStorage.removeItem("role");
+        }
+      } catch (err) {
+        // On error, fallback to login
+        await AsyncStorage.removeItem("accessToken");
+        await AsyncStorage.removeItem("refreshToken");
+        await AsyncStorage.removeItem("userId");
+        await AsyncStorage.removeItem("role");
       }
     }
   };
@@ -330,57 +358,40 @@ export default function LoginScreen() {
           }
           return res.json();
         })
-        .then((data) => {
-          console.log("🔹 Google login server response:", data);
+        .then(async (data) => {
+          const accessToken = data.accessToken || data.tokens?.accessToken;
+          const refreshToken = data.refreshToken || data.tokens?.refreshToken;
+          if (accessToken && refreshToken) {
+            await AsyncStorage.setItem("accessToken", accessToken);
+            await AsyncStorage.setItem("refreshToken", refreshToken);
+            await AsyncStorage.setItem("userId", data.userId || "");
+            await AsyncStorage.setItem("role", data.role || "user");
 
-          if (
-            (data.accessToken && data.refreshToken) ||
-            (data.tokens?.accessToken && data.tokens?.refreshToken)
-          ) {
-            // Check for "isNewUser" flag in response
-            if (data.isNewUser) {
-              // Store tokens and user info
-              AsyncStorage.setItem("accessToken", data.accessToken || data.tokens.accessToken);
-              AsyncStorage.setItem("refreshToken", data.refreshToken || data.tokens.refreshToken);
-              AsyncStorage.setItem("userId", data.userId || "");
-              AsyncStorage.setItem("role", data.role || "user");
-              router.replace("/SetPasswordScreen");
-              return;
-            }
-            // Check if user is Google-authenticated but has no password
-            if (data.hasPassword === false) {
-              AsyncStorage.setItem("accessToken", data.accessToken || data.tokens.accessToken);
-              AsyncStorage.setItem("refreshToken", data.refreshToken || data.tokens.refreshToken);
-              AsyncStorage.setItem("userId", data.userId || "");
-              AsyncStorage.setItem("role", data.role || "user");
-              router.replace("/SetPasswordScreen");
-              return;
-            }
-            const accessToken = data.accessToken || data.tokens.accessToken;
-            const refreshToken = data.refreshToken || data.tokens.refreshToken;
-            if (data.requires2FA && data.role !== "admin") {
-              // 2FA for non-admin
-              setTempTokens({
-                accessToken,
-                refreshToken,
+            try {
+              const meRes = await fetch(`${config.BASE_URL}/auth/me`, {
+                method: "GET",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${accessToken}`,
+                },
               });
-              setTempUserData({
-                userID: data.userId || "",
-                role: data.role || "user",
-              });
-              setShow2FAModal(true);
-            } else {
-              // Normal login
-              AsyncStorage.setItem("accessToken", accessToken);
-              AsyncStorage.setItem("refreshToken", refreshToken);
-              AsyncStorage.setItem("userId", data.userId || "");
-              AsyncStorage.setItem("role", data.role || "user");
 
-              if (data.role === "admin") {
-                router.replace("/(admintabs)/AdminDashboardScreen");
+              const meData = await meRes.json();
+              if (meRes.ok) {
+                if (!meData.isPasswordSet) {
+                  router.replace("/SetPasswordScreen");
+                } else if (meData.role === "admin") {
+                  router.replace("/(admintabs)/AdminDashboardScreen");
+                } else {
+                  router.replace("/(tabs)/DashboardScreen");
+                }
               } else {
-                router.replace("/(tabs)/DashboardScreen");
+                console.warn("Failed to fetch user status from /auth/me", meData);
+                Alert.alert("Error", "Failed to verify user status.");
               }
+            } catch (err) {
+              console.error("Error fetching user profile:", err);
+              Alert.alert("Error", "Something went wrong while checking user status.");
             }
           } else {
             throw new Error("Missing tokens in response");

@@ -28,13 +28,26 @@ export default function RootLayout() {
 
   useEffect(() => {
     const checkLoginStatus = async () => {
+      const fromBack = await AsyncStorage.getItem("fromBack");
       const token = await AsyncStorage.getItem("accessToken");
       const role = await AsyncStorage.getItem("role");
+      const isPasswordSet = await AsyncStorage.getItem("isPasswordSet");
+
       if (token && role) {
-        setInitialRoute("index"); // תיכנס קודם למסך ההתחברות
+        if (fromBack === "true") {
+          if (isPasswordSet !== "true") {
+            setInitialRoute("SetPasswordScreen");
+          } else {
+            setInitialRoute("index");
+          }
+          await AsyncStorage.removeItem("fromBack");
+        } else {
+          setInitialRoute("index");
+        }
       } else {
-        setInitialRoute("SignUpScreen"); // או כל מסך רישום אחר
+        setInitialRoute("SignUpScreen");
       }
+
       await SplashScreen.hideAsync();
     };
     checkLoginStatus();
