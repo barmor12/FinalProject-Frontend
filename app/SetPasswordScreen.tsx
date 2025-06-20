@@ -15,6 +15,7 @@ import { useRouter } from "expo-router";
 import styles from "../app/styles/LoginStyles";
 
 import config from "../config";
+import { BlurView } from "expo-blur";
 
 export default function SetPasswordScreen() {
   const [password, setPassword] = useState("");
@@ -124,64 +125,80 @@ export default function SetPasswordScreen() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        <ScrollView contentContainerStyle={styles.container}>
-          <Text style={styles.title}>Set Your Password</Text>
-          <Text
-            style={{
-              color: "#5d3a1a",
-              fontSize: 15,
-              fontWeight: "bold",
-              marginBottom: 10,
-              backgroundColor: "#fff8e1",
-              padding: 10,
-              borderRadius: 6,
-              textAlign: "center",
-            }}
-          >
-            Your password must include:
-            {"\n"}✔ At least 8 characters
-            {"\n"}✔ One lowercase letter
-            {"\n"}✔ One uppercase letter
-            {"\n"}✔ One number
-            {"\n"}✔ One special character (e.g. @$!%*?&)
-          </Text>
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            secureTextEntry
-            onChangeText={(text) => {
-              setPassword(text);
-              checkPasswordStrength(text);
-            }}
-          />
-          <View style={{ marginBottom: 10 }}>
-            {requirementList.map((item) => (
-              <Text key={item.key} style={{ color: passwordRequirements[item.key] ? "green" : "red" }}>
-                {passwordRequirements[item.key] ? "✔️" : "❌"} {item.label}
-              </Text>
-            ))}
-          </View>
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            secureTextEntry
-            onChangeText={setConfirmPassword}
-          />
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSetPassword}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? "Saving..." : "Set Password"}
+      <BlurView intensity={40} tint="light" style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+        >
+          <ScrollView contentContainerStyle={styles.container}>
+            <Text
+              style={{
+                fontSize: 35,
+                fontWeight: "bold",
+                color: "#a2785c", // חום בהיר יותר
+                textAlign: "center",
+                marginTop: -50, // מרווח מלמעלה
+                marginBottom: 60,
+                textShadowColor: "rgba(0, 0, 0, 0.15)",
+                textShadowOffset: { width: 1, height: 3 },
+                textShadowRadius: 4,
+              }}
+            >
+              Set Your Password
             </Text>
-          </TouchableOpacity>
-        </ScrollView>
-      </KeyboardAvoidingView>
+            <Text
+              style={{
+                color: "#5d3a1a",
+                fontSize: 15,
+                fontWeight: "bold",
+                marginBottom: 10,
+                backgroundColor: "#ecdcc6",
+                padding: 10,
+                borderRadius: 6,
+                textAlign: "center",
+              }}
+            >
+              Your password must include:
+              {"\n"}✔ At least 8 characters
+              {"\n"}✔ One lowercase letter
+              {"\n"}✔ One uppercase letter
+              {"\n"}✔ One number
+              {"\n"}✔ One special character (e.g. @$!%*?&)
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="New Password"
+              secureTextEntry
+              onChangeText={(text) => {
+                setPassword(text);
+                checkPasswordStrength(text);
+              }}
+            />
+            <View style={{ marginBottom: 10 }}>
+              {requirementList.map((item) => (
+                <Text key={item.key} style={{ color: passwordRequirements[item.key] ? "green" : "red" }}>
+                  {passwordRequirements[item.key] ? "✔️" : "❌"} {item.label}
+                </Text>
+              ))}
+            </View>
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              secureTextEntry
+              onChangeText={setConfirmPassword}
+            />
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSetPassword}
+              disabled={loading}
+            >
+              <Text style={styles.buttonText}>
+                {loading ? "Saving..." : "Set Password"}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </BlurView>
     </ImageBackground>
   );
 }

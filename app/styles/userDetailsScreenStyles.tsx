@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
       fontSize: 26,
       fontWeight: "bold",
       textAlign: "center",
-      marginBottom: 10,
+      marginBottom: 11,
       color: "#6b4226",
     },
     sectionTitle: {

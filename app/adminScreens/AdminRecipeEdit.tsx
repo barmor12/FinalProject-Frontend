@@ -13,6 +13,7 @@ import {
     Platform,
     ActivityIndicator
 } from "react-native";
+import Header from "../../components/Header";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import * as ImagePicker from "expo-image-picker";
@@ -334,17 +335,7 @@ export default function AdminRecipeEdit() {
     if (!isEditMode) {
         return (
             <SafeAreaView style={styles.container}>
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => router.back()}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#6b4226" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Recipe Details</Text>
-                    <View style={{ width: 40 }} />
-                </View>
-
+                <Header title="Recipe Details" showBack />
                 <ScrollView style={styles.scrollView}>
                     <View style={styles.form}>
                         <Image
@@ -375,9 +366,6 @@ export default function AdminRecipeEdit() {
                             <View style={styles.recipeList}>
                                 {recipe.ingredients && Object.keys(recipe.ingredients).length > 0 ? (
                                     Object.entries(recipe.ingredients).map(([key, value]) => {
-                                        // Debug logging
-                                        console.log(`Ingredient ${key}:`, value);
-
                                         // Handle different data formats
                                         let ingredientText = '';
                                         if (typeof value === 'string') {
@@ -412,9 +400,6 @@ export default function AdminRecipeEdit() {
                             <View style={styles.recipeList}>
                                 {recipe.instructions && Object.keys(recipe.instructions).length > 0 ? (
                                     Object.entries(recipe.instructions).map(([key, value]) => {
-                                        // Debug logging
-                                        console.log(`Instruction ${key}:`, value);
-
                                         // Handle different data formats
                                         let instructionText = '';
                                         let stepNumber = key.replace('step', '');
@@ -472,17 +457,7 @@ export default function AdminRecipeEdit() {
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
             >
-                <View style={styles.header}>
-                    <TouchableOpacity
-                        style={styles.backButton}
-                        onPress={() => setIsEditMode(false)}
-                    >
-                        <Ionicons name="arrow-back" size={24} color="#6b4226" />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Edit Recipe</Text>
-                    <View style={{ width: 40 }} />
-                </View>
-
+                <Header title="Edit Recipe" showBack />
                 <ScrollView style={styles.scrollView}>
                     <View style={styles.form}>
                         <View style={styles.inputGroup}>

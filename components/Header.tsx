@@ -6,14 +6,16 @@ export default function Header({
   title,
   showBack = true,
   style,
+  onBackPress,
 }: {
   title?: string;
   showBack?: boolean;
   style?: object;
+  onBackPress?: () => void;
 }) {
   return (
     <View style={[styles.headerWrapper, style]}>
-      {showBack && <BackButton />}
+      {showBack && <BackButton onPress={onBackPress} />}
       {title && <Text style={styles.headerText}>{title}</Text>}
     </View>
   );

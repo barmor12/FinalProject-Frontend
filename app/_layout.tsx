@@ -8,13 +8,13 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Prevents the splash screen from closing automatically
-SplashScreen.preventAutoHideAsync();
+// Removed SplashScreen.preventAutoHideAsync();
 
 export type RootStackParamList = {
   AdminOrdersScreen: { shouldRefresh?: boolean };
@@ -24,16 +24,32 @@ export type RootStackParamList = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    SplashScreen.hideAsync();
+    const checkLoginStatus = async () => {
+      const token = await AsyncStorage.getItem("accessToken");
+      const role = await AsyncStorage.getItem("role");
+      if (token && role) {
+        setInitialRoute("index"); // תיכנס קודם למסך ההתחברות
+      } else {
+        setInitialRoute("SignUpScreen"); // או כל מסך רישום אחר
+      }
+      await SplashScreen.hideAsync();
+    };
+    checkLoginStatus();
   }, []);
+
+  if (!initialRoute) {
+    return null; // or a loading indicator while checking login status
+  }
 
   return (
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
           <Stack
+            initialRouteName={initialRoute}
             screenOptions={{
               headerShown: false, // Remove header
             }}

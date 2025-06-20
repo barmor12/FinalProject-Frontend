@@ -197,8 +197,14 @@ export default function AddRecipeScreen() {
         Alert.alert("Success", "Recipe added successfully");
         router.back();
       } else {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to add recipe");
+        const text = await response.text();
+        try {
+          const error = JSON.parse(text);
+          throw new Error(error.error || "Failed to add recipe");
+        } catch {
+          console.error("Unexpected error response:", text);
+          throw new Error("Unexpected server error. Try again later.");
+        }
       }
     } catch (error) {
       console.error("Error:", error);

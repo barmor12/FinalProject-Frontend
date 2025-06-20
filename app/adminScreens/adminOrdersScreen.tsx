@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   SafeAreaView,
   View,
@@ -24,6 +24,8 @@ import Header from "../../components/Header";
 
 export default function AdminOrdersScreen() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const scrollRef = useRef<ScrollView>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
@@ -380,13 +382,17 @@ export default function AdminOrdersScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
-      <Header title="Orders" />
+    <SafeAreaView style={[styles.container, { paddingTop: 70, backgroundColor: "#f7efe5" }]}>
+      <View style={{ backgroundColor: "#f7efe5", paddingBottom: 10 }}>
+        <Header title="Orders" />
+      </View>
 
       {/* 🔍 שדה חיפוש לפי שם לקוח */}
       <TextInput
         style={styles.searchInput}
         placeholder="Search by customer name..."
+        placeholderTextColor="#888"
+        selectionColor="#6b4226"
         value={searchQuery}
         onChangeText={setSearchQuery}
       />
@@ -394,7 +400,6 @@ export default function AdminOrdersScreen() {
       {/* 🛒 טבלת כותרות */}
       <View style={styles.tableHeader}>
         <Text style={styles.priorityHeaderCell}></Text>
-        <Text style={styles.headerCell}>Order ID</Text>
         <TouchableOpacity
           style={styles.headerCell}
           onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
@@ -440,6 +445,12 @@ export default function AdminOrdersScreen() {
         <ActivityIndicator size="large" color="#6b4226" />
       ) : (
         <ScrollView
+          ref={scrollRef}
+          onScroll={(event) => {
+            const scrollY = event.nativeEvent.contentOffset.y;
+            setShowScrollToTop(scrollY > 700);
+          }}
+          scrollEventThrottle={16}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.scrollViewContent}
           refreshControl={
@@ -466,11 +477,18 @@ export default function AdminOrdersScreen() {
                   color={order.isPriority ? "#FFD700" : "#6b4226"}
                 />
               </TouchableOpacity>
-              <Text style={styles.cell}>{order._id.slice(-6)}</Text>
-              <Text style={styles.cell}>
+              <Text
+                style={styles.cell}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {new Date(order.createdAt).toLocaleDateString()}
               </Text>
-              <Text style={[styles.cell, styles[order.status]]}>
+              <Text
+                style={[styles.cell, styles[order.status]]}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {order.status}
               </Text>
               <Text style={styles.cell} numberOfLines={1} ellipsizeMode="tail">
@@ -642,6 +660,29 @@ export default function AdminOrdersScreen() {
           </View>
         </View>
       </Modal>
+      {showScrollToTop && (
+        <TouchableOpacity
+          style={{
+            position: "absolute",
+            bottom: 80,
+            right: 20,
+            backgroundColor: "rgba(107, 66, 38, 0.6)",
+            padding: 12,
+            borderRadius: 30,
+            elevation: 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.3,
+            shadowRadius: 4,
+            zIndex: 10,
+          }}
+          onPress={() => {
+            scrollRef.current?.scrollTo({ y: 0, animated: true });
+          }}
+        >
+          <Ionicons name="arrow-up" size={24} color="#fff" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 }

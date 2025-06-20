@@ -267,6 +267,15 @@ export default function CheckoutScreen() {
         Alert.alert("Error", "Please select a delivery date.");
         return;
       }
+      // Prevent selecting today's date for delivery (shipping)
+      if (
+        shippingMethod === "Standard Delivery (2-3 days)" &&
+        deliveryDate &&
+        new Date(deliveryDate).toDateString() === new Date().toDateString()
+      ) {
+        Alert.alert("Error", "You cannot select today's date for delivery.");
+        return;
+      }
       if (paymentMethod === 'credit' && !selectedCard) {
         Alert.alert("Error", "Please select a credit card.");
         return;
@@ -553,7 +562,11 @@ export default function CheckoutScreen() {
                                 setDeliveryDate(currentYearDate);
                               }
                             }}
-                            minimumDate={new Date(new Date().setHours(0, 0, 0, 0))}
+                            minimumDate={
+                              shippingMethod === "Standard Delivery (2-3 days)"
+                                ? new Date(Date.now() + 86400000)
+                                : new Date()
+                            }
                             maximumDate={new Date(new Date().getFullYear(), 11, 31)}
                             locale="en-GB"
                           />
@@ -586,6 +599,8 @@ export default function CheckoutScreen() {
                   placeholder={
                     appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"
                   }
+
+              
                   value={promoCode}
                   onChangeText={setPromoCode}
                   editable={!appliedCode}
@@ -877,8 +892,9 @@ export default function CheckoutScreen() {
               <Text style={styles.modalTitle}>Add New Address</Text>
 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: "#3b2b20", backgroundColor: "#f9f3ea" }]}
                 placeholder="Full Name"
+                placeholderTextColor="#a2785c"
                 value={newAddress.fullName}
                 onChangeText={(text) =>
                   setNewAddress({ ...newAddress, fullName: text })
@@ -886,8 +902,9 @@ export default function CheckoutScreen() {
               />
 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: "#3b2b20", backgroundColor: "#f9f3ea" }]}
                 placeholder="Phone"
+                placeholderTextColor="#a2785c"
                 value={newAddress.phone}
                 onChangeText={(text) =>
                   setNewAddress({ ...newAddress, phone: text })
@@ -896,8 +913,9 @@ export default function CheckoutScreen() {
               />
 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: "#3b2b20", backgroundColor: "#f9f3ea" }]}
                 placeholder="Street"
+                placeholderTextColor="#a2785c"
                 value={newAddress.street}
                 onChangeText={(text) =>
                   setNewAddress({ ...newAddress, street: text })
@@ -905,8 +923,9 @@ export default function CheckoutScreen() {
               />
 
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: "#3b2b20", backgroundColor: "#f9f3ea" }]}
                 placeholder="City"
+                placeholderTextColor="#a2785c"
                 value={newAddress.city}
                 onChangeText={(text) =>
                   setNewAddress({ ...newAddress, city: text })

@@ -460,7 +460,12 @@ export default function AdminUsersScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title="User Management" />
+      <Header
+        title="User Management"
+        onBackPress={() =>
+          router.push("/AdminPanelScreen")
+        }
+      />
       <View style={styles.searchWrapper}>
         <MaterialIcons
           name="search"
