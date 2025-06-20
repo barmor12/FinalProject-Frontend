@@ -134,7 +134,9 @@ export default function ProductDetailsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header title={product.name} />
+      <View style={[styles.headerContainer, { backgroundColor: "transparent" }]}>
+        <Header title={product.name} style={{ backgroundColor: "transparent" }} />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Image
           source={{ uri: product.image || "https://via.placeholder.com/200" }}

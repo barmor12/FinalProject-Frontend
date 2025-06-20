@@ -196,9 +196,10 @@ export default function RecipeScreen() {
         }
     };
 
-    const clearSearch = () => {
+    const clearSearch = async () => {
         setSearchText("");
-        setFilteredRecipes(recipes);
+        setLoading(true);
+        await fetchRecipes();
     };
 
     const toggleSearch = () => {
@@ -412,20 +413,30 @@ export default function RecipeScreen() {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.header}>
-                <View style={styles.headerContent}>
+                <View style={[styles.headerContent, { justifyContent: "center" }]}>
                     <Text style={styles.title}>Recipe Book</Text>
-                    <View style={styles.rightHeader}>
-                        <TouchableOpacity onPress={toggleSearch} style={[styles.searchButton, {
-                            padding: 8,
-                            backgroundColor: "#f3e5d7",
-                            borderRadius: 24,
-                            marginLeft: 6,
-                        }]}>
-                            <Ionicons name={searchVisible ? "close" : "search"} size={26} color="#6b4226" />
-                        </TouchableOpacity>
-                    </View>
+                    <TouchableOpacity
+                        onPress={() => {
+                            clearSearch();
+                            toggleSearch();
+                        }}
+                        style={[
+                            styles.searchButton,
+                            {
+                                padding: 8,
+                                backgroundColor: "#f3e5d7",
+                                borderRadius: 24,
+                                position: 'absolute',
+                                right: 20,
+                            },
+                        ]}
+                    >
+                        <Ionicons name={searchVisible ? "close" : "search"} size={26} color="#6b4226" />
+                    </TouchableOpacity>
                 </View>
             </View>
+
+
 
             {searchVisible && (
                 <View style={styles.searchContainer}>

@@ -135,9 +135,13 @@ const styles: { [key: string]: any } = StyleSheet.create({
       // position relative is required for absolute BackButton
     },
     headerTitle: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#6b4226',
+      fontSize: 28,
+      fontWeight: "800",
+      color: "#6b4226",
+      letterSpacing: 0.5,
+      textShadowColor: 'rgba(0, 0, 0, 0.15)',
+      textShadowOffset: { width: 1, height: 2 },
+      textShadowRadius: 3,
     },
   });
 

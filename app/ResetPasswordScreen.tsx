@@ -14,6 +14,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import styles from "./styles/LoginStyles";
 import config from "../config";
+import BackButton from "../components/BackButton";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
@@ -70,13 +71,30 @@ export default function ResetPasswordScreen() {
         source={require("../assets/bg-login.jpg")}
         style={{ flex: 1 }}
         resizeMode="cover"
+        blurRadius={4}
       >
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
+          scrollEnabled={false}
         >
           <View style={styles.container}>
-            <Text style={styles.title}>Reset Password</Text>
+            <View style={{ position: "absolute", top: 60, left: 20, zIndex: 10 }}>
+              <BackButton />
+            </View>
+            <Text
+              style={[
+                styles.title,
+                {
+                  color: "#6b4226",
+                  textShadowColor: "rgba(0, 0, 0, 0.15)",
+                  textShadowOffset: { width: 1, height: 2 },
+                  textShadowRadius: 3,
+                },
+              ]}
+            >
+              Reset Password
+            </Text>
             <Text style={styles.subtitle}>Enter the reset code and new password</Text>
 
             <TextInput
@@ -114,7 +132,7 @@ export default function ResetPasswordScreen() {
             />
 
             <TouchableOpacity
-              style={styles.button}
+              style={[styles.button, { backgroundColor: "#c49b72", marginTop: 40 }]}
               onPress={handleResetPassword}
               disabled={loading}
             >
@@ -125,12 +143,6 @@ export default function ResetPasswordScreen() {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.push("/")}
-            >
-              <Text style={styles.buttonText}>Back to Login</Text>
-            </TouchableOpacity>
           </View>
         </ScrollView>
       </ImageBackground>

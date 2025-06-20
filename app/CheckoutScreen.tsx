@@ -545,6 +545,7 @@ export default function CheckoutScreen() {
                             value={deliveryDate || new Date()}
                             mode="date"
                             display={Platform.OS === "android" ? "calendar" : "spinner"}
+                            themeVariant="light"
                             onChange={(event, selectedDate) => {
                               if (selectedDate) {
                                 const currentYearDate = new Date(selectedDate);

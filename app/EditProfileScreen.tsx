@@ -7,6 +7,8 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  ScrollView,
+  RefreshControl,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -25,6 +27,7 @@ export default function EditProfileScreen() {
   const [lastName, setLastName] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [user, setUser] = useState<{
     firstName: string;
     lastName: string;
@@ -35,38 +38,44 @@ export default function EditProfileScreen() {
     profilePic: require("../assets/images/Welcome.jpg"),
   });
 
-  useEffect(() => {
-    const fetchUserDataAndSetState = async () => {
-      try {
-        setLoading(true);
-        const userData = await fetchUserData();
-        console.log("🔄 Fetched user data:", userData);
+  const fetchUserDataAndSetState = async () => {
+    try {
+      setLoading(true);
+      const userData = await fetchUserData();
+      console.log("🔄 Fetched user data:", userData);
 
-        let profilePicUri:
-          | string
-          | number = require("../assets/images/userIcon.png");
+      let profilePicUri:
+        | string
+        | number = require("../assets/images/userIcon.png");
 
-        if (userData.profilePic && userData.profilePic.url) {
-          profilePicUri = userData.profilePic.url;
-        }
-
-        setUser({
-          firstName: userData.firstName || "Guest",
-          lastName: userData.lastName || "Null",
-          profilePic: profilePicUri,
-        });
-        setFirstName(userData.firstName || "Guest");
-        setLastName(userData.lastName || "Null");
-      } catch (error) {
-        console.error("❌ Error fetching user data:", error);
-        Alert.alert("Error", "Failed to load user data.");
-      } finally {
-        setLoading(false);
+      if (userData.profilePic && userData.profilePic.url) {
+        profilePicUri = userData.profilePic.url;
       }
-    };
 
+      setUser({
+        firstName: userData.firstName || "Guest",
+        lastName: userData.lastName || "Null",
+        profilePic: profilePicUri,
+      });
+      setFirstName(userData.firstName || "Guest");
+      setLastName(userData.lastName || "Null");
+    } catch (error) {
+      console.error("❌ Error fetching user data:", error);
+      Alert.alert("Error", "Failed to load user data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchUserDataAndSetState();
   }, []);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchUserDataAndSetState();
+    setRefreshing(false);
+  };
 
   const pickImage = async () => {
     try {
@@ -92,7 +101,6 @@ export default function EditProfileScreen() {
       setUser({ ...user, profilePic: result.assets[0].uri });
       await handleUpdateProfilePic(result.assets[0].uri);
     } catch (error) {
-      console.log("fail to update profile", error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
@@ -139,7 +147,6 @@ export default function EditProfileScreen() {
 
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
-      console.log("fail update profile", error);
       Alert.alert("Error", "Something went wrong.");
     } finally {
       setIsUploading(false);
@@ -196,7 +203,10 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
       <Header title="Edit Profile" />
 
       {loading ? (
@@ -206,13 +216,12 @@ export default function EditProfileScreen() {
         </View>
       ) : (
         <>
-          <TouchableOpacity onPress={pickImage} disabled={isUploading}>
-            <View>
+          <TouchableOpacity onPress={pickImage} disabled={isUploading} style={styles.imageContainer}>
+            <View style={{ alignItems: "center" }}>
               {isUploading ? (
                 <ActivityIndicator size="large" color="#0000ff" />
               ) : (
                 <Image
-                  testID="profile-image"
                   source={
                     typeof user.profilePic === "string"
                       ? { uri: user.profilePic }
@@ -225,6 +234,7 @@ export default function EditProfileScreen() {
               <Text style={styles.changePhotoText}>Change Photo</Text>
             </View>
           </TouchableOpacity>
+
           <Text style={styles.inputLabel}>First Name</Text>
           <TextInput
             style={styles.input}
@@ -247,6 +257,6 @@ export default function EditProfileScreen() {
           </TouchableOpacity>
         </>
       )}
-    </View>
+    </ScrollView>
   );
 }

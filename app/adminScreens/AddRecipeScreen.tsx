@@ -17,6 +17,7 @@ import * as ImagePicker from "expo-image-picker";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/AdminScreensStyles/AddRecipeScreenStyles";
+import Header from "../../components/Header"; // ודא שזה הנתיב הנכון לקובץ Header
 
 interface Ingredient {
   name: string;
@@ -240,16 +241,7 @@ export default function AddRecipeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={{ flex: 1 }}
       >
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#6b4226" />
-          </TouchableOpacity>
-          <Text style={styles.title}>Add New Recipe</Text>
-          <View style={{ width: 40 }} />
-        </View>
+        <Header title="Add New Recipe" showBack />
 
         <ScrollView ref={scrollViewRef} style={styles.scrollView}>
           <View style={styles.form}>

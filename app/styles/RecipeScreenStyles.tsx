@@ -30,9 +30,9 @@ const styles = StyleSheet.create({
         fontWeight: "800",
         color: "#6b4226",
         letterSpacing: 0.5,
-        textShadowColor: 'rgba(0, 0, 0, 0.1)',
-        textShadowOffset: { width: 1, height: 1 },
-        textShadowRadius: 2,
+        textShadowColor: 'rgba(0, 0, 0, 0.15)', // מוגבר
+        textShadowOffset: { width: 1, height: 2 }, // מוגדל לגובה
+        textShadowRadius: 3, // מוגדל
     },
     rightHeader: {
         flexDirection: "row",
@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
     },
     recipeGrid: {
         padding: 2,
+        paddingTop: 12,
         paddingBottom: 50,
     },
     recipeCard: {

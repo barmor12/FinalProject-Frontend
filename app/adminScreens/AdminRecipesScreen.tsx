@@ -2,22 +2,18 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
     View,
     Text,
-    StyleSheet,
     SafeAreaView,
     ScrollView,
-    TextInput,
     TouchableOpacity,
     Alert,
     Image,
     RefreshControl,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { router, useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import config from "../../config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import styles from "../styles/AdminScreensStyles/AdminRecipesScreenStyles";
-import BackButton from "../../components/BackButton";
-import { useRouter } from "expo-router";
 import Header from "../../components/Header";
 
 interface Recipe {
@@ -39,8 +35,6 @@ export default function AdminRecipesScreen() {
     const router = useRouter();
     const [recipes, setRecipes] = useState<Recipe[]>([]);
     const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
-    const [isEditing, setIsEditing] = useState(false);
-    const [editedRecipe, setEditedRecipe] = useState<Partial<Recipe>>({});
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
 
@@ -98,45 +92,6 @@ export default function AdminRecipesScreen() {
             pathname: "/adminScreens/AdminRecipeEdit",
             params: { recipeId: recipe._id }
         });
-    };
-
-    const handleSave = async () => {
-        if (!selectedRecipe) return;
-
-        try {
-            const token = await AsyncStorage.getItem("accessToken");
-            if (!token) {
-                Alert.alert("Error", "You must be logged in");
-                router.replace("/");
-                return;
-            }
-
-            const response = await fetch(`${config.BASE_URL}/recipes/${selectedRecipe._id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify(editedRecipe),
-            });
-
-            if (!response.ok) {
-                if (response.status === 401) {
-                    Alert.alert("Error", "Your session has expired. Please log in again.");
-                    router.replace("/");
-                    return;
-                }
-                throw new Error("Failed to update recipe");
-            }
-
-            Alert.alert("Success", "Recipe updated successfully");
-            fetchRecipes();
-            setIsEditing(false);
-            setSelectedRecipe(null);
-        } catch (error) {
-            console.error("Error updating recipe:", error);
-            Alert.alert("Error", "Failed to update recipe");
-        }
     };
 
     const handleDelete = async (recipeId: string) => {
@@ -197,7 +152,9 @@ export default function AdminRecipesScreen() {
 
     return (
         <SafeAreaView style={[styles.container, { paddingTop: 70 }]}>
-            <Header title="Manage Recipes"  />
+            <View style={styles.headerContainer}>
+                <Header title="Manage Recipes" />
+            </View>
 
             <ScrollView
                 style={styles.scrollView}
@@ -240,6 +197,12 @@ export default function AdminRecipesScreen() {
                     ))}
                 </View>
             </ScrollView>
+            <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => router.push("/adminScreens/AddRecipeScreen")}
+            >
+                <Ionicons name="add" size={32} color="white" />
+            </TouchableOpacity>
         </SafeAreaView>
     );
 }

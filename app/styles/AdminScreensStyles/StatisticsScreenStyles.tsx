@@ -23,6 +23,9 @@ const styles = StyleSheet.create({
       fontSize: 24,
       fontWeight: "bold",
       color: "#4e2c17",
+      textShadowColor: 'rgba(0, 0, 0, 0.15)',
+      textShadowOffset: { width: 0, height: 2 },
+      textShadowRadius: 4,
     },
     statsGrid: {
       flexDirection: "row",

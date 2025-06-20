@@ -447,8 +447,13 @@ export default function DashboardScreen() {
           </View>
         )}
         <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
-          <Text style={{ fontSize: 26, fontWeight: "bold", color: "#6b4226", textAlign: "center" }}>
+          <Text style={{ fontSize: 26, fontWeight: "800", color: "#6b4226", textAlign: "center",letterSpacing: 0.5,
+            textShadowColor: 'rgba(0, 0, 0, 0.15)',textShadowOffset: { width: 1, height: 2 },
+            textShadowRadius: 3,
+           }}>
             Discover Delicious Cakes!
+
+
           </Text>
         </View>
         <View style={{
@@ -552,19 +557,31 @@ export default function DashboardScreen() {
         {selectedProduct && (
           <Modal visible={!!selectedProduct} transparent animationType="fade">
             <View style={styles.modalOverlay}>
-              <View style={styles.modalContent}>
+              <View style={{
+                backgroundColor: "#fff8f0",
+                padding: 24,
+                borderRadius: 16,
+                alignItems: "center",
+                width: "85%",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.2,
+                shadowRadius: 8,
+                elevation: 6
+              }}>
                 <TouchableOpacity
-                  style={styles.closeModalButton}
+                  style={{ position: "absolute", top: 12, right: 12 }}
                   onPress={() => setSelectedProduct(null)}
                 >
-                  <Ionicons name="close" size={24} color="#000" />
+                  <Ionicons name="close" size={28} color="#a0522d" />
                 </TouchableOpacity>
-                <Text style={styles.quantityTitle}>Select Quantity</Text>
-                <Text style={{ fontSize: 16, marginVertical: 8 }}>{selectedProduct.name}</Text>
-                <Text style={{ fontSize: 14, marginBottom: 12 }}>Price: ${selectedProduct.price.toFixed(2)}</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 16 }}>
+                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#6b4226", marginBottom: 10 }}>Select Quantity</Text>
+                <Image source={{ uri: selectedProduct.image }} style={{ width: 100, height: 100, borderRadius: 12, marginBottom: 10 }} />
+                <Text style={{ fontSize: 18, fontWeight: "600", color: "#6b4226", marginBottom: 4 }}>{selectedProduct.name}</Text>
+                <Text style={{ fontSize: 16, color: "#d2691e", marginBottom: 12 }}>Price: ${selectedProduct.price.toFixed(2)}</Text>
+                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
                   <TouchableOpacity
-                    style={styles.qtyControl}
+                    style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
                     onPress={() => {
                       const qty = Math.max(1, selectedQuantity - 1);
                       if (qty <= selectedProduct.stock) {
@@ -572,11 +589,11 @@ export default function DashboardScreen() {
                       }
                     }}
                   >
-                    <Text style={styles.qtyControlText}>-</Text>
+                    <Ionicons name="remove" size={20} color="#fff" />
                   </TouchableOpacity>
-                  <Text style={{ fontSize: 18, marginHorizontal: 12 }}>{selectedQuantity}</Text>
+                  <Text style={{ fontSize: 20, fontWeight: "bold", marginHorizontal: 16 }}>{selectedQuantity}</Text>
                   <TouchableOpacity
-                    style={styles.qtyControl}
+                    style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
                     onPress={() => {
                       const qty = selectedQuantity + 1;
                       if (qty <= selectedProduct.stock) {
@@ -584,14 +601,14 @@ export default function DashboardScreen() {
                       }
                     }}
                   >
-                    <Text style={styles.qtyControlText}>+</Text>
+                    <Ionicons name="add" size={20} color="#fff" />
                   </TouchableOpacity>
                 </View>
                 <TouchableOpacity
-                  style={styles.confirmAddButton}
+                  style={{ backgroundColor: "#6b4226", paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 }}
                   onPress={handleAddToCart}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>Add to Cart</Text>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Add to Cart</Text>
                 </TouchableOpacity>
               </View>
             </View>

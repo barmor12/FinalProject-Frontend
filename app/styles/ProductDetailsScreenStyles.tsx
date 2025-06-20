@@ -16,11 +16,9 @@ const styles = StyleSheet.create({
       marginBottom: 12,
     },
     headerContainer: {
-      position: "relative",
       paddingTop: 20,
       paddingBottom: 10,
-      backgroundColor: "#F8F0E6",
-      overflow: "visible",
+      backgroundColor: "transparent", // שימוש ברקע מה-SafeAreaView
       zIndex: 10,
     },
     image: {

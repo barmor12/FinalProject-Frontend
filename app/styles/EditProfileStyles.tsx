@@ -22,7 +22,9 @@ export default StyleSheet.create({
 
   imageContainer: {
     alignItems: "center",
+    justifyContent: "center",
     marginBottom: 20,
+    marginTop: 10,
   },
   profileImage: {
     width: 150,

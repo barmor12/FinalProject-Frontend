@@ -17,9 +17,9 @@ const styles = StyleSheet.create({
       color: "#6b4226",
       marginBottom: 25,
       textAlign: "center",
-      textShadowColor: "rgba(0, 0, 0, 0.1)",
-      textShadowOffset: { width: 1, height: 1 },
-      textShadowRadius: 2,
+      textShadowColor: "rgba(0, 0, 0, 0.15)",
+      textShadowOffset: { width: 1, height: 2 },
+      textShadowRadius: 3,
     },
     statsContainer: {
       backgroundColor: "#fff",

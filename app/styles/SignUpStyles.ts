@@ -35,6 +35,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "center",
     marginTop: 15,
+    textShadowColor: "rgba(0, 0, 0, 0.20)",
+    textShadowOffset: { width: 1, height: 3 },
+    textShadowRadius: 4,
   },
   subtitle: {
     fontSize: 16,

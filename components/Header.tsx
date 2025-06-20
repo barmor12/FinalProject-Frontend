@@ -5,14 +5,16 @@ import BackButton from "./BackButton";
 export default function Header({
   title,
   showBack = true,
+  style,
 }: {
-  title: string;
+  title?: string;
   showBack?: boolean;
+  style?: object;
 }) {
   return (
-    <View style={styles.headerWrapper}>
+    <View style={[styles.headerWrapper, style]}>
       {showBack && <BackButton />}
-      <Text style={styles.headerText}>{title}</Text>
+      {title && <Text style={styles.headerText}>{title}</Text>}
     </View>
   );
 }
@@ -30,10 +32,14 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     color: "#7C4A2D",
     textAlign: "center",
-    marginRight: 40, // לפצות על כפתור החזור בצד שמאל
+    marginRight: 40,
+    letterSpacing: 0.5,
+    textShadowColor: 'rgba(0, 0, 0, 0.25)',
+    textShadowOffset: { width: 1, height: 2 },
+    textShadowRadius: 4,
   },
 });

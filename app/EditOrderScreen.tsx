@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {
-  View,
   Text,
   SafeAreaView,
   TouchableOpacity,
@@ -9,15 +8,19 @@ import {
   ActivityIndicator,
   Modal,
   Platform,
+  ScrollView,
+  RefreshControl,
+  View,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
+import Header from "../components/Header";
 
 export default function EditOrderScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
   const [shippingMethod, setShippingMethod] = useState<string>("");
-  const [deliveryDate, setDeliveryDate] = useState<string>("");
+  const [deliveryDate, setDeliveryDate] = useState<string>(""); // נטען בהמשך עם useEffect
   const [addressId, setAddressId] = useState<string>("");
   const [addressLabel, setAddressLabel] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(true);
@@ -25,7 +28,14 @@ export default function EditOrderScreen() {
   const [addressModalVisible, setAddressModalVisible] = useState(false);
 
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [dateObj, setDateObj] = useState<Date | null>(null);
+  const [dateObj, setDateObj] = useState<Date>(new Date());
+
+  const [refreshing, setRefreshing] = useState(false);
+  const onRefresh = () => {
+    setRefreshing(true);
+    // ריענון נתונים בעת הצורך
+    setTimeout(() => setRefreshing(false), 1000);
+  };
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -41,7 +51,13 @@ export default function EditOrderScreen() {
         return;
       }
       setShippingMethod(data.shippingMethod || "");
-      setDeliveryDate(data.deliveryDate?.slice(0, 10) || "");
+      setDeliveryDate(data.deliveryDate?.slice(0, 10) || new Date().toISOString().slice(0, 10));
+      if (data.deliveryDate) {
+        const parsed = new Date(data.deliveryDate);
+        if (!isNaN(parsed.getTime())) {
+          setDateObj(parsed);
+        }
+      }
       if (data.address) {
         setAddressId(data.address._id || "");
         setAddressLabel(
@@ -62,7 +78,10 @@ export default function EditOrderScreen() {
       setLoading(false);
     };
     fetchOrder();
-  }, []);
+  }, [orderId]);
+
+  const parsedDate = new Date(deliveryDate);
+  const pickerDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
   const handleSave = async () => {
     const token = await AsyncStorage.getItem("accessToken");
@@ -95,18 +114,13 @@ export default function EditOrderScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f9f3ea" }}>
-      <View style={{ padding: 20 }}>
-        <Text
-          style={{
-            fontSize: 24,
-            fontWeight: "bold",
-            color: "#6b4226",
-            marginBottom: 20,
-            textAlign: "center",
-          }}
-        >
-          Edit Order
-        </Text>
+      <Header title="Edit Order" showBack />
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ padding: 20 }}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+      >
+        {/* הסר את ה־Text הגדול של הכותרת */}
 
         {/* Shipping Method */}
         <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 8, color: "#6b4226" }}>
@@ -162,9 +176,10 @@ export default function EditOrderScreen() {
         </TouchableOpacity>
         {showDatePicker && (
           <DateTimePicker
-            value={dateObj || new Date()}
+            value={pickerDate}
             mode="date"
             display="default"
+            themeVariant="light"
             onChange={(_, selectedDate) => {
               setShowDatePicker(Platform.OS === "ios");
               if (selectedDate) {
@@ -198,41 +213,116 @@ export default function EditOrderScreen() {
                 {addressLabel || "Choose address"}
               </Text>
             </TouchableOpacity>
-            <Modal visible={addressModalVisible} animationType="slide">
-              <SafeAreaView style={{ flex: 1, padding: 20, backgroundColor: "#f9f3ea" }}>
-                <Text style={{ fontSize: 20, fontWeight: "bold", marginBottom: 20, color: "#6b4226" }}>
-                  Select Address
-                </Text>
-                {addresses.map((a, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    onPress={() => {
-                      setAddressId(a._id);
-                      setAddressLabel(`${a.fullName}, ${a.street}, ${a.city}`);
-                      setAddressModalVisible(false);
-                    }}
-                    style={{ padding: 15, borderBottomWidth: 1, borderColor: "#ccc" }}
-                  >
-                    <Text style={{ fontSize: 16, color: "#6b4226" }}>
-                      {`${a.fullName}, ${a.street}, ${a.city}`}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+            <Modal
+              transparent
+              visible={addressModalVisible}
+              animationType="fade"
+              onRequestClose={() => setAddressModalVisible(false)}
+            >
+              <TouchableOpacity
+                activeOpacity={1}
+                onPressOut={() => setAddressModalVisible(false)}
+                style={{
+                  flex: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0,0,0,0.4)",
+                }}
+              >
                 <TouchableOpacity
-                  onPress={() => setAddressModalVisible(false)}
+                  activeOpacity={1}
                   style={{
-                    marginTop: 30,
-                    backgroundColor: "#d9534f",
-                    padding: 15,
-                    borderRadius: 10,
-                    alignItems: "center",
+                    width: "90%",
+                    maxHeight: "70%",
+                    backgroundColor: "#fff",
+                    borderRadius: 20,
+                    padding: 24,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 12,
+                    elevation: 12,
                   }}
                 >
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
-                    Close
-                  </Text>
+                  <View
+                    style={{
+                      paddingVertical: 16,
+                      borderTopLeftRadius: 20,
+                      borderTopRightRadius: 20,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontSize: 22,
+                        fontWeight: "800",
+                        color: "#6b4226",
+                        textAlign: "center",
+                        textShadowColor: 'rgba(0, 0, 0, 0.15)',
+                        textShadowOffset: { width: 1, height: 1 },
+                        textShadowRadius: 2,
+                        backgroundColor: "#fff",
+                        paddingVertical: 4,
+                        paddingHorizontal: 12,
+                        borderRadius: 12,
+                        alignSelf: "center",
+                      }}
+                    >
+                      Select Address
+                    </Text>
+                  </View>
+                  <View style={{ height: 12 }} />
+                  <ScrollView>
+                    {addresses.map((a, idx) => (
+                      <TouchableOpacity
+                        key={idx}
+                        onPress={() => {
+                          setAddressId(a._id);
+                          setAddressLabel(`${a.fullName}, ${a.street}, ${a.city}`);
+                          setAddressModalVisible(false);
+                        }}
+                        style={{
+                          paddingVertical: 16,
+                          paddingHorizontal: 16,
+                          backgroundColor: "#fdf7f2",
+                          borderRadius: 12,
+                          marginBottom: 12,
+                          shadowColor: "#000",
+                          shadowOffset: { width: 0, height: 2 },
+                          shadowOpacity: 0.1,
+                          shadowRadius: 4,
+                          elevation: 2,
+                        }}
+                      >
+                        <Text style={{ fontSize: 16, color: "#6b4226" }}>
+                          {`${a.fullName}, ${a.street}, ${a.city}`}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                  <TouchableOpacity
+                    onPress={() => setAddressModalVisible(false)}
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      backgroundColor: "#f0e6dd",
+                      borderRadius: 20,
+                      width: 36,
+                      height: 36,
+                      justifyContent: "center",
+                      alignItems: "center",
+                      shadowColor: "#000",
+                      shadowOffset: { width: 0, height: 1 },
+                      shadowOpacity: 0.15,
+                      shadowRadius: 2,
+                      elevation: 3,
+                    }}
+                  >
+                    <Text style={{ fontSize: 18, color: "#333" }}>✕</Text>
+                  </TouchableOpacity>
                 </TouchableOpacity>
-              </SafeAreaView>
+              </TouchableOpacity>
             </Modal>
           </>
         )}
@@ -253,7 +343,7 @@ export default function EditOrderScreen() {
             Save Changes
           </Text>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
