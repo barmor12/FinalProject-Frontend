@@ -1,4 +1,4 @@
-import React, { useState, useEffect, } from "react";
+import React, { useState, useEffect } from "react";
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   View,
@@ -8,10 +8,10 @@ import {
   TouchableOpacity,
   TextInput,
   RefreshControl,
-  ScrollView,
   Modal,
   Alert,
 } from "react-native";
+import { ScrollView as RNScrollView } from "react-native"; // שנה שם לייבוא בשביל ה־ref
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
@@ -19,6 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import styles from "../styles/DashboardScreenStyles";
 import { fetchUserData } from "../utils/fetchUserData";
+import { ScrollView } from "react-native";
 
 interface Product {
   _id: string;
@@ -32,6 +33,8 @@ interface Product {
 
 // Filter products based on search input and liked status
 export default function DashboardScreen() {
+  const scrollRef = React.useRef<RNScrollView>(null);
+  const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [user, setUser] = useState<{ name: string; profilePic: string }>({
     name: "",
     profilePic: "",
@@ -401,12 +404,19 @@ export default function DashboardScreen() {
   };
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        contentContainerStyle={{ paddingBottom: 80 }}
-      >
+      <View style={{ flex: 1 }}>
+        <RNScrollView
+          ref={scrollRef}
+          onScroll={(event) => {
+            const scrollY = event.nativeEvent.contentOffset.y;
+            setShowScrollToTop(scrollY > 700); 
+          }}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          contentContainerStyle={{ paddingBottom: 80 }}
+        >
         <View style={styles.header}>
           <View style={styles.leftHeader}>
             <TouchableOpacity
@@ -617,7 +627,31 @@ export default function DashboardScreen() {
             </View>
           </Modal>
         )}
-      </ScrollView>
+        </RNScrollView>
+        {showScrollToTop && (
+          <TouchableOpacity
+            style={{
+              position: "absolute",
+              bottom: 80,
+              right: 20,
+              backgroundColor: "rgba(107, 66, 38, 0.6)",
+              padding: 12,
+              borderRadius: 30,
+              elevation: 5,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+              zIndex: 10,
+            }}
+            onPress={() => {
+              scrollRef.current?.scrollTo({ y: 0, animated: true });
+            }}
+          >
+            <Ionicons name="arrow-up" size={24} color="#fff" />
+          </TouchableOpacity>
+        )}
+      </View>
     </SafeAreaView>
   );
 }
