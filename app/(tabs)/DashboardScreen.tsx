@@ -1,4 +1,5 @@
 import React, { useState, useEffect, } from "react";
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   View,
   Text,
@@ -293,28 +294,30 @@ export default function DashboardScreen() {
   const renderProductCardVertical = ({ item }: { item: Product }) => {
     const isFavorite = likedProducts.has(item._id);
     return (
-      <View style={styles.verticalCardContainer}>
+      <View style={[styles.verticalCardContainer, { height: 340 }]}>
         <TouchableOpacity
-          style={styles.verticalCardTouchable}
+          style={[styles.verticalCardTouchable, { padding: 0, alignItems: "stretch" }]}
           onPress={() => {
             if (item.stock > 0) {
               navigateToProduct(item);
             }
           }}
         >
-          <Image source={{ uri: item.image }} style={styles.productImage} />
+          <Image
+            source={{ uri: item.image }}
+            style={styles.productImage}
+            resizeMode="cover"
+          />
           <View style={styles.productInfo}>
             <Text style={styles.productName}>{item.name}</Text>
-            <Text style={styles.itemPrice}>${item.price.toFixed(2)}</Text>
-            <View style={{ minHeight: 30, alignItems: 'center', justifyContent: 'center' }}>
-              {item.stock <= 0 ? (
-                <Text style={[styles.outOfStockLabel, { paddingHorizontal: 6 }]}>Out of Stock</Text>
-              ) : item.stock < 3 ? (
-                <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
-              ) : (
-                <Text style={{ color: 'transparent' }}>placeholder</Text>
-              )}
-            </View>
+            <Text style={styles.priceText}>${item.price.toFixed(2)}</Text>
+            {/* Low Stock label directly after price, before any spacers or containers */}
+            {item.stock > 0 && item.stock < 3 && (
+              <Text style={styles.lowStockLabel}>Low Stock: {item.stock} left</Text>
+            )}
+            {item.stock <= 0 && (
+              <Text style={[styles.outOfStockLabel, { paddingHorizontal: 6 }]}>Out of Stock</Text>
+            )}
           </View>
         </TouchableOpacity>
         <TouchableOpacity
@@ -336,7 +339,7 @@ export default function DashboardScreen() {
             }}
             style={styles.addToCartButton}
           >
-            <Ionicons name="cart" size={20} color="#fff" />
+            <Ionicons name="cart" size={22} color="#fff" />
           </TouchableOpacity>
         )}
       </View>
