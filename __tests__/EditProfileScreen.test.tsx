@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
+import { render, fireEvent, waitFor, act } from '@testing-library/react-native';
 import EditProfileScreen from '@/app/EditProfileScreen';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,7 +8,7 @@ import config from '../config';
 
 jest.mock('expo-image-picker', () => ({
     requestMediaLibraryPermissionsAsync: jest.fn(),
-    launchImageLibraryAsync: jest.fn(),
+    launchImageLibraryAsync: jest.fn().mockResolvedValue({ cancelled: true }),
     MediaTypeOptions: { Images: 'Images' },
 }));
 
@@ -39,6 +39,15 @@ describe('EditProfileScreen', () => {
         (fetchUserData as jest.Mock).mockResolvedValue(mockUser);
     });
 
+    it('renders without crashing', async () => {
+        const { getByText } = render(<EditProfileScreen />);
+        await act(async () => {
+            await waitFor(() => {
+                expect(getByText('Loading Profile...')).toBeTruthy();
+            });
+        });
+    });
+
     it('shows loading then user info', async () => {
         const { getByText, getByPlaceholderText, getByTestId, queryByText } = render(
             <EditProfileScreen />
@@ -47,8 +56,10 @@ describe('EditProfileScreen', () => {
         // initial loading
         expect(getByText('Loading Profile...')).toBeTruthy();
 
-        // after fetch
-        await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        await act(async () => {
+            // after fetch
+            await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        });
 
         expect(queryByText('Loading Profile...')).toBeNull();
         expect(getByText('Change Photo')).toBeTruthy();
@@ -67,14 +78,18 @@ describe('EditProfileScreen', () => {
         (AsyncStorage.getItem as jest.Mock).mockResolvedValue('token123');
 
         const { getByText, getByPlaceholderText } = render(<EditProfileScreen />);
-        await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        await act(async () => {
+            await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        });
 
         fireEvent.changeText(getByPlaceholderText('Enter first name'), '');
         fireEvent.changeText(getByPlaceholderText('Enter last name'), '');
         fireEvent.press(getByText('Update Profile'));
 
-        await waitFor(() => {
-            expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields.');
+        await act(async () => {
+            await waitFor(() => {
+                expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields.');
+            });
         });
     });
 
@@ -85,22 +100,26 @@ describe('EditProfileScreen', () => {
         );
 
         const { getByText, getByPlaceholderText } = render(<EditProfileScreen />);
-        await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        await act(async () => {
+            await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        });
 
         fireEvent.changeText(getByPlaceholderText('Enter first name'), 'bob');
         fireEvent.changeText(getByPlaceholderText('Enter last name'), 'johnson');
         fireEvent.press(getByText('Update Profile'));
 
-        await waitFor(() => {
-            expect(Alert.alert).toHaveBeenCalledWith(
-                'Success',
-                'Name updated successfully!',
-                expect.any(Array)
-            );
-            // simulate OK press
-            const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as any[];
-            buttons[0].onPress();
-            expect(mockBack).toHaveBeenCalled();
+        await act(async () => {
+            await waitFor(() => {
+                expect(Alert.alert).toHaveBeenCalledWith(
+                    'Success',
+                    'Name updated successfully!',
+                    expect.any(Array)
+                );
+                // simulate OK press
+                const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as any[];
+                buttons[0].onPress();
+                expect(mockBack).toHaveBeenCalled();
+            });
         });
 
         expect(fetch).toHaveBeenCalledWith(
@@ -123,14 +142,18 @@ describe('EditProfileScreen', () => {
         );
 
         const { getByText, getByPlaceholderText } = render(<EditProfileScreen />);
-        await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        await act(async () => {
+            await waitFor(() => expect(fetchUserData).toHaveBeenCalled());
+        });
 
         fireEvent.changeText(getByPlaceholderText('Enter first name'), 'Alice');
         fireEvent.changeText(getByPlaceholderText('Enter last name'), 'Smith');
         fireEvent.press(getByText('Update Profile'));
 
-        await waitFor(() => {
-            expect(Alert.alert).toHaveBeenCalledWith('Error', 'Server error');
+        await act(async () => {
+            await waitFor(() => {
+                expect(Alert.alert).toHaveBeenCalledWith('Error', 'Server error');
+            });
         });
     });
 });

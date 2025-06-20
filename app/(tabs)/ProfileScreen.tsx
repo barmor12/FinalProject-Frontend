@@ -237,7 +237,7 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
 
-          <Text style={[styles.userName, { marginTop: 6 }]}>
+          <Text style={[styles.userName, { marginTop: 15 }]}>
             {user.name || "User"} {user.lastName || ""}
           </Text>
 

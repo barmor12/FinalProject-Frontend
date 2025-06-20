@@ -337,7 +337,7 @@ export default function DashboardScreen() {
               setSelectedProduct(item);
               setSelectedQuantity(1);
             }}
-            style={styles.addToCartButton}
+            style={[styles.addToCartButton, { right: 7, bottom: 5 }]}
           >
             <Ionicons name="cart" size={22} color="#fff" />
           </TouchableOpacity>

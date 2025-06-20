@@ -60,9 +60,13 @@ const styles = StyleSheet.create({
     borderColor: "#d49a6a",
   },
   userName: {
-    fontSize: 22,
+    fontSize: 35,
     fontWeight: "bold",
     color: "#6b4226",
+    textShadowColor: "rgba(0, 0, 0, 0.15)",
+    textShadowOffset: { width: 1, height: 3 },
+    textShadowRadius: 4,
+    marginBottom: 8,
   },
   lastLoginText: {
     fontSize: 14,

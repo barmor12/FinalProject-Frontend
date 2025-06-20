@@ -222,6 +222,7 @@ export default function EditProfileScreen() {
                 <ActivityIndicator size="large" color="#0000ff" />
               ) : (
                 <Image
+                  testID="profile-image"
                   source={
                     typeof user.profilePic === "string"
                       ? { uri: user.profilePic }
