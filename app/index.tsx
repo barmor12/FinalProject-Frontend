@@ -270,10 +270,42 @@ export default function LoginScreen() {
     setTempTokens(null);
     setTempUserData(null);
 
-    if (role === "admin") {
-      router.replace("/(admintabs)/AdminDashboardScreen");
-    } else {
-      router.replace("/(tabs)/DashboardScreen");
+    // Check if user needs to set password
+    try {
+      const meRes = await fetch(`${config.BASE_URL}/auth/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${tokens.accessToken}`,
+        },
+      });
+
+      const meData = await meRes.json();
+      if (meRes.ok) {
+        if (!meData.isPasswordSet) {
+          router.replace("/SetPasswordScreen");
+        } else if (role === "admin") {
+          router.replace("/(admintabs)/AdminDashboardScreen");
+        } else {
+          router.replace("/(tabs)/DashboardScreen");
+        }
+      } else {
+        console.warn("Failed to fetch user status from /auth/me", meData);
+        // Fallback to role-based navigation
+        if (role === "admin") {
+          router.replace("/(admintabs)/AdminDashboardScreen");
+        } else {
+          router.replace("/(tabs)/DashboardScreen");
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching user profile:", err);
+      // Fallback to role-based navigation
+      if (role === "admin") {
+        router.replace("/(admintabs)/AdminDashboardScreen");
+      } else {
+        router.replace("/(tabs)/DashboardScreen");
+      }
     }
   };
 
