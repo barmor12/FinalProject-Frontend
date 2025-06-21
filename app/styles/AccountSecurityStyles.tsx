@@ -12,6 +12,25 @@ export default StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
+  modalText: {
+    fontSize: 14,
+    color: "#444",
+    lineHeight: 20,
+  },
+  requirementHeader: {
+    color: "#5d3a1a",
+    fontSize: 15,
+    fontWeight: "bold",
+    marginBottom: 10,
+    backgroundColor: "#ecdcc6",
+    padding: 10,
+    borderRadius: 6,
+    textAlign: "center",
+  },
+  requirements: {
+    width: "100%",
+    marginVertical: 12,
+  },
   header: {
     flexDirection: "row",
     alignItems: "center",

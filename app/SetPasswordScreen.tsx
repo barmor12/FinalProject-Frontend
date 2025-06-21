@@ -1,4 +1,3 @@
-// app/SetPasswordScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -127,14 +126,11 @@ export default function SetPasswordScreen() {
   return (
     <ImageBackground
       source={require("../assets/bg-login.jpg")}
-      style={localStyles.background}
+      style={StyleSheet.absoluteFill}
       resizeMode="cover"
     >
-      <View style={{
-        backgroundColor: "255,255,255,0.4"
-      }}></View>
-      {/* this is your exact BlurView */}
-      <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+      {/* BlurView for background blur */}
+      <BlurView intensity={120} tint="light" style={StyleSheet.absoluteFill} />
 
       <KeyboardAvoidingView
         style={localStyles.flex}
@@ -160,14 +156,24 @@ export default function SetPasswordScreen() {
           </View>
 
           <Text style={styles.title}>Set Your Password</Text>
-          <Text style={localStyles.requirementHeader}>
-            Your password must include:
-            {"\n"}✔ At least 8 characters
-            {"\n"}✔ One lowercase letter
-            {"\n"}✔ One uppercase letter
-            {"\n"}✔ One number
-            {"\n"}✔ One special character (e.g. @$!%*?&)
-          </Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="New Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry
+              onChangeText={(text) => {
+                setPassword(text);
+                checkPasswordStrength(text);
+              }}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Confirm Password"
+              placeholderTextColor="#aaa"
+              secureTextEntry
+              onChangeText={setConfirmPassword}
+            />
 
           <View style={localStyles.requirements}>
             {requirementList.map((item) => (
@@ -183,21 +189,6 @@ export default function SetPasswordScreen() {
             ))}
           </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            secureTextEntry
-            onChangeText={(text) => {
-              setPassword(text);
-              checkPasswordStrength(text);
-            }}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Confirm Password"
-            secureTextEntry
-            onChangeText={setConfirmPassword}
-          />
 
           <TouchableOpacity
             style={styles.button}

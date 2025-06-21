@@ -16,6 +16,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 33,
+    paddingTop: 100,
     fontWeight: "800",
     color: "#3e2723",
     textAlign: "center",
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: "rgba(255, 248, 243, 0.75)",
+    backgroundColor: "rgba(255, 248, 243, 0.9)", // אחידות גבוהה יותר
     zIndex: -1,
   },
 

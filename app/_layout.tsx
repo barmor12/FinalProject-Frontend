@@ -24,10 +24,18 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
 
-  useEffect(() => {
-    const checkLoginStatus = async () => {
+useEffect(() => {
+  const checkLoginStatus = async () => {
+    try {
       const fromBack = await AsyncStorage.getItem("fromBack");
       const token = await AsyncStorage.getItem("accessToken");
+      // Immediately after getItem("accessToken"), check for token presence
+      if (!token) {
+        console.warn("⚠️ No access token found, skipping cart fetch.");
+        // You can skip cart fetch or other logic here
+        // Optionally, could return here if needed
+        // For this example, just continue
+      }
       const role = await AsyncStorage.getItem("role");
       const isPasswordSet = await AsyncStorage.getItem("isPasswordSet");
 
@@ -46,12 +54,26 @@ export default function RootLayout() {
         setInitialRoute("SignUpScreen");
       }
 
+      // Example: Network call (like fetching cart) should not crash navigation
+      if (token) {
+        try {
+          // Example: await fetchCart(token);
+          // await fetchCart(token);
+        } catch (err) {
+          console.warn("Warning: Failed to fetch cart:", err);
+        }
+      }
+
       await SplashScreen.hideAsync();
-    };
-    checkLoginStatus();
-  }, []);
+    } catch (err) {
+      console.error("Error checking login status:", err);
+    }
+  };
+  checkLoginStatus();
+}, []);
 
   if (!initialRoute) {
+    // You can add a loading spinner here if needed
     return null; // or a loading indicator while checking login status
   }
 

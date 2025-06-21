@@ -26,6 +26,26 @@ export default function ResetPasswordScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // Password strength requirements state
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    length: false,
+    lowercase: false,
+    uppercase: false,
+    number: false,
+    special: false,
+  });
+
+  const checkPasswordStrength = (value: string) => {
+    setPasswordRequirements({
+      length: value.length >= 8,
+      lowercase: /[a-z]/.test(value),
+      uppercase: /[A-Z]/.test(value),
+      number: /\d/.test(value),
+      special: /[@$!%*?&]/.test(value),
+    });
+    setNewPassword(value);
+  };
+
 
   const handleResetPassword = async () => {
     if (!email || !code || !newPassword || !confirmPassword) {
@@ -36,7 +56,20 @@ export default function ResetPasswordScreen() {
       Alert.alert("Error", "Passwords do not match.");
       return;
     }
-
+    // Check that all requirements are met
+    if (
+      !passwordRequirements.length ||
+      !passwordRequirements.lowercase ||
+      !passwordRequirements.uppercase ||
+      !passwordRequirements.number ||
+      !passwordRequirements.special
+    ) {
+      Alert.alert(
+        "Weak Password",
+        "Password must be at least 8 characters long and include lowercase, uppercase, number, and special character."
+      );
+      return;
+    }
     try {
       setLoading(true);
       const response = await fetch(`${config.BASE_URL}/auth/reset-password`, {
@@ -76,7 +109,8 @@ export default function ResetPasswordScreen() {
         <ScrollView
           contentContainerStyle={{ flexGrow: 1 }}
           keyboardShouldPersistTaps="handled"
-          scrollEnabled={false}
+          scrollEnabled={Platform.OS === "ios" ? true : false}
+          showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
             <View style={{ position: "absolute", top: 60, left: 20, zIndex: 10 }}>
@@ -120,8 +154,9 @@ export default function ResetPasswordScreen() {
               placeholderTextColor="#000"
               secureTextEntry
               value={newPassword}
-              onChangeText={setNewPassword}
+              onChangeText={checkPasswordStrength}
             />
+            {/* Password requirements display */}
             <TextInput
               style={styles.input}
               placeholder="Confirm Password"
@@ -130,6 +165,26 @@ export default function ResetPasswordScreen() {
               value={confirmPassword}
               onChangeText={setConfirmPassword}
             />
+            <View style={{ marginTop: 10, marginBottom: 5 }}>
+              <Text style={{ fontWeight: "bold", color: "#6b4226", marginBottom: 2 }}>
+                Password must include:
+              </Text>
+              <Text style={{ color: passwordRequirements.length ? "green" : "red" }}>
+                {passwordRequirements.length ? "✔️" : "❌"} At least 8 characters
+              </Text>
+              <Text style={{ color: passwordRequirements.lowercase ? "green" : "red" }}>
+                {passwordRequirements.lowercase ? "✔️" : "❌"} Lowercase letter
+              </Text>
+              <Text style={{ color: passwordRequirements.uppercase ? "green" : "red" }}>
+                {passwordRequirements.uppercase ? "✔️" : "❌"} Uppercase letter
+              </Text>
+              <Text style={{ color: passwordRequirements.number ? "green" : "red" }}>
+                {passwordRequirements.number ? "✔️" : "❌"} Number
+              </Text>
+              <Text style={{ color: passwordRequirements.special ? "green" : "red" }}>
+                {passwordRequirements.special ? "✔️" : "❌"} Special character (@$!%*?&)
+              </Text>
+            </View>
 
             <TouchableOpacity
               style={[styles.button, { backgroundColor: "#c49b72", marginTop: 40 }]}
