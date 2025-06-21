@@ -97,8 +97,8 @@ describe('ResetPasswordScreen', () => {
         const { getByPlaceholderText, getAllByText } = render(<ResetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('Email'), 'x@y.com');
         fireEvent.changeText(getByPlaceholderText('Reset Code'), '0000');
-        fireEvent.changeText(getByPlaceholderText('New Password'), 'Valid1!');
-        fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Valid1!');
+        fireEvent.changeText(getByPlaceholderText('New Password'), 'ValidPass1!');
+        fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'ValidPass1!');
 
         const [_, button] = getAllByText('Reset Password');
         fireEvent.press(button);
