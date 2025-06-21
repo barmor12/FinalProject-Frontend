@@ -111,7 +111,7 @@ export default function EditOrderScreen() {
       return;
     }
     Alert.alert("Success", "Order updated successfully");
-    router.back();
+    router.replace("/OrdersScreen");
   };
 
   if (loading) {
