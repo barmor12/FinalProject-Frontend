@@ -4,7 +4,6 @@ import LoginScreen from "../app/index";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 
-
 beforeAll(() => {
     jest.spyOn(console, "log").mockImplementation(() => { });
     jest.spyOn(console, "warn").mockImplementation(() => { });
@@ -35,7 +34,7 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: jest.fn(),
 }));
 
-// mock fetch
+// default mock for successful login
 global.fetch = jest.fn(() =>
     Promise.resolve({
         ok: true,
@@ -53,20 +52,26 @@ global.fetch = jest.fn(() =>
 
 describe("LoginScreen", () => {
     beforeEach(() => {
-        jest.clearAllMocks(); // חשוב לנקות כל טסט
+        jest.clearAllMocks();
     });
 
-    it("should show alert if email or password is empty", () => {
+    it("should show alert if email or password is empty", async () => {
         const alertSpy = jest.spyOn(Alert, "alert");
-        const { getByText } = render(<LoginScreen />);
+        const { getByText, getByTestId } = render(<LoginScreen />);
+
+        // wait until login content is rendered
+        await waitFor(() => expect(getByTestId("loginButton")).toBeTruthy());
+
         fireEvent.press(getByText("Log In"));
         expect(alertSpy).toHaveBeenCalledWith("Error", "Please enter email and password.");
     });
 
     it("should log in successfully and store tokens", async () => {
         const { getByText, getByTestId } = render(<LoginScreen />);
+        await waitFor(() => getByTestId("emailInput"));
+
         fireEvent.changeText(getByTestId("emailInput"), "test@example.com");
-        fireEvent.changeText(getByTestId("passwordInput"), "123456");
+        fireEvent.changeText(getByTestId("passwordInput"), "Aa12345!");
         fireEvent.press(getByText("Log In"));
 
         await waitFor(() => {
@@ -78,6 +83,7 @@ describe("LoginScreen", () => {
     });
 
     it("should show error alert on failed login", async () => {
+        // mock failed login
         (fetch as jest.Mock).mockImplementationOnce(() =>
             Promise.resolve({
                 ok: false,
@@ -87,6 +93,8 @@ describe("LoginScreen", () => {
 
         const alertSpy = jest.spyOn(Alert, "alert");
         const { getByText, getByTestId } = render(<LoginScreen />);
+        await waitFor(() => getByTestId("emailInput"));
+
         fireEvent.changeText(getByTestId("emailInput"), "fail@example.com");
         fireEvent.changeText(getByTestId("passwordInput"), "wrongpass");
         fireEvent.press(getByText("Log In"));

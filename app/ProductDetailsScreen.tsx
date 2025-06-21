@@ -139,7 +139,7 @@ export default function ProductDetailsScreen() {
       </View>
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <Image
-          source={{ uri: product.image || "https://via.placeholder.com/200" }}
+          source={{ uri: product.image || "https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png" }}
           style={styles.image}
         />
         <Text style={styles.description}>{product.description}</Text>

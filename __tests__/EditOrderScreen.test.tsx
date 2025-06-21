@@ -1,99 +1,150 @@
-import React from 'react';
-import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import EditOrderScreen from '@/app/EditOrderScreen';
-import { Alert } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import config from '../config';
+// __tests__/CreditCardScreen.test.tsx
+import React from "react";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import CreditCardScreen from "@/app/CreditCardScreen";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Alert } from "react-native";
+import config from "@/config";
 
-jest.mock('expo-router', () => ({
-    useLocalSearchParams: () => ({ orderId: 'ORDER123' }),
-    router: { back: jest.fn() },
-}));
+// bump Jest timeout in case CI is slow
+jest.setTimeout(10000);
 
-jest.mock('@react-native-async-storage/async-storage', () => ({
+jest.mock("@react-native-async-storage/async-storage", () => ({
     getItem: jest.fn(),
 }));
+jest.spyOn(Alert, "alert");
 
-describe('EditOrderScreen', () => {
+describe("CreditCardScreen", () => {
+    const fakeCards = [
+        {
+            id: "card1",
+            cardNumber: "1234123412345678",
+            cardHolderName: "John Doe",
+            expiryDate: "12/25",
+            cardType: "visa",
+            isDefault: true,
+        },
+        {
+            id: "card2",
+            cardNumber: "8765432187654321",
+            cardHolderName: "Jane Roe",
+            expiryDate: "11/24",
+            cardType: "mastercard",
+            isDefault: false,
+        },
+    ];
+
     beforeEach(() => {
         jest.clearAllMocks();
-        Alert.alert = jest.fn();
-        (AsyncStorage.getItem as jest.Mock).mockResolvedValue('token123');
+        // AsyncStorage.getItem always returns our token
+        (AsyncStorage.getItem as jest.Mock).mockResolvedValue("token123");
+        // Mock fetch: GET => cards, others => { message: "ok" }
+        global.fetch = jest.fn((url, opts) => {
+            if (opts?.method === "GET") {
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({ cards: fakeCards }),
+                });
+            }
+            return Promise.resolve({
+                ok: true,
+                json: () => Promise.resolve({ message: "ok" }),
+            });
+        }) as jest.Mock;
     });
 
-    it('renders loading then shows order data and saves changes', async () => {
-        const orderData = {
-            shippingMethod: 'Standard Delivery (2-3 days)',
-            deliveryDate: '2025-06-20T00:00:00Z',
-            address: { _id: 'A1', fullName: 'Bob', street: 'St', city: 'City' },
-        };
-        const addresses = [
-            { _id: 'A1', fullName: 'Bob', street: 'St', city: 'City' },
-            { _id: 'A2', fullName: 'Ann', street: 'Rd', city: 'Town' },
-        ];
+    it("loads and displays credit cards", async () => {
+        const { getByText } = render(<CreditCardScreen />);
 
-        (global.fetch as jest.Mock)
-            // 1) fetch order details
-            .mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve(orderData),
-            })
-            // 2) fetch addresses list
-            .mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve(addresses),
-            })
-            // 3) save changes
-            .mockResolvedValueOnce({
-                ok: true,
-                json: () => Promise.resolve({}),
-            });
-
-        const { getByTestId, queryByTestId, getByText } = render(<EditOrderScreen />);
-
-        // initial loading spinner
-        expect(getByTestId('loading-indicator')).toBeTruthy();
-
-        // wait until loading disappears
+        // wait for cards to render
         await waitFor(() => {
-            expect(queryByTestId('loading-indicator')).toBeNull();
+            expect(getByText("**** **** **** 5678")).toBeTruthy();
+            expect(getByText("John Doe")).toBeTruthy();
+            expect(getByText("12/25")).toBeTruthy();
         });
 
-        // now UI shows
-        expect(getByText('Edit Order')).toBeTruthy();
-        expect(getByText('Standard Delivery (2-3 days)')).toBeTruthy();
-        expect(getByText('2025-06-20')).toBeTruthy();
-        expect(getByText('Bob, St, City')).toBeTruthy();
-
-        // press Save Changes
-        fireEvent.press(getByTestId('save-button'));
-
-        // wait for save to complete
-        await waitFor(() => {
-            // PUT called with correct args
-            expect(fetch).toHaveBeenCalledWith(
-                `${config.BASE_URL}/order/ORDER123/status`,
+        // and the GET call
+        await waitFor(() =>
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${config.BASE_URL}/auth/credit-cards`,
                 expect.objectContaining({
-                    method: 'PUT',
+                    method: "GET",
                     headers: expect.objectContaining({
-                        'Content-Type': 'application/json',
-                        Authorization: 'Bearer token123',
+                        Authorization: "Bearer token123",
+                    }),
+                })
+            )
+        );
+    });
+
+    it("shows validation errors on invalid input in Add New Card modal", async () => {
+        const { getByText, getByTestId } = render(<CreditCardScreen />);
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        fireEvent.press(getByTestId("add-card-button"));
+        fireEvent.press(getByTestId("save-button"));
+
+        expect(getByText("Please enter a valid 16-digit card number")).toBeTruthy();
+        expect(
+            getByText("Please enter a valid expiry date (MM/YY)")
+        ).toBeTruthy();
+        expect(getByText("Please enter a valid 3-digit CVV")).toBeTruthy();
+        expect(getByText("Please enter the cardholder name")).toBeTruthy();
+    });
+
+    it("submits valid new card and shows success alert", async () => {
+        const { getByTestId, getByPlaceholderText } = render(
+            <CreditCardScreen />
+        );
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        fireEvent.press(getByTestId("add-card-button"));
+        fireEvent.changeText(
+            getByPlaceholderText("1234 5678 9012 3456"),
+            "4111 1111 1111 1111"
+        );
+        fireEvent.changeText(getByPlaceholderText("John Doe"), "Mary Jane");
+        fireEvent.changeText(getByPlaceholderText("MM/YY"), "08/26");
+        fireEvent.changeText(getByPlaceholderText("123"), "123");
+        fireEvent.press(getByTestId("save-button"));
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${config.BASE_URL}/auth/add-credit-cards`,
+                expect.objectContaining({
+                    method: "POST",
+                    headers: expect.objectContaining({
+                        "Content-Type": "application/json",
+                        Authorization: "Bearer token123",
                     }),
                     body: JSON.stringify({
-                        shippingMethod: 'Standard Delivery (2-3 days)',
-                        deliveryDate: '2025-06-20',
-                        address: 'A1',
+                        cardNumber: "4111111111111111",
+                        cardHolderName: "Mary Jane",
+                        expiryDate: "08/26",
+                        isDefault: false,
                     }),
                 })
             );
-            // success alert
-            expect(Alert.alert).toHaveBeenCalledWith(
-                'Success',
-                'Order updated successfully'
+            expect(Alert.alert).toHaveBeenCalledWith("Success", "ok");
+        });
+    });
+
+    it("edits existing card and shows success alert", async () => {
+        const { getByTestId } = render(<CreditCardScreen />);
+
+        await waitFor(() => expect(global.fetch).toHaveBeenCalled());
+
+        fireEvent.press(getByTestId("edit-card-card1"));
+        fireEvent.press(getByTestId("update-button"));
+
+        await waitFor(() => {
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${config.BASE_URL}/auth/credit-cards/card1`,
+                expect.objectContaining({ method: "PUT" })
             );
-            // navigate back
-            // eslint-disable-next-line @typescript-eslint/no-require-imports
-            expect(require('expo-router').router.back).toHaveBeenCalled();
+            expect(Alert.alert).toHaveBeenCalledWith("Success", "ok");
         });
     });
 });

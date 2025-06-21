@@ -38,6 +38,7 @@ export default function LoginScreen() {
     role: string;
   } | null>(null);
   const [isAuthInProgress, setIsAuthInProgress] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   // Utility to decode JWT payload without external library
   function decodeJwt(token: string): any {
@@ -81,83 +82,95 @@ export default function LoginScreen() {
 
 
   const initializeApp = async () => {
-    let accessToken = await AsyncStorage.getItem("accessToken");
+    try {
+      let accessToken = await AsyncStorage.getItem("accessToken");
 
-    if (accessToken) {
-      try {
-        const decoded = decodeJwt(accessToken);
-        // Always update userId in storage from token
-        if (decoded.userId) {
-          await AsyncStorage.setItem("userId", decoded.userId);
-        }
+      if (accessToken) {
+        try {
+          const decoded = decodeJwt(accessToken);
+          // Always update userId in storage from token
+          if (decoded.userId) {
+            await AsyncStorage.setItem("userId", decoded.userId);
+          }
 
-        if (decoded.exp * 1000 < Date.now()) {
-          console.log("🔄 Token expired, refreshing...");
+          if (decoded.exp * 1000 < Date.now()) {
+            console.log("🔄 Token expired, refreshing...");
+            const refreshed = await refreshAccessToken();
+            if (!refreshed) {
+              console.log(
+                "⚠️ Token refresh failed, but user is still logged in"
+              );
+              return;
+            }
+            accessToken = await AsyncStorage.getItem("accessToken");
+          }
+        } catch (error) {
+          console.log(
+            "⚠️ Error during token validation, but user is still logged in:",
+            error
+          );
           const refreshed = await refreshAccessToken();
           if (!refreshed) {
-            console.log("⚠️ Token refresh failed, but user is still logged in");
+            console.log(
+              "⚠️ Token refresh failed, but user is still logged in"
+            );
             return;
           }
           accessToken = await AsyncStorage.getItem("accessToken");
         }
-      } catch (error) {
-        console.log(
-          "⚠️ Error during token validation, but user is still logged in:",
-          error
-        );
+      } else {
         const refreshed = await refreshAccessToken();
         if (!refreshed) {
-          console.log("⚠️ Token refresh failed, but user is still logged in");
+          console.log("⚠️ No access token found and refresh failed");
           return;
         }
-        accessToken = await AsyncStorage.getItem("accessToken");
       }
-    } else {
-      const refreshed = await refreshAccessToken();
-      if (!refreshed) {
-        console.log("⚠️ No access token found and refresh failed");
-        return;
-      }
-    }
 
-    // Always fetch user data from server to get isPasswordSet
-    const finalAccessToken = await AsyncStorage.getItem("accessToken");
-    if (finalAccessToken) {
-      try {
-        const response = await fetch(`${config.BASE_URL}/auth/me`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${finalAccessToken}`,
-          },
-        });
-        const data = await response.json();
-        if (response.ok) {
-          // Store userId/role again if needed
-          if (data.userId) await AsyncStorage.setItem("userId", data.userId);
-          if (data.role) await AsyncStorage.setItem("role", data.role);
-          // Main logic: redirect based on isPasswordSet
-          if (!data.isPasswordSet) {
-            router.replace("/SetPasswordScreen");
-          } else if (data.role === "admin") {
-            router.replace("/(admintabs)/AdminDashboardScreen");
+      // Always fetch user data from server to get isPasswordSet
+      const finalAccessToken = await AsyncStorage.getItem("accessToken");
+      if (finalAccessToken) {
+        try {
+          const response = await fetch(`${config.BASE_URL}/auth/me`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${finalAccessToken}`,
+            },
+          });
+          const data = await response.json();
+          if (response.ok) {
+            // Store userId/role again if needed
+            if (data.userId) await AsyncStorage.setItem("userId", data.userId);
+            if (data.role) await AsyncStorage.setItem("role", data.role);
+            // Main logic: redirect based on isPasswordSet
+            if (!data.isPasswordSet) {
+              router.replace("/SetPasswordScreen");
+            } else if (data.role === "admin") {
+              router.replace("/(admintabs)/AdminDashboardScreen");
+            } else {
+              router.replace("/(tabs)/DashboardScreen");
+            }
           } else {
-            router.replace("/(tabs)/DashboardScreen");
+            // If error, fallback to login
+            await AsyncStorage.multiRemove([
+              "accessToken",
+              "refreshToken",
+              "userId",
+              "role",
+            ]);
           }
-        } else {
-          // If error, fallback to login
-          await AsyncStorage.removeItem("accessToken");
-          await AsyncStorage.removeItem("refreshToken");
-          await AsyncStorage.removeItem("userId");
-          await AsyncStorage.removeItem("role");
+        } catch (err) {
+          // On error, fallback to login
+          await AsyncStorage.multiRemove([
+            "accessToken",
+            "refreshToken",
+            "userId",
+            "role",
+          ]);
         }
-      } catch (err) {
-        // On error, fallback to login
-        await AsyncStorage.removeItem("accessToken");
-        await AsyncStorage.removeItem("refreshToken");
-        await AsyncStorage.removeItem("userId");
-        await AsyncStorage.removeItem("role");
       }
+    } finally {
+      setIsInitializing(false);
     }
   };
 
@@ -166,68 +179,37 @@ export default function LoginScreen() {
     initializeApp();
   }, []);
 
-  // פונקציה להתחברות
-  const handleLogin = async () => {
-    console.log("🔄 Login process started");
 
+  // login handler
+  const handleLogin = async () => {
     if (!email || !password) {
       Alert.alert("Error", "Please enter email and password.");
       return;
     }
-
+    setLoading(true);
     try {
-      setLoading(true);
-      console.log("📡 Sending request to server...");
-      const response = await fetch(`${config.BASE_URL}/auth/login`, {
+      const res = await fetch(`${config.BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: email.toLowerCase().trim(),
-          password,
-        }),
+        body: JSON.stringify({ email: email.toLowerCase().trim(), password }),
       });
-
-      const data = await response.json();
-      console.log("🔹 Server response:", data);
-
-      if (response.ok) {
-        // Check if the response has the expected structure
-        if (
-          !data.tokens ||
-          !data.tokens.accessToken ||
-          !data.tokens.refreshToken
-        ) {
-          throw new Error("Invalid response format from server");
-        }
-
-        if (data.requires2FA && data.role !== "admin") {
-          // Store temporary tokens and user data
-          setTempTokens(data.tokens);
-          setTempUserData({
-            userID: data.userId || "",
-            role: data.role || "user",
-          });
-          setShow2FAModal(true);
-        } else {
-          // No 2FA required, proceed with normal login
-          await completeLogin(
-            data.tokens,
-            data.userId || "",
-            data.role || "user"
-          );
-        }
-      } else {
-        console.warn("⚠️ Login failed:", data?.error || "Unknown error");
+      const data = await res.json();
+      if (!res.ok) {
         Alert.alert("Error", data?.error || "Login failed");
+      } else if (data.requires2FA) {
+        setTempTokens(data.tokens);
+        setTempUserData({ userID: data.userId, role: data.role });
+        setShow2FAModal(true);
+      } else {
+        await AsyncStorage.setItem("accessToken", data.tokens.accessToken);
+        await AsyncStorage.setItem("refreshToken", data.tokens.refreshToken);
+        await AsyncStorage.setItem("userId", data.userId);
+        await AsyncStorage.setItem("role", data.role);
+        Alert.alert("Success", "Logged in successfully!");
+        router.replace(data.role === "admin" ? "/(admintabs)/AdminDashboardScreen" : "/(tabs)/DashboardScreen");
       }
-    } catch (error) {
-      console.error("❌ Error during login process:", error);
-      Alert.alert(
-        "Error",
-        error instanceof Error
-          ? error.message
-          : "Something went wrong. Please try again."
-      );
+    } catch (e) {
+      Alert.alert("Error", e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setLoading(false);
     }
@@ -362,36 +344,51 @@ export default function LoginScreen() {
           const accessToken = data.accessToken || data.tokens?.accessToken;
           const refreshToken = data.refreshToken || data.tokens?.refreshToken;
           if (accessToken && refreshToken) {
-            await AsyncStorage.setItem("accessToken", accessToken);
-            await AsyncStorage.setItem("refreshToken", refreshToken);
-            await AsyncStorage.setItem("userId", data.userId || "");
-            await AsyncStorage.setItem("role", data.role || "user");
-
-            try {
-              const meRes = await fetch(`${config.BASE_URL}/auth/me`, {
-                method: "GET",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${accessToken}`,
-                },
+            if (data.requires2FA) {
+              setTempTokens({ accessToken, refreshToken });
+              setTempUserData({
+                userID: data.userId || "",
+                role: data.role || "user",
               });
+              setShow2FAModal(true);
+            } else {
+              await AsyncStorage.setItem("accessToken", accessToken);
+              await AsyncStorage.setItem("refreshToken", refreshToken);
+              await AsyncStorage.setItem("userId", data.userId || "");
+              await AsyncStorage.setItem("role", data.role || "user");
 
-              const meData = await meRes.json();
-              if (meRes.ok) {
-                if (!meData.isPasswordSet) {
-                  router.replace("/SetPasswordScreen");
-                } else if (meData.role === "admin") {
-                  router.replace("/(admintabs)/AdminDashboardScreen");
+              try {
+                const meRes = await fetch(`${config.BASE_URL}/auth/me`, {
+                  method: "GET",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${accessToken}`,
+                  },
+                });
+
+                const meData = await meRes.json();
+                if (meRes.ok) {
+                  if (!meData.isPasswordSet) {
+                    router.replace("/SetPasswordScreen");
+                  } else if (meData.role === "admin") {
+                    router.replace("/(admintabs)/AdminDashboardScreen");
+                  } else {
+                    router.replace("/(tabs)/DashboardScreen");
+                  }
                 } else {
-                  router.replace("/(tabs)/DashboardScreen");
+                  console.warn(
+                    "Failed to fetch user status from /auth/me",
+                    meData
+                  );
+                  Alert.alert("Error", "Failed to verify user status.");
                 }
-              } else {
-                console.warn("Failed to fetch user status from /auth/me", meData);
-                Alert.alert("Error", "Failed to verify user status.");
+              } catch (err) {
+                console.error("Error fetching user profile:", err);
+                Alert.alert(
+                  "Error",
+                  "Something went wrong while checking user status."
+                );
               }
-            } catch (err) {
-              console.error("Error fetching user profile:", err);
-              Alert.alert("Error", "Something went wrong while checking user status.");
             }
           } else {
             throw new Error("Missing tokens in response");
@@ -404,7 +401,7 @@ export default function LoginScreen() {
     }
   }, [response]);
 
-  return (
+  const renderLoginContent = () => (
     <View style={{ flex: 1 }}>
       <View style={styles.backgroundOverlay} />
       <KeyboardAvoidingView
@@ -602,4 +599,20 @@ export default function LoginScreen() {
       </KeyboardAvoidingView>
     </View>
   );
+
+  return isInitializing ? (
+    <View
+      style={{
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f7f1e7",
+      }}
+    >
+      <ActivityIndicator size="large" color="#6b4226" />
+    </View>
+  ) : (
+    renderLoginContent()
+  );
 }
+

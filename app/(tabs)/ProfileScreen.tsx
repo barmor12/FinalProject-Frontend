@@ -288,7 +288,7 @@ export default function ProfileScreen() {
 
 
           <TouchableOpacity
-            style={[styles.button, styles.logoutButton, { marginTop: 30 }]}
+            style={[styles.button, styles.logoutButton, { marginTop: 25 }]}
             onPress={handleLogout}
           >
             <MaterialIcons name="logout" size={20} color="#fff" />

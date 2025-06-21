@@ -49,19 +49,17 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#e0e0e0",
         height: 36,
-        marginRight: 8,
-        paddingLeft: 8,
+        marginHorizontal: 20,
+        paddingHorizontal: 8,
+        marginTop: 8,
     },
     searchIcon: {
         marginRight: 4,
     },
     searchInput: {
         flex: 1,
-        height: 36,
         color: "#6b4226",
         fontSize: 14,
-        letterSpacing: 0.3,
-        paddingRight: 10,
     },
     clearSearchButton: {
         width: 30,
@@ -74,9 +72,7 @@ const styles = StyleSheet.create({
         height: 36,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#f9f3ea",
         borderRadius: 18,
-        marginRight: 7
     },
     scrollView: {
         flex: 1,
@@ -178,6 +174,7 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         zIndex: 1,
+
     },
     modalTitle: {
         fontSize: 26,
@@ -391,6 +388,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         color: '#fff',
     },
-}); 
+});
 
 export default styles;

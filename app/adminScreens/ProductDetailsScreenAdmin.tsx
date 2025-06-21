@@ -231,7 +231,7 @@ export default function ProductDetailsScreen() {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <SafeAreaView style={styles.container}>
-                <Header title=""  />
+                <Header title="" />
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"
@@ -240,156 +240,156 @@ export default function ProductDetailsScreen() {
                         <View>
                             {isEditing ? (
                                 <View style={styles.editContainer}>
-                                <Text style={styles.editLabel}>Product Name</Text>
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={editedProduct?.name}
-                                    onChangeText={(text) =>
-                                        setEditedProduct((prev) => prev && { ...prev, name: text })
-                                    }
-                                />
-
-                                <Text style={styles.editLabel}>Product Image</Text>
-                                <View style={styles.editImageContainer}>
-                                    <Image
-                                        source={{ uri: typeof editedProduct?.image === 'object' && editedProduct?.image?.url ? editedProduct.image.url : (editedProduct?.image as string) || "https://via.placeholder.com/200" }}
-                                        style={styles.editImage}
+                                    <Text style={styles.editLabel}>Product Name</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedProduct?.name}
+                                        onChangeText={(text) =>
+                                            setEditedProduct((prev) => prev && { ...prev, name: text })
+                                        }
                                     />
-                                    <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                                        <Text style={styles.uploadButtonText}>Upload New Image</Text>
-                                    </TouchableOpacity>
-                                </View>
 
-                                <Text style={styles.editLabel}>Description</Text>
-                                <TextInput
-                                    style={styles.editDescriptionInput}
-                                    value={editedProduct?.description}
-                                    onChangeText={(text) =>
-                                        setEditedProduct((prev) => prev && { ...prev, description: text })
-                                    }
-                                    multiline
-                                />
-
-                                <Text style={styles.editLabel}>Cost</Text>
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={editedProduct?.cost?.toString()}
-                                    keyboardType="numeric"
-                                    onChangeText={(text) => {
-                                        const parsedValue = parseFloat(text);
-                                        setEditedProduct((prev) => prev && {
-                                            ...prev,
-                                            cost: isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2))
-                                        });
-                                    }}
-                                />
-
-                                <Text style={styles.editLabel}>Price</Text>
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={editedProduct?.price.toString()}
-                                    keyboardType="numeric"
-                                    onChangeText={(text) => {
-                                        const parsedValue = parseFloat(text);
-                                        setEditedProduct((prev) => prev && {
-                                            ...prev,
-                                            price: isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2))
-                                        });
-                                    }}
-                                />
-
-                                <Text style={styles.editLabel}>Stock</Text>
-                                <TextInput
-                                    style={styles.editInput}
-                                    value={editedProduct?.stock?.toString() || ""}
-                                    onChangeText={(text) =>
-                                        setEditedProduct((prev) => prev && { ...prev, stock: text })
-                                    }
-                                    keyboardType="numeric"
-                                    placeholder="Enter stock quantity"
-                                />
-
-                                <View style={styles.editButtonContainer}>
-                                    <TouchableOpacity
-                                        style={styles.editSaveButton}
-                                        onPress={handleSave}
-                                    >
-                                        <Text style={styles.editButtonText}>Save Changes</Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={styles.editCancelButton}
-                                        onPress={() => setIsEditing(false)}
-                                    >
-                                        <Text style={styles.editButtonText}>Cancel</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        ) : (
-                            <View style={styles.viewContainer}>
-                                <Image
-                                    source={{ uri: typeof product.image === 'object' && product.image?.url ? product.image.url : (product.image as string) || "https://via.placeholder.com/200" }}
-                                    style={styles.productImage}
-                                    key={`product-image-${typeof product.image === 'object' && product.image?.url ? product.image.url : product.image || ""}`}
-                                />
-
-                                <View style={styles.contentContainer}>
-                                    <Text style={styles.productTitle}>{product.name}</Text>
-
-                                    <View style={styles.priceTag}>
-                                        <Text style={styles.priceText}>${product.price.toFixed(2)}</Text>
-                                    </View>
-
-                                    <View style={styles.profitContainer}>
-                                        <View style={styles.profitItem}>
-                                            <Text style={styles.profitLabel}>Cost</Text>
-                                            <Text style={styles.profitValue}>${product.cost?.toFixed(2) || '0.00'}</Text>
-                                        </View>
-                                        <View style={styles.profitItem}>
-                                            <Text style={styles.profitLabel}>Profit</Text>
-                                            <Text style={styles.profitValue}>${((product.price - (product.cost || 0))).toFixed(2)}</Text>
-                                        </View>
-                                        <View style={styles.profitItem}>
-                                            <Text style={styles.profitLabel}>Stock</Text>
-                                            <Text style={[
-                                                styles.profitValue,
-                                                {
-                                                    color: product.stock === "0" || (parseInt(product.stock) > 0 && parseInt(product.stock) < 5)
-                                                        ? '#d9534f'  // Red for out of stock or low stock (< 5)
-                                                        : product.stock === ""
-                                                            ? '#f0ad4e'  // Orange for undefined stock
-                                                            : '#28a745'  // Green for in stock
-                                                }
-                                            ]}>
-                                                {product.stock === ""
-                                                    ? "N/A"
-                                                    : parseInt(product.stock) > 0 && parseInt(product.stock) < 5
-                                                        ? `${product.stock} (Low)`
-                                                        : product.stock
-                                                }
-                                            </Text>
-                                        </View>
-                                    </View>
-
-                                    <Text style={styles.sectionTitle}>Description</Text>
-                                    <Text style={styles.descriptionText}>{product.description}</Text>
-
-                                    <View style={styles.buttonContainer}>
-                                        <TouchableOpacity
-                                            style={styles.editButton}
-                                            onPress={() => setIsEditing(true)}
-                                        >
-                                            <Text style={styles.buttonText}>Edit Product</Text>
+                                    <Text style={styles.editLabel}>Product Image</Text>
+                                    <View style={styles.editImageContainer}>
+                                        <Image
+                                            source={{ uri: typeof editedProduct?.image === 'object' && editedProduct?.image?.url ? editedProduct.image.url : (editedProduct?.image as string) || "https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png" }}
+                                            style={styles.editImage}
+                                        />
+                                        <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                                            <Text style={styles.uploadButtonText}>Upload New Image</Text>
                                         </TouchableOpacity>
+                                    </View>
 
+                                    <Text style={styles.editLabel}>Description</Text>
+                                    <TextInput
+                                        style={styles.editDescriptionInput}
+                                        value={editedProduct?.description}
+                                        onChangeText={(text) =>
+                                            setEditedProduct((prev) => prev && { ...prev, description: text })
+                                        }
+                                        multiline
+                                    />
+
+                                    <Text style={styles.editLabel}>Cost</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedProduct?.cost?.toString()}
+                                        keyboardType="numeric"
+                                        onChangeText={(text) => {
+                                            const parsedValue = parseFloat(text);
+                                            setEditedProduct((prev) => prev && {
+                                                ...prev,
+                                                cost: isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2))
+                                            });
+                                        }}
+                                    />
+
+                                    <Text style={styles.editLabel}>Price</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedProduct?.price.toString()}
+                                        keyboardType="numeric"
+                                        onChangeText={(text) => {
+                                            const parsedValue = parseFloat(text);
+                                            setEditedProduct((prev) => prev && {
+                                                ...prev,
+                                                price: isNaN(parsedValue) ? 0 : parseFloat(parsedValue.toFixed(2))
+                                            });
+                                        }}
+                                    />
+
+                                    <Text style={styles.editLabel}>Stock</Text>
+                                    <TextInput
+                                        style={styles.editInput}
+                                        value={editedProduct?.stock?.toString() || ""}
+                                        onChangeText={(text) =>
+                                            setEditedProduct((prev) => prev && { ...prev, stock: text })
+                                        }
+                                        keyboardType="numeric"
+                                        placeholder="Enter stock quantity"
+                                    />
+
+                                    <View style={styles.editButtonContainer}>
                                         <TouchableOpacity
-                                            style={styles.deleteButton}
-                                            onPress={handleDelete}
+                                            style={styles.editSaveButton}
+                                            onPress={handleSave}
                                         >
-                                            <Text style={styles.buttonText}>Delete Product</Text>
+                                            <Text style={styles.editButtonText}>Save Changes</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            style={styles.editCancelButton}
+                                            onPress={() => setIsEditing(false)}
+                                        >
+                                            <Text style={styles.editButtonText}>Cancel</Text>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
-                            </View>
+                            ) : (
+                                <View style={styles.viewContainer}>
+                                    <Image
+                                        source={{ uri: typeof product.image === 'object' && product.image?.url ? product.image.url : (product.image as string) || "https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png" }}
+                                        style={styles.productImage}
+                                        key={`product-image-${typeof product.image === 'object' && product.image?.url ? product.image.url : product.image || ""}`}
+                                    />
+
+                                    <View style={styles.contentContainer}>
+                                        <Text style={styles.productTitle}>{product.name}</Text>
+
+                                        <View style={styles.priceTag}>
+                                            <Text style={styles.priceText}>${product.price.toFixed(2)}</Text>
+                                        </View>
+
+                                        <View style={styles.profitContainer}>
+                                            <View style={styles.profitItem}>
+                                                <Text style={styles.profitLabel}>Cost</Text>
+                                                <Text style={styles.profitValue}>${product.cost?.toFixed(2) || '0.00'}</Text>
+                                            </View>
+                                            <View style={styles.profitItem}>
+                                                <Text style={styles.profitLabel}>Profit</Text>
+                                                <Text style={styles.profitValue}>${((product.price - (product.cost || 0))).toFixed(2)}</Text>
+                                            </View>
+                                            <View style={styles.profitItem}>
+                                                <Text style={styles.profitLabel}>Stock</Text>
+                                                <Text style={[
+                                                    styles.profitValue,
+                                                    {
+                                                        color: product.stock === "0" || (parseInt(product.stock) > 0 && parseInt(product.stock) < 5)
+                                                            ? '#d9534f'  // Red for out of stock or low stock (< 5)
+                                                            : product.stock === ""
+                                                                ? '#f0ad4e'  // Orange for undefined stock
+                                                                : '#28a745'  // Green for in stock
+                                                    }
+                                                ]}>
+                                                    {product.stock === ""
+                                                        ? "N/A"
+                                                        : parseInt(product.stock) > 0 && parseInt(product.stock) < 5
+                                                            ? `${product.stock} (Low)`
+                                                            : product.stock
+                                                    }
+                                                </Text>
+                                            </View>
+                                        </View>
+
+                                        <Text style={styles.sectionTitle}>Description</Text>
+                                        <Text style={styles.descriptionText}>{product.description}</Text>
+
+                                        <View style={styles.buttonContainer}>
+                                            <TouchableOpacity
+                                                style={styles.editButton}
+                                                onPress={() => setIsEditing(true)}
+                                            >
+                                                <Text style={styles.buttonText}>Edit Product</Text>
+                                            </TouchableOpacity>
+
+                                            <TouchableOpacity
+                                                style={styles.deleteButton}
+                                                onPress={handleDelete}
+                                            >
+                                                <Text style={styles.buttonText}>Delete Product</Text>
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                </View>
                             )}
                         </View>
                     </TouchableWithoutFeedback>

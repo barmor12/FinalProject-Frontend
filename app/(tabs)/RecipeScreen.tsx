@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
     View,
     Text,
-    StyleSheet,
     SafeAreaView,
     ScrollView,
     Image,
     TouchableOpacity,
-    Dimensions,
     TextInput,
     ActivityIndicator,
     Alert,
@@ -326,7 +324,7 @@ export default function RecipeScreen() {
                 onPress={() => fetchRecipeById(item._id)}
             >
                 <Image
-                    source={{ uri: item.image?.url || 'https://via.placeholder.com/150' }}
+                    source={{ uri: item.image?.url || 'https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png' }}
                     style={styles.recipeImage}
                 />
                 {isNew && <View style={styles.newBadge}><Text style={styles.newBadgeText}>NEW</Text></View>}
@@ -423,24 +421,29 @@ export default function RecipeScreen() {
                         style={[
                             styles.searchButton,
                             {
-                                padding: 8,
-                                backgroundColor: "#f3e5d7",
-                                borderRadius: 24,
-                                position: 'absolute',
+                                position: "absolute",
                                 right: 20,
+                                backgroundColor: "#f3e5d7",
                             },
                         ]}
                     >
-                        <Ionicons name={searchVisible ? "close" : "search"} size={26} color="#6b4226" />
+                        <Ionicons
+                            name={searchVisible ? "close" : "search"}
+                            size={20}
+                            color="#6b4226"
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
 
-
-
             {searchVisible && (
                 <View style={styles.searchContainer}>
-                    <Ionicons name="search" size={18} color="#6b4226" style={styles.searchIcon} />
+                    <Ionicons
+                        name="search"
+                        size={18}
+                        color="#6b4226"
+                        style={styles.searchIcon}
+                    />
                     <TextInput
                         style={styles.searchInput}
                         placeholder="Search recipes..."
@@ -449,8 +452,11 @@ export default function RecipeScreen() {
                         onChangeText={handleSearch}
                         autoFocus
                     />
-                    {searchText && (
-                        <TouchableOpacity onPress={clearSearch} style={styles.clearSearchButton}>
+                    {searchText !== "" && (
+                        <TouchableOpacity
+                            onPress={clearSearch}
+                            style={styles.clearSearchButton}
+                        >
                             <Ionicons name="close-circle" size={18} color="#6b4226" />
                         </TouchableOpacity>
                     )}
@@ -504,7 +510,7 @@ export default function RecipeScreen() {
                         <ScrollView>
                             <View style={styles.modalImageContainer}>
                                 <Image
-                                    source={{ uri: selectedRecipe.image?.url || 'https://via.placeholder.com/250' }}
+                                    source={{ uri: selectedRecipe.image?.url || 'https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png' }}
                                     style={styles.modalImage}
                                 />
                                 {selectedRecipe.createdAt &&

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   View,
   Text,
@@ -10,6 +9,7 @@ import {
   RefreshControl,
   Modal,
   Alert,
+  ScrollView
 } from "react-native";
 import { ScrollView as RNScrollView } from "react-native"; // שנה שם לייבוא בשביל ה־ref
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +19,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "@/config";
 import styles from "../styles/DashboardScreenStyles";
 import { fetchUserData } from "../utils/fetchUserData";
-import { ScrollView } from "react-native";
 
 interface Product {
   _id: string;
@@ -45,7 +44,7 @@ export default function DashboardScreen() {
   // New searchTerm state
   const [searchTerm, setSearchTerm] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [showHorizontalScroll, setShowHorizontalScroll] = useState(true);
+  const [, setShowHorizontalScroll] = useState(true);
   const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
   // State variable to determine whether to display only liked products
   const [showOnlyLiked, setShowOnlyLiked] = useState(false);
@@ -56,7 +55,6 @@ export default function DashboardScreen() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedQuantity, setSelectedQuantity] = useState(1);
   // Cart state, for demonstration
-  const [cart, setCart] = useState<{ product: Product; quantity: number }[]>([]);
 
   // Handle search input and update searchTerm state
   const handleSearch = (text: string) => {
@@ -173,8 +171,13 @@ export default function DashboardScreen() {
   // No need to refetch products on focus to preserve filters
   useFocusEffect(
     React.useCallback(() => {
-      // No need to refetch products on focus to preserve filters
-      return () => { };
+      // This will run when the screen comes into focus
+      return () => {
+        // This will run when the screen goes out of focus
+        setSearchTerm("");
+        setSearchVisible(false);
+        setShowHorizontalScroll(true);
+      };
     }, [])
   );
 
@@ -349,20 +352,7 @@ export default function DashboardScreen() {
     );
   };
 
-  // Cart update logic
-  const updateCart = (product: Product, quantity: number) => {
-    setCart((prevCart) => {
-      // Update quantity if product already exists, else add new
-      const idx = prevCart.findIndex((item) => item.product._id === product._id);
-      if (idx !== -1) {
-        const updated = [...prevCart];
-        updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + quantity };
-        return updated;
-      } else {
-        return [...prevCart, { product, quantity }];
-      }
-    });
-  };
+
 
   // Add to cart logic using POST request (mirrors ProductDetailsScreen)
   const handleAddToCart = async () => {
@@ -409,7 +399,7 @@ export default function DashboardScreen() {
           ref={scrollRef}
           onScroll={(event) => {
             const scrollY = event.nativeEvent.contentOffset.y;
-            setShowScrollToTop(scrollY > 700); 
+            setShowScrollToTop(scrollY > 700);
           }}
           scrollEventThrottle={16}
           refreshControl={
@@ -417,216 +407,217 @@ export default function DashboardScreen() {
           }
           contentContainerStyle={{ paddingBottom: 80 }}
         >
-        <View style={styles.header}>
-          <View style={styles.leftHeader}>
-            <TouchableOpacity
-              onPress={() => router.push("/ProfileScreen")}
-              style={styles.profileContainer}
-            >
-              <Image
-                source={{ uri: user.profilePic }}
-                style={styles.profileImage}
-              />
-              <Text style={styles.userName}>{user.name}</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.centerHeader} />
-          <View style={styles.rightHeader}>
-            <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
-              <Ionicons
-                name={searchVisible ? "close" : "search"}
-                size={24}
-                color="#fff"
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-        {searchVisible && (
-          <View style={styles.searchBlock}>
-            <TextInput
-              style={styles.searchInputFull}
-              placeholder="Search by name, ingredient, or allergen..."
-              value={searchTerm}
-              onChangeText={handleSearch}
-              autoFocus
-              textAlign="left"
-            />
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
-              <Text style={{ marginRight: 8, color: "#6b4226" }}>🔍 Try typing:</Text>
-              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Chocolate</Text>
-              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Gluten</Text>
-              <Text style={{ marginRight: 8, color: "#d49a6a" }}>Nuts</Text>
+          <View style={styles.header}>
+            <View style={styles.leftHeader}>
+              <TouchableOpacity
+                onPress={() => router.push("/ProfileScreen")}
+                style={styles.profileContainer}
+              >
+                <Image
+                  source={{ uri: user.profilePic }}
+                  style={styles.profileImage}
+                />
+                <Text style={styles.userName}>{user.name}</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.centerHeader} />
+            <View style={styles.rightHeader}>
+              <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
+                <Ionicons
+                  name={searchVisible ? "close" : "search"}
+                  size={24}
+                  color="#fff"
+                />
+              </TouchableOpacity>
             </View>
           </View>
-        )}
-        <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
-          <Text style={{ fontSize: 26, fontWeight: "800", color: "#6b4226", textAlign: "center",letterSpacing: 0.5,
-            textShadowColor: 'rgba(0, 0, 0, 0.15)',textShadowOffset: { width: 1, height: 2 },
-            textShadowRadius: 3,
-           }}>
-            Discover Delicious Cakes!
-
-
-          </Text>
-        </View>
-        <View style={{
-          backgroundColor: "#fffbe9",
-          borderWidth: 1.5,
-          borderColor: "#d49a6a",
-          padding: 16,
-          borderRadius: 10,
-          marginBottom: 10,
-          elevation: 3,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-        }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 6 }}>📊 Store Overview</Text>
-          <Text style={{ fontSize: 16, fontWeight: "bold", color: "#d9534f", marginBottom: 4 }}>
-            🍰 Best Seller: 
-            <Text
-              style={{ textDecorationLine: "underline", color: "#6b4226" }}
-              onPress={() => {
-                const sorted = [...products].sort((a, b) => b.stock - a.stock);
-                if (sorted.length > 0) {
-                  navigateToProduct(sorted[0]);
-                }
-              }}
-            >
-              {getBestSellerName()}
-            </Text>
-          </Text>
-          <Text style={{ fontSize: 14, color: "#6b4226" }}>📦 Total products: {products.length}</Text>
-          <Text style={{ fontSize: 14, color: "#6b4226" }}>❤️ Favorites saved: {likedProducts.size}</Text>
-        </View>
-
-        {/* Promo Card for Buyers */}
-        <View style={{ backgroundColor: "#f0f8ff", padding: 16, borderRadius: 10, marginBottom: 10, elevation: 3 }}>
-          <Text style={{ fontSize: 20, fontWeight: "bold", color: "#0066cc", marginBottom: 4 }}>🎁 Special Offer</Text>
-          <Text style={{ fontSize: 16, color: "#004080" }}>Get 10% off your first order!</Text>
-          <Text style={{ fontSize: 14, color: "#004080" }}>Use code <Text style={{ fontWeight: "bold" }}>WELCOME10</Text> at checkout.</Text>
-        </View>
-
-
-        <View style={styles.filtersContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity
-              style={[
-                styles.filterChip,
-                activeFilters.favorites && styles.activeFilterChip
-              ]}
-              onPress={toggleShowFavorites}
-            >
-              <Text style={[
-                styles.filterText,
-                activeFilters.favorites && styles.activeFilterText
-              ]}>❤️ Favorites</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.filterChip}
-              onPress={() => {
-                const newOrder = sortOrder === "asc" ? "desc" : "asc";
-                setSortOrder(newOrder);
-              }}
-            >
-              <Text style={styles.filterText}>
-                {sortOrder === "asc" ? "⬆️ Price Low" : "⬇️ Price High"}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterChip,
-                activeFilters.inStock && styles.activeFilterChip
-              ]}
-              onPress={handleInStockFilter}
-            >
-              <Text style={[
-                styles.filterText,
-                activeFilters.inStock && styles.activeFilterText
-              ]}>📦 Stock</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-        <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
-          Explore Cakes
-        </Text>
-        {/* Show "No results found" if no filtered products after search/filtering */}
-        {filteredProducts.length === 0 ? (
-          <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 16 }}>
-            No results found
-          </Text>
-        ) : (
-          <FlatList
-            data={filteredProducts}
-            keyExtractor={(item) => item._id}
-            renderItem={renderProductCardVertical}
-            numColumns={2}
-            columnWrapperStyle={{ justifyContent: "space-between" }}
-            scrollEnabled={false}
-          />
-        )}
-        {/* Quantity modal for add to cart */}
-        {selectedProduct && (
-          <Modal visible={!!selectedProduct} transparent animationType="fade">
-            <View style={styles.modalOverlay}>
-              <View style={{
-                backgroundColor: "#fff8f0",
-                padding: 24,
-                borderRadius: 16,
-                alignItems: "center",
-                width: "85%",
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.2,
-                shadowRadius: 8,
-                elevation: 6
-              }}>
-                <TouchableOpacity
-                  style={{ position: "absolute", top: 12, right: 12 }}
-                  onPress={() => setSelectedProduct(null)}
-                >
-                  <Ionicons name="close" size={28} color="#a0522d" />
-                </TouchableOpacity>
-                <Text style={{ fontSize: 24, fontWeight: "bold", color: "#6b4226", marginBottom: 10 }}>Select Quantity</Text>
-                <Image source={{ uri: selectedProduct.image }} style={{ width: 100, height: 100, borderRadius: 12, marginBottom: 10 }} />
-                <Text style={{ fontSize: 18, fontWeight: "600", color: "#6b4226", marginBottom: 4 }}>{selectedProduct.name}</Text>
-                <Text style={{ fontSize: 16, color: "#d2691e", marginBottom: 12 }}>Price: ${selectedProduct.price.toFixed(2)}</Text>
-                <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
-                    onPress={() => {
-                      const qty = Math.max(1, selectedQuantity - 1);
-                      if (qty <= selectedProduct.stock) {
-                        setSelectedQuantity(qty);
-                      }
-                    }}
-                  >
-                    <Ionicons name="remove" size={20} color="#fff" />
-                  </TouchableOpacity>
-                  <Text style={{ fontSize: 20, fontWeight: "bold", marginHorizontal: 16 }}>{selectedQuantity}</Text>
-                  <TouchableOpacity
-                    style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
-                    onPress={() => {
-                      const qty = selectedQuantity + 1;
-                      if (qty <= selectedProduct.stock) {
-                        setSelectedQuantity(qty);
-                      }
-                    }}
-                  >
-                    <Ionicons name="add" size={20} color="#fff" />
-                  </TouchableOpacity>
-                </View>
-                <TouchableOpacity
-                  style={{ backgroundColor: "#6b4226", paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 }}
-                  onPress={handleAddToCart}
-                >
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Add to Cart</Text>
-                </TouchableOpacity>
+          {searchVisible && (
+            <View style={styles.searchBlock}>
+              <TextInput
+                style={styles.searchInputFull}
+                placeholder="Search by name, ingredient, or allergen..."
+                value={searchTerm}
+                onChangeText={handleSearch}
+                autoFocus
+                textAlign="left"
+              />
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: 10 }}>
+                <Text style={{ marginRight: 8, color: "#6b4226" }}>🔍 Try typing:</Text>
+                <Text style={{ marginRight: 8, color: "#d49a6a" }}>Chocolate</Text>
+                <Text style={{ marginRight: 8, color: "#d49a6a" }}>Gluten</Text>
+                <Text style={{ marginRight: 8, color: "#d49a6a" }}>Nuts</Text>
               </View>
             </View>
-          </Modal>
-        )}
+          )}
+          <View style={{ backgroundColor: "#f9f3ea", padding: 20, borderRadius: 10, marginBottom: 10 }}>
+            <Text style={{
+              fontSize: 26, fontWeight: "800", color: "#6b4226", textAlign: "center", letterSpacing: 0.5,
+              textShadowColor: 'rgba(0, 0, 0, 0.15)', textShadowOffset: { width: 1, height: 2 },
+              textShadowRadius: 3,
+            }}>
+              Discover Delicious Cakes!
+
+
+            </Text>
+          </View>
+          <View style={{
+            backgroundColor: "#fffbe9",
+            borderWidth: 1.5,
+            borderColor: "#d49a6a",
+            padding: 16,
+            borderRadius: 10,
+            marginBottom: 10,
+            elevation: 3,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.1,
+            shadowRadius: 3,
+          }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#6b4226", marginBottom: 6 }}>📊 Store Overview</Text>
+            <Text style={{ fontSize: 16, fontWeight: "bold", color: "#d9534f", marginBottom: 4 }}>
+              🍰 Best Seller:
+              <Text
+                style={{ textDecorationLine: "underline", color: "#6b4226" }}
+                onPress={() => {
+                  const sorted = [...products].sort((a, b) => b.stock - a.stock);
+                  if (sorted.length > 0) {
+                    navigateToProduct(sorted[0]);
+                  }
+                }}
+              >
+                {getBestSellerName()}
+              </Text>
+            </Text>
+            <Text style={{ fontSize: 14, color: "#6b4226" }}>📦 Total products: {products.length}</Text>
+            <Text style={{ fontSize: 14, color: "#6b4226" }}>❤️ Favorites saved: {likedProducts.size}</Text>
+          </View>
+
+          {/* Promo Card for Buyers */}
+          <View style={{ backgroundColor: "#f0f8ff", padding: 16, borderRadius: 10, marginBottom: 10, elevation: 3 }}>
+            <Text style={{ fontSize: 20, fontWeight: "bold", color: "#0066cc", marginBottom: 4 }}>🎁 Special Offer</Text>
+            <Text style={{ fontSize: 16, color: "#004080" }}>Get 10% off your first order!</Text>
+            <Text style={{ fontSize: 14, color: "#004080" }}>Use code <Text style={{ fontWeight: "bold" }}>WELCOME10</Text> at checkout.</Text>
+          </View>
+
+
+          <View style={styles.filtersContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  activeFilters.favorites && styles.activeFilterChip
+                ]}
+                onPress={toggleShowFavorites}
+              >
+                <Text style={[
+                  styles.filterText,
+                  activeFilters.favorites && styles.activeFilterText
+                ]}>❤️ Favorites</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterChip}
+                onPress={() => {
+                  const newOrder = sortOrder === "asc" ? "desc" : "asc";
+                  setSortOrder(newOrder);
+                }}
+              >
+                <Text style={styles.filterText}>
+                  {sortOrder === "asc" ? "⬆️ Price Low" : "⬇️ Price High"}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  activeFilters.inStock && styles.activeFilterChip
+                ]}
+                onPress={handleInStockFilter}
+              >
+                <Text style={[
+                  styles.filterText,
+                  activeFilters.inStock && styles.activeFilterText
+                ]}>📦 Stock</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+          <Text style={{ fontSize: 18, fontWeight: "600", marginVertical: 10, color: "#6b4226" }}>
+            Explore Cakes
+          </Text>
+          {/* Show "No results found" if no filtered products after search/filtering */}
+          {filteredProducts.length === 0 ? (
+            <Text style={{ textAlign: 'center', marginTop: 20, fontSize: 16 }}>
+              No results found
+            </Text>
+          ) : (
+            <FlatList
+              data={filteredProducts}
+              keyExtractor={(item) => item._id}
+              renderItem={renderProductCardVertical}
+              numColumns={2}
+              columnWrapperStyle={{ justifyContent: "space-between" }}
+              scrollEnabled={false}
+            />
+          )}
+          {/* Quantity modal for add to cart */}
+          {selectedProduct && (
+            <Modal visible={!!selectedProduct} transparent animationType="fade">
+              <View style={styles.modalOverlay}>
+                <View style={{
+                  backgroundColor: "#fff8f0",
+                  padding: 24,
+                  borderRadius: 16,
+                  alignItems: "center",
+                  width: "85%",
+                  shadowColor: "#000",
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: 0.2,
+                  shadowRadius: 8,
+                  elevation: 6
+                }}>
+                  <TouchableOpacity
+                    style={{ position: "absolute", top: 12, right: 12 }}
+                    onPress={() => setSelectedProduct(null)}
+                  >
+                    <Ionicons name="close" size={28} color="#a0522d" />
+                  </TouchableOpacity>
+                  <Text style={{ fontSize: 24, fontWeight: "bold", color: "#6b4226", marginBottom: 10 }}>Select Quantity</Text>
+                  <Image source={{ uri: selectedProduct.image }} style={{ width: 100, height: 100, borderRadius: 12, marginBottom: 10 }} />
+                  <Text style={{ fontSize: 18, fontWeight: "600", color: "#6b4226", marginBottom: 4 }}>{selectedProduct.name}</Text>
+                  <Text style={{ fontSize: 16, color: "#d2691e", marginBottom: 12 }}>Price: ${selectedProduct.price.toFixed(2)}</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}>
+                    <TouchableOpacity
+                      style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
+                      onPress={() => {
+                        const qty = Math.max(1, selectedQuantity - 1);
+                        if (qty <= selectedProduct.stock) {
+                          setSelectedQuantity(qty);
+                        }
+                      }}
+                    >
+                      <Ionicons name="remove" size={20} color="#fff" />
+                    </TouchableOpacity>
+                    <Text style={{ fontSize: 20, fontWeight: "bold", marginHorizontal: 16 }}>{selectedQuantity}</Text>
+                    <TouchableOpacity
+                      style={{ backgroundColor: "#f1c27d", padding: 12, borderRadius: 50 }}
+                      onPress={() => {
+                        const qty = selectedQuantity + 1;
+                        if (qty <= selectedProduct.stock) {
+                          setSelectedQuantity(qty);
+                        }
+                      }}
+                    >
+                      <Ionicons name="add" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  </View>
+                  <TouchableOpacity
+                    style={{ backgroundColor: "#6b4226", paddingVertical: 12, paddingHorizontal: 24, borderRadius: 10 }}
+                    onPress={handleAddToCart}
+                  >
+                    <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>Add to Cart</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </Modal>
+          )}
         </RNScrollView>
         {showScrollToTop && (
           <TouchableOpacity

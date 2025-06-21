@@ -1,3 +1,4 @@
+// app/SetPasswordScreen.tsx
 import React, { useState } from "react";
 import {
   View,
@@ -9,14 +10,23 @@ import {
   Platform,
   ScrollView,
   ImageBackground,
+  StyleSheet,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import styles from "../app/styles/LoginStyles";
-
 import config from "../config";
-import { BlurView } from "expo-blur";
 import BackButton from "../components/BackButton";
+
+// Fallback for expo-blur in tests
+let BlurView: React.ComponentType<any> = View;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { BlurView: BV } = require("expo-blur");
+  BlurView = BV;
+} catch {
+  /* no-op */
+}
 
 export default function SetPasswordScreen() {
   const [password, setPassword] = useState("");
@@ -48,14 +58,13 @@ export default function SetPasswordScreen() {
   ];
 
   const checkPasswordStrength = (value: string) => {
-    const updatedReqs = {
+    setPasswordRequirements({
       length: value.length >= 8,
       lowercase: /[a-z]/.test(value),
       uppercase: /[A-Z]/.test(value),
       number: /\d/.test(value),
       special: /[@$!%*?&]/.test(value),
-    };
-    setPasswordRequirements(updatedReqs);
+    });
   };
 
   const handleSetPassword = async () => {
@@ -86,34 +95,29 @@ export default function SetPasswordScreen() {
       setLoading(true);
       const userId = await AsyncStorage.getItem("userId");
       const accessToken = await AsyncStorage.getItem("accessToken");
-
-      const response = await fetch(
-        `${config.BASE_URL}/auth/set-password`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          body: JSON.stringify({ userId, password }),
-        }
-      );
-
+      const response = await fetch(`${config.BASE_URL}/auth/set-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ userId, password }),
+      });
       const data = await response.json();
 
       if (response.ok) {
         Alert.alert("Success", "Password set successfully!");
         const role = await AsyncStorage.getItem("role");
-        if (role === "admin") {
-          router.replace("/(admintabs)/AdminDashboardScreen");
-        } else {
-          router.replace("/(tabs)/DashboardScreen");
-        }
+        router.replace(
+          role === "admin"
+            ? "/(admintabs)/AdminDashboardScreen"
+            : "/(tabs)/DashboardScreen"
+        );
       } else {
         Alert.alert("Error", data?.error || "Failed to set password.");
       }
-    } catch (error) {
-      console.error("Error setting password:", error);
+    } catch (err) {
+      console.error("Error setting password:", err);
       Alert.alert("Error", "Something went wrong.");
     } finally {
       setLoading(false);
@@ -123,95 +127,122 @@ export default function SetPasswordScreen() {
   return (
     <ImageBackground
       source={require("../assets/bg-login.jpg")}
-      style={{ flex: 1 }}
+      style={localStyles.background}
       resizeMode="cover"
     >
-      <BlurView intensity={40} tint="light" style={{ flex: 1 }}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
+      <View style={{
+        backgroundColor: "255,255,255,0.4"
+      }}></View>
+      {/* this is your exact BlurView */}
+      <BlurView intensity={40} tint="light" style={StyleSheet.absoluteFill} />
+
+      <KeyboardAvoidingView
+        style={localStyles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
+      >
+        <ScrollView
+          contentContainerStyle={localStyles.scrollContent}
+          keyboardShouldPersistTaps="handled"
         >
-          <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.container}>
-            <View style={{ position: "absolute", top: 60, left: 20, zIndex: 1 }}>
-              <BackButton
-                onPress={async () => {
-                  await AsyncStorage.removeItem("accessToken");
-                  await AsyncStorage.removeItem("refreshToken");
-                  await AsyncStorage.removeItem("isPasswordSet");
-                  await AsyncStorage.removeItem("role");
-                  await AsyncStorage.removeItem("userId");
-                  router.replace("/");
+          <View style={localStyles.backButton}>
+            <BackButton
+              onPress={async () => {
+                await AsyncStorage.multiRemove([
+                  "accessToken",
+                  "refreshToken",
+                  "isPasswordSet",
+                  "role",
+                  "userId",
+                ]);
+                router.replace("/");
+              }}
+            />
+          </View>
+
+          <Text style={styles.title}>Set Your Password</Text>
+          <Text style={localStyles.requirementHeader}>
+            Your password must include:
+            {"\n"}✔ At least 8 characters
+            {"\n"}✔ One lowercase letter
+            {"\n"}✔ One uppercase letter
+            {"\n"}✔ One number
+            {"\n"}✔ One special character (e.g. @$!%*?&)
+          </Text>
+
+          <View style={localStyles.requirements}>
+            {requirementList.map((item) => (
+              <Text
+                key={item.key}
+                style={{
+                  color: passwordRequirements[item.key] ? "green" : "red",
+                  marginBottom: 4,
                 }}
-              />
-            </View>
-            <Text
-              style={{
-                fontSize: 35,
-                fontWeight: "bold",
-                color: "#a2785c", // חום בהיר יותר
-                textAlign: "center",
-                marginTop: -50, // מרווח מלמעלה
-                marginBottom: 60,
-                textShadowColor: "rgba(0, 0, 0, 0.15)",
-                textShadowOffset: { width: 1, height: 3 },
-                textShadowRadius: 4,
-              }}
-            >
-              Set Your Password
-            </Text>
-            <Text
-              style={{
-                color: "#5d3a1a",
-                fontSize: 15,
-                fontWeight: "bold",
-                marginBottom: 10,
-                backgroundColor: "#ecdcc6",
-                padding: 10,
-                borderRadius: 6,
-                textAlign: "center",
-              }}
-            >
-              Your password must include:
-              {"\n"}✔ At least 8 characters
-              {"\n"}✔ One lowercase letter
-              {"\n"}✔ One uppercase letter
-              {"\n"}✔ One number
-              {"\n"}✔ One special character (e.g. @$!%*?&)
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="New Password"
-              secureTextEntry
-              onChangeText={(text) => {
-                setPassword(text);
-                checkPasswordStrength(text);
-              }}
-            />
-            <View style={{ marginBottom: 10 }}>
-              {requirementList.map((item) => (
-                <Text key={item.key} style={{ color: passwordRequirements[item.key] ? "green" : "red" }}>
-                  {passwordRequirements[item.key] ? "✔️" : "❌"} {item.label}
-                </Text>
-              ))}
-            </View>
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              secureTextEntry
-              onChangeText={setConfirmPassword}
-            />
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleSetPassword}
-              disabled={loading}
-            >
-              <Text style={styles.buttonText}>
-                {loading ? "Saving..." : "Set Password"}
+              >
+                {passwordRequirements[item.key] ? "✔️" : "❌"} {item.label}
               </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </BlurView>
+            ))}
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            secureTextEntry
+            onChangeText={(text) => {
+              setPassword(text);
+              checkPasswordStrength(text);
+            }}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            secureTextEntry
+            onChangeText={setConfirmPassword}
+          />
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handleSetPassword}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Saving..." : "Set Password"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ImageBackground>
   );
 }
+
+const localStyles = StyleSheet.create({
+  flex: { flex: 1 },
+  background: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 24,
+    paddingTop: 100,
+    alignItems: "center",
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 16,
+    zIndex: 10,
+  },
+  requirementHeader: {
+    color: "#5d3a1a",
+    fontSize: 15,
+    fontWeight: "bold",
+    marginBottom: 10,
+    backgroundColor: "#ecdcc6",
+    padding: 10,
+    borderRadius: 6,
+    textAlign: "center",
+  },
+  requirements: {
+    width: "100%",
+    marginVertical: 12,
+  },
+});

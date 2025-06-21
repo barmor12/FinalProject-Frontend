@@ -3,7 +3,6 @@ import {
   SafeAreaView,
   View,
   Text,
-  StyleSheet,
   FlatList,
   Image,
   TouchableOpacity,
@@ -123,7 +122,7 @@ export default function CheckoutScreen() {
         throw new Error("Failed to fetch addresses");
       }
 
-      const data: Address[] = await response.json(); 
+      const data: Address[] = await response.json();
       setAddresses(data);
 
 
@@ -239,21 +238,7 @@ export default function CheckoutScreen() {
     return discounted.toFixed(2);
   };
 
-  const renderCartItem = ({ item }: { item: CartItem }) => (
-    <View style={styles.cartItem}>
-      <Image
-        source={{ uri: item.cake.image.url }}
-        style={styles.itemImage}
-        resizeMode="cover"
-      />
 
-      <View style={styles.itemDetails}>
-        <Text style={styles.itemName}>{item.cake.name}</Text>
-        <Text style={styles.itemPrice}>${item.cake.price.toFixed(2)}</Text>
-        <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-      </View>
-    </View>
-  );
   const handlePlaceOrder = async () => {
     try {
       if (
@@ -409,17 +394,6 @@ export default function CheckoutScreen() {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === "android") {
-      setShowDatePicker(false);
-    }
-    if (selectedDate) {
-      // Set the year to current year for all dates
-      const currentYearDate = new Date(selectedDate);
-      currentYearDate.setFullYear(new Date().getFullYear());
-      setDeliveryDate(currentYearDate);
-    }
-  };
 
   const toggleDatePicker = () => {
     setShowDatePicker(!showDatePicker);
@@ -600,7 +574,7 @@ export default function CheckoutScreen() {
                     appliedCode ? `Applied: ${appliedCode}` : "Enter promo code"
                   }
 
-              
+
                   value={promoCode}
                   onChangeText={setPromoCode}
                   editable={!appliedCode}

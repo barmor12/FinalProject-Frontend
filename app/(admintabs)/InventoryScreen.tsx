@@ -74,7 +74,7 @@ export default function InventoryScreen() {
         ...product,
         image: product.image?.url?.startsWith("http")
           ? product.image.url
-          : "https://via.placeholder.com/150",
+          : "https://res.cloudinary.com/dhhrsuudb/image/upload/v1749854544/cakes/z1mpm3pz667fnq7b7whj.png",
       }));
 
       setProducts(updatedProducts);
