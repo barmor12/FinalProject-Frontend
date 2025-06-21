@@ -393,12 +393,13 @@ export default function AddressScreen() {
                                 <View style={styles.inputContainer}>
                                     <Text style={styles.inputLabel}>Full Name</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: '#000' }]}
                                         value={formData.fullName}
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, fullName: text })
                                         }
                                         placeholder="Name"
+                                        placeholderTextColor="#888"
                                         returnKeyType="next"
                                     />
                                     {errors.fullName && (
@@ -409,12 +410,13 @@ export default function AddressScreen() {
                                 <View style={styles.inputContainer}>
                                     <Text style={styles.inputLabel}>Phone Number</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: '#000' }]}
                                         value={formData.phone}
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, phone: text })
                                         }
                                         placeholder="050-1234567"
+                                        placeholderTextColor="#888"
                                         keyboardType="phone-pad"
                                         returnKeyType="next"
                                     />
@@ -426,12 +428,13 @@ export default function AddressScreen() {
                                 <View style={styles.inputContainer}>
                                     <Text style={styles.inputLabel}>Street Address</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: '#000' }]}
                                         value={formData.street}
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, street: text })
                                         }
                                         placeholder="Street"
+                                        placeholderTextColor="#888"
                                         returnKeyType="next"
                                     />
                                     {errors.street && (
@@ -442,12 +445,13 @@ export default function AddressScreen() {
                                 <View style={styles.inputContainer}>
                                     <Text style={styles.inputLabel}>City</Text>
                                     <TextInput
-                                        style={styles.input}
+                                        style={[styles.input, { color: '#000' }]}
                                         value={formData.city}
                                         onChangeText={(text) =>
                                             setFormData({ ...formData, city: text })
                                         }
                                         placeholder="Tel-Aviv"
+                                        placeholderTextColor="#888"
                                         returnKeyType="done"
                                         onSubmitEditing={handleSave}
                                     />

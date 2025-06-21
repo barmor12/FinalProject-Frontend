@@ -16,7 +16,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminDiscountCodesScreenStyles";
 import BackButton from "../../components/BackButton";
@@ -53,6 +53,14 @@ export default function AdminDiscountCodes() {
       });
       const data = await res.json();
       setCodes(data);
+      const now = new Date();
+      const updatedCodes = data.map((code: DiscountCode) => {
+        if (code.expiryDate && new Date(code.expiryDate) < now && code.isActive) {
+          return { ...code, isActive: false };
+        }
+        return code;
+      });
+      setCodes(updatedCodes);
     } catch (error) {
       Alert.alert("Error", "Failed to load discount codes");
     } finally {
@@ -191,19 +199,16 @@ export default function AdminDiscountCodes() {
                 {expiryDate ? expiryDate.toLocaleDateString() : "Select Date"}
               </Text>
             </TouchableOpacity>
-            {showDatePicker && (
-              <DateTimePicker
-                value={expiryDate || new Date()}
-                mode="date"
-                display="default"
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (event.type === "set" && selectedDate) {
-                    setExpiryDate(selectedDate);
-                  }
-                }}
-              />
-            )}
+            <DateTimePickerModal
+              isVisible={showDatePicker}
+              mode="date"
+              date={expiryDate || new Date()}
+              onConfirm={(date) => {
+                setExpiryDate(date);
+                setShowDatePicker(false);
+              }}
+              onCancel={() => setShowDatePicker(false)}
+            />
           </View>
 
           <TouchableOpacity style={styles.button} onPress={createCode}>

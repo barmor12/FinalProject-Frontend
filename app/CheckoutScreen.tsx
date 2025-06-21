@@ -85,6 +85,7 @@ export default function CheckoutScreen() {
 
   const [deliveryDate, setDeliveryDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDeliveryDate, setTempDeliveryDate] = useState<Date | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'credit'>('cash');
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
@@ -397,6 +398,8 @@ export default function CheckoutScreen() {
 
   const toggleDatePicker = () => {
     setShowDatePicker(!showDatePicker);
+    // Reset tempDeliveryDate to current deliveryDate or tomorrow's date
+    setTempDeliveryDate(deliveryDate || new Date(Date.now() + 86400000));
   };
 
   return (
@@ -525,15 +528,13 @@ export default function CheckoutScreen() {
                       <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
                         <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
                           <DateTimePicker
-                            value={deliveryDate || new Date()}
+                            value={tempDeliveryDate || new Date()}
                             mode="date"
                             display={Platform.OS === "android" ? "calendar" : "spinner"}
                             themeVariant="light"
                             onChange={(event, selectedDate) => {
                               if (selectedDate) {
-                                const currentYearDate = new Date(selectedDate);
-                                currentYearDate.setFullYear(new Date().getFullYear());
-                                setDeliveryDate(currentYearDate);
+                                setTempDeliveryDate(selectedDate);
                               }
                             }}
                             minimumDate={
@@ -552,7 +553,12 @@ export default function CheckoutScreen() {
                               <Text style={{ fontWeight: "600" }}>Cancel</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                              onPress={() => setShowDatePicker(false)}
+                              onPress={() => {
+                                if (tempDeliveryDate) {
+                                  setDeliveryDate(new Date(tempDeliveryDate));
+                                }
+                                setShowDatePicker(false);
+                              }}
                               style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#6b4226", borderRadius: 5 }}
                             >
                               <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>

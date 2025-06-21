@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-import DateTimePicker from "@react-native-community/datetimepicker";
+// Helper function to safely parse ISO date strings
+const parseISODate = (str: string) => {
+  const parsed = new Date(str);
+  return isNaN(parsed.getTime()) ? new Date(Date.now() + 86400000) : parsed;
+};
 import {
   Text,
   SafeAreaView,
@@ -16,6 +20,7 @@ import { useLocalSearchParams, router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import Header from "../components/Header";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 export default function EditOrderScreen() {
   const { orderId } = useLocalSearchParams<{ orderId: string }>();
@@ -29,6 +34,8 @@ export default function EditOrderScreen() {
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateObj, setDateObj] = useState<Date>(new Date());
+
+  const [tempDeliveryDate, setTempDeliveryDate] = useState<Date>(new Date(Date.now() + 86400000));
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = () => {
@@ -51,12 +58,18 @@ export default function EditOrderScreen() {
         return;
       }
       setShippingMethod(data.shippingMethod || "");
-      setDeliveryDate(data.deliveryDate?.slice(0, 10) || new Date().toISOString().slice(0, 10));
+      setDeliveryDate(
+        data.deliveryDate?.slice(0, 10) ||
+        new Date(Date.now() + 86400000).toISOString().slice(0, 10)
+      );
       if (data.deliveryDate) {
         const parsed = new Date(data.deliveryDate);
         if (!isNaN(parsed.getTime())) {
           setDateObj(parsed);
+          setTempDeliveryDate(parsed);
         }
+      } else {
+        setTempDeliveryDate(new Date(Date.now() + 86400000));
       }
       if (data.address) {
         setAddressId(data.address._id || "");
@@ -79,9 +92,6 @@ export default function EditOrderScreen() {
     };
     fetchOrder();
   }, [orderId]);
-
-  const parsedDate = new Date(deliveryDate);
-  const pickerDate = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
 
   const handleSave = async () => {
     const token = await AsyncStorage.getItem("accessToken");
@@ -161,7 +171,14 @@ export default function EditOrderScreen() {
           {shippingMethod === "Self Pickup" ? "Pickup Date" : "Delivery Date"}
         </Text>
         <TouchableOpacity
-          onPress={() => setShowDatePicker(true)}
+          onPress={() => {
+            const defaultDate = new Date(deliveryDate);
+            const validDate = isNaN(defaultDate.getTime()) ? new Date(Date.now() + 86400000) : defaultDate;
+            setTempDeliveryDate(validDate);
+            setDeliveryDate(validDate.toISOString().slice(0, 10));
+            setDateObj(validDate);
+            setShowDatePicker(true);
+          }}
           style={{
             borderWidth: 1,
             padding: 15,
@@ -175,22 +192,47 @@ export default function EditOrderScreen() {
           </Text>
         </TouchableOpacity>
         {showDatePicker && (
-          <DateTimePicker
-            value={pickerDate}
-            mode="date"
-            display="default"
-            themeVariant="light"
-            onChange={(_, selectedDate) => {
-              setShowDatePicker(Platform.OS === "ios");
-              if (selectedDate) {
-                const y = selectedDate.getFullYear();
-                const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
-                const d = String(selectedDate.getDate()).padStart(2, "0");
-                setDeliveryDate(`${y}-${m}-${d}`);
-                setDateObj(selectedDate);
-              }
-            }}
-          />
+          <Modal transparent={true} animationType="fade">
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+              <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
+                <DateTimePicker
+                  value={tempDeliveryDate || new Date()}
+                  mode="date"
+                  display={Platform.OS === "android" ? "calendar" : "spinner"}
+                  themeVariant="light"
+                  onChange={(event, selectedDate) => {
+                    const dateToSet = selectedDate || tempDeliveryDate || new Date(Date.now() + 86400000);
+                    setTempDeliveryDate(dateToSet);
+                  }}
+                  minimumDate={new Date(Date.now() + 86400000)}
+                  maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                  locale="en-GB"
+                />
+                <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#ccc", borderRadius: 5 }}
+                  >
+                    <Text style={{ fontWeight: "600" }}>Cancel</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const finalDate = tempDeliveryDate || new Date(Date.now() + 86400000);
+                      const y = finalDate.getFullYear();
+                      const m = String(finalDate.getMonth() + 1).padStart(2, "0");
+                      const d = String(finalDate.getDate()).padStart(2, "0");
+                      setDeliveryDate(`${y}-${m}-${d}`);
+                      setDateObj(finalDate);
+                      setShowDatePicker(false);
+                    }}
+                    style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#6b4226", borderRadius: 5 }}
+                  >
+                    <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
         )}
 
         {/* Address Selection */}

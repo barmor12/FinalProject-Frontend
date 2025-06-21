@@ -224,6 +224,7 @@ export default function AdminNotificationsScreen() {
               value={title}
               onChangeText={setTitle}
               placeholder="Enter notification title"
+              placeholderTextColor="#888"
               maxLength={50}
             />
             <Text style={styles.charCounter}>{title.length}/50</Text>
@@ -234,6 +235,7 @@ export default function AdminNotificationsScreen() {
               value={message}
               onChangeText={setMessage}
               placeholder="Enter notification message"
+              placeholderTextColor="#888"
               multiline
               maxLength={200}
             />
