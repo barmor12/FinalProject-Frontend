@@ -359,7 +359,20 @@ export default function ProfileScreen() {
             </View>
           )}
 
+        {/* Footer with links & version */}
+        <View style={{ marginTop: 30, alignItems: "center", paddingBottom: 30 }}>
+          <View style={{ flexDirection: "row", gap: 12, marginBottom: 10 }}>
+            <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/terms")}>
+              <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Terms of Use</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/privacy")}>
+              <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Privacy Policy</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={{ fontSize: 12, color: "#6b4226", marginBottom: 2 }}>App Version 1.0.0</Text>
+          <Text style={{ fontSize: 12, color: "#6b4226", fontWeight: "600" }}>© 2025 Bakey. All rights reserved.</Text>
         </View>
+      </View>
       </ScrollView>
     </SafeAreaView>
   );
