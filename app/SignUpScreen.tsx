@@ -118,8 +118,10 @@ export default function SignUpScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 }}>
-          <View style={{ alignSelf: "flex-start", marginBottom: 20, marginTop: 40 }}>
-            <BackButton />
+          <View style={{ alignSelf: "flex-start", padding: 20,marginLeft: -40, paddingTop: 50, zIndex: 10 }}>
+            <TouchableOpacity onPress={() => router.replace("/")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <BackButton />
+            </TouchableOpacity>
           </View>
           <View style={{ width: "100%", maxWidth: 360 }}>
             <Text style={styles.title}>Create an Account</Text>
