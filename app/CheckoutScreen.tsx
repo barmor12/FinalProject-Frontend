@@ -774,33 +774,35 @@ export default function CheckoutScreen() {
                   </TouchableOpacity>
                 </View>
               ) : (
-                <FlatList
-                  data={addresses}
-                  keyExtractor={(item) => item._id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      style={[
-                        styles.addressItem,
-                        selectedAddress?._id === item._id &&
-                        styles.selectedAddress,
-                      ]}
-                      onPress={() => {
-                        setSelectedAddress(item);
-                        setDeliveryDetailsVisible(false);
-                      }}
-                    >
-                      <Text style={styles.modalText}>
-                        <Text style={{ fontWeight: "bold" }}>
-                          {item.fullName}
-                        </Text>{" "}
-                        ({item.phone})
-                      </Text>
-                      <Text style={styles.modalText}>
-                        {item.street}, {item.city}
-                      </Text>
-                    </TouchableOpacity>
-                  )}
-                />
+                <View style={{ maxHeight: 300, marginVertical: 10 }}>
+                  <FlatList
+                    data={addresses}
+                    keyExtractor={(item) => item._id}
+                    renderItem={({ item }) => (
+                      <TouchableOpacity
+                        style={[
+                          styles.addressItem,
+                          selectedAddress?._id === item._id &&
+                          styles.selectedAddress,
+                        ]}
+                        onPress={() => {
+                          setSelectedAddress(item);
+                          setDeliveryDetailsVisible(false);
+                        }}
+                      >
+                        <Text style={styles.modalText}>
+                          <Text style={{ fontWeight: "bold" }}>
+                            {item.fullName}
+                          </Text>{" "}
+                          ({item.phone})
+                        </Text>
+                        <Text style={styles.modalText}>
+                          {item.street}, {item.city}
+                        </Text>
+                      </TouchableOpacity>
+                    )}
+                  />
+                </View>
               )}
 
               <TouchableOpacity
