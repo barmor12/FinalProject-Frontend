@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bakey",
     "slug": "CakeBusinessApp",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "com.avielandbar.cakebusinessapp",
@@ -11,6 +11,7 @@
     "ios": {
       "bundleIdentifier": "com.avielandbar.cakebusinessapp",
       "supportsTablet": true,
+      "buildNumber": "1",
       "infoPlist": {
         "NSAppTransportSecurity": {
           "NSAllowsArbitraryLoads": true
@@ -29,7 +30,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.avielandbar.cakebusinessapp",
-      "usesCleartextTraffic": false
+      "usesCleartextTraffic": false,
+      "versionCode": 1
     },
     "web": {
       "bundler": "metro",
