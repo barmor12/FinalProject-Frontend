@@ -17,7 +17,6 @@ import config from "../../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../_layout";
 import { useFocusEffect } from "expo-router";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminOrdersScreenStyles";
 import Header from "../../components/Header";
@@ -42,7 +41,6 @@ export default function AdminOrdersScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [statusDropdownVisible, setStatusDropdownVisible] = useState(false);
-  const router = useRouter();
 
   // fetchOrders must be defined before use in hooks
   const fetchOrders = useCallback(async () => {
@@ -109,15 +107,6 @@ export default function AdminOrdersScreen() {
       : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  interface Order {
-    _id: string;
-    status: "pending" | "confirmed" | "delivered" | "cancelled";
-    user?: { _id: string; firstName: string; lastName: string; email: string };
-    items: { cake: string; quantity: number }[];
-    totalPrice: number;
-    createdAt: string;
-    isPriority?: boolean;
-  }
   type AdminOrdersScreenRouteProp = RouteProp<
     { AdminOrdersScreen: { shouldRefresh?: boolean } },
     "AdminOrdersScreen"
@@ -382,65 +371,107 @@ export default function AdminOrdersScreen() {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: 70, backgroundColor: "#f7efe5" }]}>
-      <View style={{ backgroundColor: "#f7efe5", paddingBottom: 10 }}>
-        <Header title="Orders" />
+    <SafeAreaView style={[styles.container, { paddingTop: 40, backgroundColor: "#f7efe5" }]}>
+      {/* Header component */}
+      <Header title="Manage Orders" style={{ backgroundColor: 'transparent' }} />
+
+      {/* Filters + search grouped visually */}
+      <View style={styles.filterGroupWrapper}>
+        {/* Filter buttons row */}
+        <View style={styles.filterContainer}>
+          {/* Status filter button */}
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              filterStatus !== "all" && { backgroundColor: "#ffe3b2" },
+            ]}
+            onPress={() => setStatusDropdownVisible(!statusDropdownVisible)}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="options-outline" size={18} color="#6b4226" />
+              <Text style={{ color: "#6b4226", fontWeight: "bold", fontSize: 15, marginLeft: 4 }}>
+                {filterStatus === "all"
+                  ? "Status: All"
+                  : filterStatus === "pending"
+                  ? "Status: Pending"
+                  : filterStatus === "confirmed"
+                  ? "Status: Confirmed"
+                  : filterStatus === "delivered"
+                  ? "Status: Delivered"
+                  : "Status: Cancelled"}
+              </Text>
+              <Ionicons name={statusDropdownVisible ? "chevron-up" : "chevron-down"} size={18} color="#6b4226" style={{ marginLeft: 3 }} />
+            </View>
+          </TouchableOpacity>
+          {/* Sort by date button */}
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            activeOpacity={0.8}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+              <Ionicons name="calendar-outline" size={17} color="#6b4226" />
+              <Text style={{ color: "#6b4226", fontWeight: "bold", fontSize: 15, marginLeft: 4 }}>
+                {sortOrder === "asc" ? "Sort by: Oldest" : "Sort by: Newest"}
+              </Text>
+              <Ionicons name={sortOrder === "asc" ? "arrow-up" : "arrow-down"} size={15} color="#6b4226" style={{ marginLeft: 2 }} />
+            </View>
+          </TouchableOpacity>
+        </View>
+        {/* Search bar below filters */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#bdbdbd" style={{ marginRight: 8 }} />
+          <TextInput
+            placeholder="Search by customer name"
+            style={styles.searchInput}
+            placeholderTextColor="#888"
+            selectionColor="#6b4226"
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            underlineColorAndroid="transparent"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+        </View>
       </View>
 
-      {/* 🔍 שדה חיפוש לפי שם לקוח */}
-      <TextInput
-        style={styles.searchInput}
-        placeholder="Search by customer name..."
-        placeholderTextColor="#888"
-        selectionColor="#6b4226"
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-      />
-
-      {/* 🛒 טבלת כותרות */}
-      <View style={styles.tableHeader}>
-        <Text style={styles.priorityHeaderCell}></Text>
-        <TouchableOpacity
-          style={styles.headerCell}
-          onPress={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
-        >
-          <Text style={styles.headerCellText}>
-            Order Date {sortOrder === "asc" ? "↑" : "↓"}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.statusHeaderCell}
-          onPress={() => setStatusDropdownVisible(!statusDropdownVisible)}
-        >
-          <Text style={styles.headerCellText}>Status ▼</Text>
-        </TouchableOpacity>
-        <Text style={styles.nameHeaderCell}>Customer Name</Text>
-      </View>
-
-      {/* Status Dropdown */}
+      {/* Modern Status Dropdown */}
       {statusDropdownVisible && (
-        <View style={styles.statusDropdown}>
-          {["all", "pending", "confirmed", "delivered", "cancelled"].map((status) => (
+        <View style={[
+          styles.statusDropdown,
+          {
+            top: 110,
+            right: 30,
+            width: 180,
+            zIndex: 100,
+          }
+        ]}>
+          {[
+            { key: "all", label: "Status: All" },
+            { key: "pending", label: "Status: Pending" },
+            { key: "confirmed", label: "Status: Confirmed" },
+            { key: "delivered", label: "Status: Delivered" },
+            { key: "cancelled", label: "Status: Cancelled" },
+          ].map((status) => (
             <TouchableOpacity
-              key={status}
+              key={status.key}
               style={[
                 styles.statusDropdownItem,
-                filterStatus === status && styles.selectedStatus,
+                filterStatus === status.key && styles.selectedStatus,
               ]}
               onPress={() => {
-                setFilterStatus(status as Order["status"]);
+                setFilterStatus(status.key as "all" | "pending" | "confirmed" | "delivered" | "cancelled");
                 setStatusDropdownVisible(false);
               }}
             >
-              <Text style={styles.statusDropdownText}>
-                {status === "all" ? "All" : status.charAt(0).toUpperCase() + status.slice(1)}
-              </Text>
+              <Text style={styles.statusDropdownText}>{status.label}</Text>
             </TouchableOpacity>
           ))}
         </View>
       )}
 
-      {/* 📜 רשימת הזמנות */}
+      {/* Modern order list - cards */}
       {loading ? (
         <ActivityIndicator size="large" color="#6b4226" />
       ) : (
@@ -457,52 +488,123 @@ export default function AdminOrdersScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
+          {sortedOrders.length === 0 && (
+            <Text style={styles.noResultsText}>No orders to display</Text>
+          )}
           {sortedOrders.map((order) => (
             <TouchableOpacity
               key={order._id}
-              style={[styles.row, order.isPriority && styles.priorityRow]}
               onPress={() =>
-                navigation.navigate("OrderDetailsScreen", {
-                  orderId: order._id,
-                })
+                navigation.navigate("OrderDetailsScreen", { orderId: order._id })
               }
+              activeOpacity={0.9}
             >
-              <TouchableOpacity
-                style={styles.priorityButton}
-                onPress={() => togglePriority(order._id, order.isPriority)}
+              <View
+                style={[
+                  styles.orderCard,
+                  {
+                    borderLeftWidth: order.isPriority ? 6 : 0,
+                    borderLeftColor: order.isPriority ? "#FFD700" : "transparent",
+                  },
+                ]}
               >
-                <Ionicons
-                  name={order.isPriority ? "star" : "star-outline"}
-                  size={20}
-                  color={order.isPriority ? "#FFD700" : "#6b4226"}
-                />
-              </TouchableOpacity>
-              <Text
-                style={styles.cell}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {new Date(order.createdAt).toLocaleDateString()}
-              </Text>
-              <Text
-                style={[styles.cell, styles[order.status]]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {order.status}
-              </Text>
-              <Text style={styles.cell} numberOfLines={1} ellipsizeMode="tail">
-                {order.user
-                  ? `${order.user.firstName || "Unknown"} ${order.user.lastName || "User"}`
-                  : "Deleted User"}
-              </Text>
-              {/* כפתור תפריט 3 נקודות */}
-              <TouchableOpacity
-                onPress={() => openOrderMenu(order)}
-                style={styles.menuButton}
-              >
-                <Text style={styles.menuText}>⋮</Text>
-              </TouchableOpacity>
+                {/* Menu button (3 dots) - right side */}
+                <TouchableOpacity
+                  onPress={() => openOrderMenu(order)}
+                  style={styles.menuButton}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  activeOpacity={0.6}
+                  accessibilityLabel="Order menu"
+                >
+                  <Text style={styles.menuText}>⋮</Text>
+                </TouchableOpacity>
+                {/* Priority star button (moved after menu button) */}
+                <TouchableOpacity
+                  style={{
+                    marginLeft: 2,
+                    marginRight: 6,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    position: "absolute",
+                    top: 10,
+                    right: 50,
+                    zIndex: 2,
+                  }}
+                  onPress={(e) => {
+                    e.stopPropagation?.();
+                    togglePriority(order._id, order.isPriority);
+                  }}
+                  accessibilityLabel={order.isPriority ? "Remove Priority" : "Mark as Priority"}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Ionicons
+                    name={order.isPriority ? "star" : "star-outline"}
+                    size={22}
+                    color={order.isPriority ? "#FFD700" : "#bdbdbd"}
+                  />
+                </TouchableOpacity>
+                {/* Customer name */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="person-outline" size={18} color="#6b4226" />
+                  <Text
+                    style={{
+                      fontSize: 17,
+                      fontWeight: "700",
+                      color: "#23232b",
+                      maxWidth: "88%",
+                    }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {order.user
+                      ? `${order.user.firstName || "Unknown"} ${order.user.lastName || "User"}`
+                      : "Deleted User"}
+                  </Text>
+                </View>
+                {/* Order ID - between name and star */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="pricetag-outline" size={15} color="#bdbdbd" />
+                  <Text style={styles.orderIdText}>#{order._id.slice(-6)}</Text>
+                </View>
+                {/* Priority star button below name/id (removed, now above after menu button) */}
+                {/* Order date */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="calendar-outline" size={17} color="#bdbdbd" />
+                  <Text style={{ fontSize: 15, color: "#68686f" }}>
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </Text>
+                </View>
+                {/* Status */}
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                  <Ionicons name="checkmark-done-circle-outline" size={17} color="#bdbdbd" />
+                  <Text
+                    style={{
+                      fontSize: 15,
+                      fontWeight: "bold",
+                      color:
+                        order.status === "pending"
+                          ? "#ff9800"
+                          : order.status === "confirmed"
+                          ? "#1976d2"
+                          : order.status === "delivered"
+                          ? "#43a047"
+                          : order.status === "cancelled"
+                          ? "#e53935"
+                          : "#23232b",
+                    }}
+                  >
+                    {order.status === "pending"
+                      ? "Pending"
+                      : order.status === "confirmed"
+                      ? "Confirmed"
+                      : order.status === "delivered"
+                      ? "Delivered"
+                      : order.status === "cancelled"
+                      ? "Cancelled"
+                      : order.status}
+                  </Text>
+                </View>
+              </View>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -687,3 +789,25 @@ export default function AdminOrdersScreen() {
   );
 }
 
+
+  // Handle press on the entire order card
+  // function handleOrderPress(order: Order) {
+  //   navigation.navigate("OrderDetailsScreen", { orderId: order._id });
+  // }
+// הזן טיפוס Order כאן:
+type Order = {
+  _id: string;
+  user?: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    [key: string]: any;
+  } | null;
+  status: string;
+  isPriority: boolean;
+  createdAt: string;
+  total?: number;
+  address?: string;
+  phone?: string;
+  [key: string]: any;
+};
