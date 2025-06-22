@@ -17,6 +17,7 @@ import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
 import * as ImagePicker from "expo-image-picker";
+import BackButton from "../components/BackButton";
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -116,7 +117,10 @@ export default function SignUpScreen() {
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40 }}>
+        <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 }}>
+          <View style={{ alignSelf: "flex-start", marginBottom: 20, marginTop: 40 }}>
+            <BackButton />
+          </View>
           <View style={{ width: "100%", maxWidth: 360 }}>
             <Text style={styles.title}>Create an Account</Text>
             <Text style={styles.subtitle}>Join us and order your first cake with us</Text>
@@ -154,11 +158,12 @@ export default function SignUpScreen() {
               testID="password-input"
             />
             <View style={styles.passwordContainer}>
-              {Object.entries(passwordRequirements).map(([key, ok]) => (
-                <Text key={key}>
-                  {ok ? "✔️" : "❌"} {key}
-                </Text>
-              ))}
+              <Text style={{ fontWeight: "bold", marginBottom: 4 }}>Password must include:</Text>
+              <Text>{passwordRequirements.length ? "✔️" : "❌"} At least 8 characters</Text>
+              <Text>{passwordRequirements.lowercase ? "✔️" : "❌"} One lowercase letter</Text>
+              <Text>{passwordRequirements.uppercase ? "✔️" : "❌"} One uppercase letter</Text>
+              <Text>{passwordRequirements.number ? "✔️" : "❌"} One number</Text>
+              <Text>{passwordRequirements.special ? "✔️" : "❌"} One special character (@$!%*?&)</Text>
             </View>
             <Text style={styles.inputLabel}>Confirm Password</Text>
             <TextInput

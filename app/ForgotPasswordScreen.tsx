@@ -11,8 +11,10 @@ import {
   ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { BlurView } from "expo-blur";
 import styles from "./styles/LoginStyles";
 import config from "../config";
+import Header from "../components/Header";
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -75,44 +77,46 @@ export default function ForgotPasswordScreen() {
       style={{ flex: 1 }}
       resizeMode="cover"
     >
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-      >
-        <View style={styles.container}>
-          <Text style={[styles.title, { opacity: 0 }]}>Forgot Password?</Text>
-          <Text style={[styles.subtitle, { opacity: 0 }]}>
-            Enter your email to reset your password
-          </Text>
-          <Text style={styles.inputLabel}>Email</Text>
-          <TextInput
-            style={styles.input}
-            placeholderTextColor="#000"
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-          />
+      <BlurView intensity={30} tint="light" style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={styles.container}>
+            <Header
+              title="Forgot Password"
+              style={{
+                backgroundColor: "transparent",
+                marginTop: -100     // pull header upward
+              }}
+            />
+            <Text style={[styles.title, { opacity: 0 }]}>Forgot Password?</Text>
+            <Text style={[styles.subtitle, { opacity: 0 }]}>
+              Enter your email to reset your password
+            </Text>
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={styles.input}
+              placeholderTextColor="#000"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
 
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleForgotPassword}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Send Reset Code</Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.push("/")}
-          >
-            <Text style={styles.signupLink}>Back to Login</Text>
-          </TouchableOpacity>
-        </View>
-      </KeyboardAvoidingView>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleForgotPassword}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.buttonText}>Send Reset Code</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </BlurView>
     </ImageBackground>
   );
 }
