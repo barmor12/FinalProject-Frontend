@@ -46,3 +46,7 @@ jest.mock('expo-modules-core', () => ({
 jest.mock('expo-font', () => ({
     loadAsync: jest.fn(),
 }));
+
+jest.mock('expo-blur', () => ({
+    BlurView: ({ children }) => children,
+  }));

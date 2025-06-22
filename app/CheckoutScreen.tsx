@@ -522,51 +522,71 @@ export default function CheckoutScreen() {
                       color="#6b4226"
                     />
                   </TouchableOpacity>
-                  {/* DateTimePicker inside custom modal with OK/Cancel */}
+                  {/* DateTimePicker inside custom modal with OK/Cancel, iOS uses Modal, Android uses inline picker */}
                   {showDatePicker && (
-                    <Modal transparent={true} animationType="fade">
-                      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
-                        <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
-                          <DateTimePicker
-                            value={tempDeliveryDate || new Date()}
-                            mode="date"
-                            display={Platform.OS === "android" ? "calendar" : "spinner"}
-                            themeVariant="light"
-                            onChange={(event, selectedDate) => {
-                              if (selectedDate) {
-                                setTempDeliveryDate(selectedDate);
-                              }
-                            }}
-                            minimumDate={
-                              shippingMethod === "Standard Delivery (2-3 days)"
-                                ? new Date(Date.now() + 86400000)
-                                : new Date()
-                            }
-                            maximumDate={new Date(new Date().getFullYear(), 11, 31)}
-                            locale="en-GB"
-                          />
-                          <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
-                            <TouchableOpacity
-                              onPress={() => setShowDatePicker(false)}
-                              style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#ccc", borderRadius: 5 }}
-                            >
-                              <Text style={{ fontWeight: "600" }}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                              onPress={() => {
-                                if (tempDeliveryDate) {
-                                  setDeliveryDate(new Date(tempDeliveryDate));
+                    Platform.OS === "ios" ? (
+                      <Modal transparent={true} animationType="fade">
+                        <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+                          <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
+                            <DateTimePicker
+                              value={tempDeliveryDate || new Date()}
+                              mode="date"
+                              display="spinner"
+                              themeVariant="light"
+                              onChange={(event, selectedDate) => {
+                                if (selectedDate) {
+                                  setTempDeliveryDate(selectedDate);
                                 }
-                                setShowDatePicker(false);
                               }}
-                              style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#6b4226", borderRadius: 5 }}
-                            >
-                              <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>
-                            </TouchableOpacity>
+                              minimumDate={
+                                shippingMethod === "Standard Delivery (2-3 days)"
+                                  ? new Date(Date.now() + 86400000)
+                                  : new Date()
+                              }
+                              maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                              locale="en-GB"
+                            />
+                            <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+                              <TouchableOpacity
+                                onPress={() => setShowDatePicker(false)}
+                                style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#ccc", borderRadius: 5 }}
+                              >
+                                <Text style={{ fontWeight: "600" }}>Cancel</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={() => {
+                                  if (tempDeliveryDate) {
+                                    setDeliveryDate(new Date(tempDeliveryDate));
+                                  }
+                                  setShowDatePicker(false);
+                                }}
+                                style={{ paddingVertical: 10, paddingHorizontal: 20, backgroundColor: "#6b4226", borderRadius: 5 }}
+                              >
+                                <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>
+                              </TouchableOpacity>
+                            </View>
                           </View>
                         </View>
-                      </View>
-                    </Modal>
+                      </Modal>
+                    ) : (
+                      <DateTimePicker
+                        value={tempDeliveryDate || new Date()}
+                        mode="date"
+                        display="calendar"
+                        onChange={(event, selectedDate) => {
+                          if (event.type === "set" && selectedDate) {
+                            setDeliveryDate(selectedDate);
+                          }
+                          setShowDatePicker(false);
+                        }}
+                        minimumDate={
+                          shippingMethod === "Standard Delivery (2-3 days)"
+                            ? new Date(Date.now() + 86400000)
+                            : new Date()
+                        }
+                        maximumDate={new Date(new Date().getFullYear(), 11, 31)}
+                      />
+                    )
                   )}
                 </View>
               )}
