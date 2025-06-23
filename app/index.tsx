@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Buffer } from "buffer";
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 
 
 import {
@@ -46,6 +48,42 @@ export default function LoginScreen() {
     const payload = token.split(".")[1];
     const decoded = Buffer.from(payload, "base64").toString("utf-8");
     return JSON.parse(decoded);
+  }
+
+  // Register for push notifications and send token to backend
+  async function registerForPushNotificationsAsync(accessToken: string) {
+    try {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.warn('📵 Notification permission not granted');
+        return;
+      }
+
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: 'fbc9882c-5a50-4890-ac90-04995b12cff7',
+      });
+      const pushToken = tokenData.data;
+
+      console.log('📱 Expo Push Token:', pushToken);
+
+      await fetch(`${config.BASE_URL}/notifications/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ token: pushToken }),
+      });
+    } catch (error) {
+      console.error('❌ Error registering push token:', error);
+    }
   }
   const refreshAccessToken = async () => {
     try {
@@ -264,6 +302,7 @@ export default function LoginScreen() {
     await AsyncStorage.setItem("refreshToken", tokens.refreshToken);
     await AsyncStorage.setItem("userId", userID);
     await AsyncStorage.setItem("role", role);
+    await registerForPushNotificationsAsync(tokens.accessToken);
 
     Alert.alert("Success", "Logged in successfully!");
     setShow2FAModal(false);
@@ -389,6 +428,7 @@ export default function LoginScreen() {
               await AsyncStorage.setItem("refreshToken", refreshToken);
               await AsyncStorage.setItem("userId", data.userId || "");
               await AsyncStorage.setItem("role", data.role || "user");
+              await registerForPushNotificationsAsync(accessToken);
 
               try {
                 const meRes = await fetch(`${config.BASE_URL}/auth/me`, {

@@ -216,8 +216,64 @@ export default function AdminOrdersScreen() {
         )
       );
 
+      // Send push notification to user
+      const userId = selectedOrder?.user?._id;
+      const notificationToken = userId
+        ? await (async () => {
+            // Simulate fetching a push token; replace with your actual logic if needed
+            // Here, we just return true if userId exists, to mimic the backend logic.
+            return true;
+          })()
+        : null;
+      if (!notificationToken) {
+        console.warn("⚠️ No push token found for the user.");
+        // Optionally: Alert.alert("Warning", "No push token found for the user.");
+        // Early return, don't attempt to send the notification.
+        return;
+      }
+      try {
+        const notificationResponse = await fetch(`${config.BASE_URL}/notifications/send-order-status-change`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: userId,
+            orderId: selectedOrder._id,
+            newStatus,
+            locale: "en", // or "he" depending on user language
+          }),
+        });
+
+        if (!notificationResponse.ok) {
+          const responseText = await notificationResponse.text();
+          console.error("❌ Failed to send push notification:", responseText);
+        } else {
+          console.log("✅ Push notification sent successfully.");
+        }
+      } catch (notifError) {
+        console.error("❌ Error sending push notification:", notifError);
+      }
+
       setStatusModalVisible(false);
       setModalVisible(false);
+
+      // Send push notification to the customer
+      if (selectedOrder?.user?._id) {
+        await fetch(`${config.BASE_URL}/notifications/send-order-status-change`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            userId: selectedOrder.user._id,
+            orderId: selectedOrder._id,
+            newStatus,
+          }),
+        });
+      }
 
       // אם הסטטוס החדש הוא delivered – שליחת מייל לבקשת ביקורת
       if (newStatus === "delivered" && selectedOrder.user?.email) {
