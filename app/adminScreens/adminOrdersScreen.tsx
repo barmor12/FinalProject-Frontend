@@ -218,6 +218,10 @@ export default function AdminOrdersScreen() {
 
       // Send push notification to user
       const userId = selectedOrder?.user?._id;
+      // 🧠 לוג לפני שליחת הבקשה לטוקן
+      if (userId) {
+        console.log("🧠 Checking for push token. Order userId:", userId.toString());
+      }
       const notificationToken = userId
         ? await (async () => {
             // Simulate fetching a push token; replace with your actual logic if needed
@@ -225,14 +229,20 @@ export default function AdminOrdersScreen() {
             return true;
           })()
         : null;
+      // 📲 לוג אחרי "שליפת" הטוקן (מדמה את הבקאנד)
+      console.log("📲 Token document found:", notificationToken);
       if (!notificationToken) {
-        console.warn("⚠️ No push token found for the user.");
+        console.warn("⚠️ No token found for user:", userId?.toString());
         // Optionally: Alert.alert("Warning", "No push token found for the user.");
         // Early return, don't attempt to send the notification.
         return;
       }
+      // נניח שיש לנו טוקן (simulate token string)
+      if (notificationToken) {
+        console.log("📤 Sending notification to token:", notificationToken);
+      }
       try {
-        const notificationResponse = await fetch(`${config.BASE_URL}/notifications/send-order-status-change`, {
+        const notificationResponse = await fetch(`${config.BASE_URL}/notifications/order-status`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${token}`,
@@ -246,11 +256,14 @@ export default function AdminOrdersScreen() {
           }),
         });
 
+        // אחרי שליחת ההתראה
         if (!notificationResponse.ok) {
           const responseText = await notificationResponse.text();
           console.error("❌ Failed to send push notification:", responseText);
         } else {
-          console.log("✅ Push notification sent successfully.");
+          // נניח שמקבלים tickets מהבקאנד (simulate)
+          const tickets = await notificationResponse.json();
+          console.log("📨 Expo tickets:", tickets);
         }
       } catch (notifError) {
         console.error("❌ Error sending push notification:", notifError);
@@ -259,21 +272,8 @@ export default function AdminOrdersScreen() {
       setStatusModalVisible(false);
       setModalVisible(false);
 
-      // Send push notification to the customer
-      if (selectedOrder?.user?._id) {
-        await fetch(`${config.BASE_URL}/notifications/send-order-status-change`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            userId: selectedOrder.user._id,
-            orderId: selectedOrder._id,
-            newStatus,
-          }),
-        });
-      }
+      // אחרי יצירת NotificationLog (פה מדמה, כי אין קריאה ישירה בפרונט)
+      console.log("📝 Notification log saved for order:", selectedOrder._id.toString());
 
       // אם הסטטוס החדש הוא delivered – שליחת מייל לבקשת ביקורת
       if (newStatus === "delivered" && selectedOrder.user?.email) {

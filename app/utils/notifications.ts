@@ -41,16 +41,30 @@ export async function registerPushToken() {
   console.log("📲 Expo Push Token:", pushToken);
 
   const jwt = await AsyncStorage.getItem("accessToken");
+  console.log("🪪 JWT Token:", jwt);
   if (!jwt) return;
 
-  await fetch(`${config.BASE_URL}/notifications/register`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt}`,
-    },
-    body: JSON.stringify({ token: pushToken }),
-  });
+  // Get userId from storage
+  const userId = await AsyncStorage.getItem("userId");
+  console.log("📤 Sending token to backend:", pushToken, "for userId:", userId);
+
+  try {
+    const res = await fetch(`${config.BASE_URL}/notifications/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      body: JSON.stringify({
+        token: pushToken,
+        userId,
+      }),
+    });
+    const data = await res.json();
+    console.log("✅ Token registration response:", data);
+  } catch (error) {
+    console.error("❌ Failed to register token:", error);
+  }
 }
 
 /**

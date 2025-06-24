@@ -69,6 +69,7 @@ export default function LoginScreen() {
       const tokenData = await Notifications.getExpoPushTokenAsync({
         projectId: 'fbc9882c-5a50-4890-ac90-04995b12cff7',
       });
+
       const pushToken = tokenData.data;
 
       console.log('📱 Expo Push Token:', pushToken);

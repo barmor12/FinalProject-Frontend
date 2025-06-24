@@ -2,7 +2,9 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
+  useNavigation,
 } from "@react-navigation/native";
+import { router } from "expo-router";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -11,6 +13,7 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 
 // Removed SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +26,7 @@ export type RootStackParamList = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
+  const navigation = useNavigation();
 
 useEffect(() => {
   const checkLoginStatus = async () => {
@@ -71,6 +75,15 @@ useEffect(() => {
   };
   checkLoginStatus();
 }, []);
+
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(() => {
+    console.log('🔗 Redirecting to orders screen');
+    router.push("/OrdersScreen");
+  });
+
+  return () => subscription.remove();
+}, [navigation]);
 
   if (!initialRoute) {
     // You can add a loading spinner here if needed
