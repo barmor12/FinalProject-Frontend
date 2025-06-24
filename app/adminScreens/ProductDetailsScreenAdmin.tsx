@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import {
     SafeAreaView,
     Text,
+    StyleSheet,
     Image,
     ScrollView,
     TouchableOpacity,
     TextInput,
     Alert,
+    ActivityIndicator,
     View,
     TouchableWithoutFeedback,
     Keyboard,
@@ -32,38 +34,28 @@ interface Product {
 }
 
 export default function ProductDetailsScreen() {
-    const { orderId } = useLocalSearchParams() as { orderId?: string };
+    const params = useLocalSearchParams();
     const [product, setProduct] = useState<Product | null>(null);
     const [isEditing, setIsEditing] = useState(false);
     const [editedProduct, setEditedProduct] = useState<Product | null>(null);
     const router = useRouter();
 
-
-    // Fetch order details function
-    const fetchOrderDetails = async (id: string) => {
-        try {
-            const token = await AsyncStorage.getItem("accessToken");
-            if (!token) {
-                Alert.alert("Error", "You need to be logged in to view order details.");
-                return;
-            }
-            const res = await fetch(`${config.BASE_URL}/orders/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            const data = await res.json();
-            setProduct(data);
-        } catch (error) {
-            console.error("Failed to fetch order details", error);
-        }
-    };
-
     useEffect(() => {
-        if (orderId) {
-            fetchOrderDetails(orderId);
+        if (params.product) {
+            try {
+                const parsedProduct = JSON.parse(params.product as string);
+                if (parsedProduct && parsedProduct._id) {
+                    setProduct(parsedProduct);
+                    setEditedProduct(parsedProduct);
+                    console.log("🔗 Fixed image URL:", parsedProduct.stock);
+                } else {
+                    console.error("❌ Invalid product data received:", params.product);
+                }
+            } catch (error) {
+                console.error("❌ Error parsing product:", error);
+            }
         }
-    }, [orderId]);
+    }, [params.product]);
 
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
@@ -406,4 +398,3 @@ export default function ProductDetailsScreen() {
         </KeyboardAvoidingView>
     );
 }
-
