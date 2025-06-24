@@ -12,6 +12,7 @@ import {
   TextInput,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -551,7 +552,7 @@ export default function AdminOrdersScreen() {
             <TouchableOpacity
               key={order._id}
               onPress={() =>
-                navigation.navigate("OrderDetailsScreen", { orderId: order._id })
+                router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: order._id } })
               }
               activeOpacity={0.9}
             >
