@@ -4,8 +4,9 @@ import {
   ThemeProvider,
   useNavigation,
 } from "@react-navigation/native";
-import { router } from "expo-router";
-import { Stack } from "expo-router";
+import { TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import NotificationHistoryModal from '../components/NotificationHistoryModal';
 
 // Removed SplashScreen.preventAutoHideAsync();
 
@@ -27,6 +29,7 @@ export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
   const navigation = useNavigation();
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
 useEffect(() => {
   const checkLoginStatus = async () => {
@@ -96,37 +99,40 @@ useEffect(() => {
         <Stack
           initialRouteName={initialRoute}
           screenOptions={{
-            headerShown: false, // Remove header
+            headerShown: false,
           }}
         >
           {/* Registration and verification screens */}
-          <Stack.Screen name="SignUpScreen" />
+          <Stack.Screen name="SignUpScreen" options={{ headerShown: false }} />
           <Stack.Screen
             name="EmailVerificationScreen"
-            options={{ title: "Verify Email" }}
+            options={{ title: "Verify Email", headerShown: false }}
           />
 
           {/* Use a component here */}
-          <Stack.Screen name="adminScreens/manageUsersScreen" />
-          <Stack.Screen name="ProductDetailsScreen" />
-          <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" />
-          <Stack.Screen name="adminScreens/AddProductScreenAdmin" />
-          <Stack.Screen name="AddressScreen" />
-          <Stack.Screen name="adminScreens/adminDiscountCodesScreen" />
-          <Stack.Screen name="CreditCardScreen" />
+          <Stack.Screen name="adminScreens/manageUsersScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="ProductDetailsScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/AddProductScreenAdmin" options={{ headerShown: false }} />
+          <Stack.Screen name="AddressScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/adminDiscountCodesScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="CreditCardScreen" options={{ headerShown: false }} />
           <Stack.Screen name="index"
-            options={{ gestureEnabled: false }}
+            options={{ gestureEnabled: false, headerShown: false }}
           />
-          <Stack.Screen name="adminScreens/adminOrdersScreen" />
-          <Stack.Screen name="OrderDetailsScreen" />
+          <Stack.Screen name="adminScreens/adminOrdersScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="OrderDetailsScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="CheckoutScreen" options={{ headerShown: false }} />
 
-          {/* Tabs are always loaded */}
-          <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+          {/* Removed the (tabs) screen to prevent rendering the tab bar again */}
+
           <Stack.Screen
-            name="(admintabs)"
-            options={{ gestureEnabled: false }} // Disable swipe-back gesture for admin dashboard
+            name="(tabs)"
+            options={{ headerShown: false }} // Disable header for tabs screen
           />
         </Stack>
+
+        {/* Floating notification button and notification modal removed */}
 
         <StatusBar style="auto" />
       </ThemeProvider>

@@ -24,6 +24,8 @@ import * as Google from "expo-auth-session/providers/google"; // Import the Goog
 import styles from "./styles/LoginStyles";
 import config from "../config";
 import { FontAwesome } from "@expo/vector-icons";
+import NotificationHistoryModal from '../components/NotificationHistoryModal';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -41,6 +43,7 @@ export default function LoginScreen() {
     role: string;
   } | null>(null);
   const [isAuthInProgress, setIsAuthInProgress] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
   // Utility to decode JWT payload without external library
@@ -683,6 +686,11 @@ export default function LoginScreen() {
           </ImageBackground>
         </ScrollView>
       </KeyboardAvoidingView>
+      {/* Notification Modal */}
+      <NotificationHistoryModal
+        visible={showNotificationModal}
+        onClose={() => setShowNotificationModal(false)}
+      />
     </View>
   );
 
