@@ -90,8 +90,8 @@ useEffect(() => {
     const role = await AsyncStorage.getItem("role");
     console.log('🧭 Navigating with data:', data, '| Role:', role);
 
-    if (role === "admin" && data.type === "new_order") {
-      router.push("/adminScreens/adminOrdersScreen");
+    if (role === "admin" && data.type === "new_order" && data.orderId) {
+      router.push({ pathname: "/OrderDetailsScreen", params: { orderId: data.orderId } });
     } else if (role === "user" && data.type === "order_status_change") {
       router.push("/OrdersScreen");
     } else {
