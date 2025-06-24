@@ -10,6 +10,9 @@ interface NotificationItem {
   body: string;
   sentAt?: string;
   createdAt: string;
+  orderId?: string;
+  navigateTo?: string;
+  type?: string;
 }
 
 interface Props {
@@ -47,11 +50,34 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose }) => {
               <TouchableOpacity
                 style={styles.notification}
                 onPress={() => {
+                  if (item.type === 'new_order') {
+                    onClose();
+                    setTimeout(() => {
+                      router.push({
+                        pathname: '/adminScreens/ProductDetailsScreenAdmin',
+                        params: { productId: item.body.split(': ')[1] },
+                      });
+                    }, 200);
+                    return;
+                  }
+
+                  if ((item as any)?.navigateTo === 'order_details' && (item as any)?.orderId) {
+                    onClose();
+                    setTimeout(() => {
+                      router.push({
+                        pathname: '/adminScreens/ProductDetailsScreenAdmin',
+                        params: { orderId: (item as any).orderId },
+                      });
+                    }, 200);
+                    return;
+                  }
+
                   if (item.title.toLowerCase().includes('status')) {
-                    onClose(); // סגור את המודל
+                    onClose();
                     setTimeout(() => {
                       router.push('/OrdersScreen');
-                    }, 200); // המתן כדי לא לקרוס עם האנימציה
+                    }, 200);
+                    return;
                   }
                 }}
               >
