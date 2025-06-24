@@ -80,13 +80,28 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  const subscription = Notifications.addNotificationResponseReceivedListener(() => {
-    console.log('🔗 Redirecting to orders screen');
-    router.push("/OrdersScreen");
+  const subscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
+    const data = response.notification.request.content.data as {
+      type?: string;
+      orderId?: string;
+      navigateTo?: string;
+    };
+
+    const role = await AsyncStorage.getItem("role");
+    console.log('🧭 Navigating with data:', data, '| Role:', role);
+
+    if (role === "admin" && data.type === "new_order") {
+      router.push("/adminScreens/adminOrdersScreen");
+    } else if (role === "user" && data.type === "order_status_change") {
+      router.push("/OrdersScreen");
+    } else {
+      // fallback - navigate to home screen
+      router.push("/");
+    }
   });
 
   return () => subscription.remove();
-}, [navigation]);
+}, []);
 
   if (!initialRoute) {
     // You can add a loading spinner here if needed
