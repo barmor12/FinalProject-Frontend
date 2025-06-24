@@ -2,10 +2,8 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
-  useNavigation,
+
 } from "@react-navigation/native";
-import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -15,7 +13,7 @@ import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
-import NotificationHistoryModal from '../components/NotificationHistoryModal';
+
 
 // Removed SplashScreen.preventAutoHideAsync();
 
@@ -28,8 +26,8 @@ export type RootStackParamList = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
-  const navigation = useNavigation();
-  const [showNotificationModal, setShowNotificationModal] = useState(false);
+
+
 
 useEffect(() => {
   const checkLoginStatus = async () => {
@@ -88,10 +86,9 @@ useEffect(() => {
     };
 
     const role = await AsyncStorage.getItem("role");
-    console.log('🧭 Navigating with data:', data, '| Role:', role);
 
     if (role === "admin" && data.type === "new_order" && data.orderId) {
-      router.push({ pathname: "/OrderDetailsScreen", params: { orderId: data.orderId } });
+      router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: data.orderId } });
     } else if (role === "user" && data.type === "order_status_change") {
       router.push("/OrdersScreen");
     } else {
@@ -136,7 +133,7 @@ useEffect(() => {
             options={{ gestureEnabled: false, headerShown: false }}
           />
           <Stack.Screen name="adminScreens/adminOrdersScreen" options={{ headerShown: false }} />
-          <Stack.Screen name="OrderDetailsScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/OrderDetailsScreen" options={{ headerShown: false }} />
           <Stack.Screen name="CheckoutScreen" options={{ headerShown: false }} />
 
           {/* Removed the (tabs) screen to prevent rendering the tab bar again */}

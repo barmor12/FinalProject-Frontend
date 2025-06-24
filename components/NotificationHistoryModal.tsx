@@ -1,7 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { getNotificationHistory } from '../app/services/notificationService';
-import { useNavigation } from '@react-navigation/native';
 import { router } from 'expo-router';
 
 interface NotificationItem {
@@ -22,7 +22,6 @@ interface Props {
 
 const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
-  const navigation = useNavigation();
 
   useEffect(() => {
     if (visible) {
@@ -50,35 +49,24 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose }) => {
               <TouchableOpacity
                 style={styles.notification}
                 onPress={() => {
-                  if (item.type === 'new_order') {
-                    onClose();
-                    setTimeout(() => {
-                      router.push({
-                        pathname: '/adminScreens/ProductDetailsScreenAdmin',
-                        params: { productId: item.body.split(': ')[1] },
-                      });
-                    }, 200);
-                    return;
-                  }
+                  onClose();
+                  setTimeout(async () => {
+                    const role = await AsyncStorage.getItem("role");
 
-                  if ((item as any)?.navigateTo === 'order_details' && (item as any)?.orderId) {
-                    onClose();
-                    setTimeout(() => {
-                      router.push({
-                        pathname: '/adminScreens/ProductDetailsScreenAdmin',
-                        params: { orderId: (item as any).orderId },
-                      });
-                    }, 200);
-                    return;
-                  }
-
-                  if (item.title.toLowerCase().includes('status')) {
-                    onClose();
-                    setTimeout(() => {
-                      router.push('/OrdersScreen');
-                    }, 200);
-                    return;
-                  }
+                    if (item.navigateTo) {
+                      const validPath = item.navigateTo as
+                        | '/adminScreens/OrderDetailsScreen'
+                        | '/adminScreens/adminOrdersScreen'
+                        | '/OrdersScreen';
+                      router.push({ pathname: validPath, params: item.orderId ? { orderId: item.orderId } : undefined });
+                    } else if (role === "admin" && item.type === "new_order" && item.orderId) {
+                      router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: item.orderId } });
+                    } else if (role === "user" && item.type === "order_status_change") {
+                      router.push("/OrdersScreen");
+                    } else {
+                      router.push("/");
+                    }
+                  }, 200);
                 }}
               >
                 <Text style={styles.text}>{item.title}</Text>

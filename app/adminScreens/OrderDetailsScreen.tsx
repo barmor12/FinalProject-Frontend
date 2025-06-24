@@ -15,10 +15,10 @@ import {
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import config from "../config";
-import styles from "../app/styles/OrderDetailsScreenStyles"; // Importing styles
-import Header from "../components/Header";
-import StatusUpdateModal from "../components/StatusUpdateModal";
+import config from "../../config";
+import styles from "../../app/styles/OrderDetailsScreenStyles"; // Importing styles
+import Header from "../../components/Header";
+import StatusUpdateModal from "../../components/StatusUpdateModal";
 
 interface Cake {
   _id: string;
