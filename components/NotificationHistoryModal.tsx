@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { getNotificationHistory } from '../app/services/notificationService';
 import { router } from 'expo-router';
+import * as Notifications from 'expo-notifications';
 
 interface NotificationItem {
   _id: string;
@@ -57,6 +58,7 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
     await AsyncStorage.setItem("readNotifications", JSON.stringify(ids));
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     onNotificationRead?.();
+    await Notifications.setBadgeCountAsync(0);
   };
 
   return (

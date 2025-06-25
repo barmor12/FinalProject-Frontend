@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const getNotificationHistory = async () => {
   const token = await AsyncStorage.getItem('accessToken');
-  console.log("📤 Sending token to backend:", token);
+
   const res = await fetch(`${config.BASE_URL}/notifications/history`, {
     headers: {
       Authorization: `Bearer ${token}`,

@@ -5,9 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import NotificationHistoryModal from './NotificationHistoryModal';
 import { useFocusEffect } from 'expo-router';
 import { getNotificationHistory } from '../app/services/notificationService';
+import * as Notifications from 'expo-notifications';
 
 interface Props {
   style?: StyleProp<ViewStyle>;
+}
+
+async function updateAppIconBadge(count: number) {
+  await Notifications.setBadgeCountAsync(count);
 }
 
 export default function NotificationButton({ style }: Props) {
@@ -16,12 +21,13 @@ export default function NotificationButton({ style }: Props) {
 
   const fetchUnreadCount = async () => {
     const notifications = await getNotificationHistory();
-    console.log("Fetched notifications:", notifications);
+
     const readIdsString = await AsyncStorage.getItem("readNotifications");
     const readIds = readIdsString ? JSON.parse(readIdsString) : [];
 
     const unread = notifications.filter((n: { _id: string }) => !readIds.includes(n._id));
     setUnreadCount(unread.length);
+    updateAppIconBadge(unread.length);
   };
 
   useFocusEffect(

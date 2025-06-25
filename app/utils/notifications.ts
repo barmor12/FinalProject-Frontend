@@ -46,7 +46,7 @@ export async function registerPushToken() {
 
   // Get userId from storage
   const userId = await AsyncStorage.getItem("userId");
-  console.log("📤 Sending token to backend:", pushToken, "for userId:", userId);
+
 
   try {
     const res = await fetch(`${config.BASE_URL}/notifications/register`, {
