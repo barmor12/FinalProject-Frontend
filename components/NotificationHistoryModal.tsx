@@ -13,25 +13,51 @@ interface NotificationItem {
   orderId?: string;
   navigateTo?: string;
   type?: string;
+  isRead?: boolean;
 }
 
 interface Props {
   visible: boolean;
   onClose: () => void;
+  onNotificationRead?: () => void;
+  markAllAsReadText?: React.ReactNode;
 }
 
-const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose }) => {
+const markAsRead = async (notificationId: string) => {
+  const readIdsString = await AsyncStorage.getItem("readNotifications");
+  const readIds = readIdsString ? JSON.parse(readIdsString) : [];
+  if (!readIds.includes(notificationId)) {
+    readIds.push(notificationId);
+    await AsyncStorage.setItem("readNotifications", JSON.stringify(readIds));
+  }
+};
+
+const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotificationRead, markAllAsReadText }) => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   useEffect(() => {
     if (visible) {
       const fetchData = async () => {
         const data = await getNotificationHistory();
-        setNotifications(data);
+        const readIdsString = await AsyncStorage.getItem("readNotifications");
+        const readIds = readIdsString ? JSON.parse(readIdsString) : [];
+        const normalized = data.map((n: NotificationItem) => ({
+          ...n,
+          isRead: readIds.includes(n._id),
+        }));
+        setNotifications(normalized);
       };
       fetchData();
     }
   }, [visible]);
+
+  // Add markAllAsRead function as described
+  const markAllAsRead = async () => {
+    const ids = notifications.map(n => n._id);
+    await AsyncStorage.setItem("readNotifications", JSON.stringify(ids));
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    onNotificationRead?.();
+  };
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
@@ -40,42 +66,59 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose }) => {
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
-          <Text style={styles.title}>🔔 Notification History</Text>
+          <Text style={styles.title}>🔔 Notification </Text>
+          <TouchableOpacity onPress={markAllAsRead} style={{ marginBottom: 10 }}>
+            {markAllAsReadText}
+          </TouchableOpacity>
           <FlatList
             data={notifications}
             keyExtractor={(item) => item._id}
             contentContainerStyle={{ paddingBottom: 10 }}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.notification}
-                onPress={() => {
-                  onClose();
-                  setTimeout(async () => {
-                    const role = await AsyncStorage.getItem("role");
-
-                    if (item.navigateTo) {
-                      const validPath = item.navigateTo as
-                        | '/adminScreens/OrderDetailsScreen'
-                        | '/adminScreens/adminOrdersScreen'
-                        | '/OrdersScreen';
-                      router.push({ pathname: validPath, params: item.orderId ? { orderId: item.orderId } : undefined });
-                    } else if (role === "admin" && item.type === "new_order" && item.orderId) {
-                      router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: item.orderId } });
-                    } else if (role === "user" && item.type === "order_status_change") {
-                      router.push("/OrdersScreen");
-                    } else {
-                      router.push("/");
+            renderItem={({ item }) => {
+              const isUnread = item.isRead === false;
+              return (
+                <TouchableOpacity
+                  style={[
+                    styles.notification,
+                    isUnread && { backgroundColor: '#fff8dc', borderLeftColor: '#ff4444' },
+                  ]}
+                  onPress={async () => {
+                    onClose();
+                    // Immediately update notifications and call onNotificationRead before navigation
+                    if (item._id) {
+                      setNotifications(prev =>
+                        prev.map(n => n._id === item._id ? { ...n, isRead: true } : n)
+                      );
+                      await markAsRead(item._id);
+                      onNotificationRead?.();
                     }
-                  }, 200);
-                }}
-              >
-                <Text style={styles.text}>{item.title}</Text>
-                <Text style={styles.body}>{item.body}</Text>
-                <Text style={styles.date}>
-                  {new Date(item.sentAt || item.createdAt).toLocaleString()}
-                </Text>
-              </TouchableOpacity>
-            )}
+                    setTimeout(async () => {
+                      const role = await AsyncStorage.getItem("role");
+
+                      if (item.navigateTo) {
+                        const validPath = item.navigateTo as
+                          | '/adminScreens/OrderDetailsScreen'
+                          | '/adminScreens/adminOrdersScreen'
+                          | '/OrdersScreen';
+                        router.push({ pathname: validPath, params: item.orderId ? { orderId: item.orderId } : undefined });
+                      } else if (role === "admin" && item.type === "new_order" && item.orderId) {
+                        router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: item.orderId } });
+                      } else if (role === "user" && item.type === "order_status_change") {
+                        router.push("/OrdersScreen");
+                      } else {
+                        router.push("/");
+                      }
+                    }, 200);
+                  }}
+                >
+                  <Text style={styles.text}>{item.title}</Text>
+                  <Text style={styles.body}>{item.body}</Text>
+                  <Text style={styles.date}>
+                    {new Date(item.sentAt || item.createdAt).toLocaleString()}
+                  </Text>
+                </TouchableOpacity>
+              );
+            }}
           />
         </View>
       </View>
