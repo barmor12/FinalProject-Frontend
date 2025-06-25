@@ -63,8 +63,8 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
 
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
+      <TouchableOpacity activeOpacity={1} onPress={onClose} style={styles.modalOverlay}>
+        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
@@ -122,8 +122,8 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
               );
             }}
           />
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 };
