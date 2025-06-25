@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Buffer } from "buffer";
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
+
 
 
 import {
@@ -25,12 +25,13 @@ import styles from "./styles/LoginStyles";
 import config from "../config";
 import { FontAwesome } from "@expo/vector-icons";
 import NotificationHistoryModal from '../components/NotificationHistoryModal';
-import { Ionicons } from '@expo/vector-icons';
+
 
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [show2FAModal, setShow2FAModal] = useState(false);
   const [verificationCode, setVerificationCode] = useState("");
@@ -525,17 +526,26 @@ export default function LoginScreen() {
                     testID="emailInput"
                   />
                   <Text style={styles.inputLabel}>Password</Text>
-                  <TextInput
-                    style={styles.input}
-                    placeholderTextColor="#000"
-                    secureTextEntry
-                    value={password}
-                    onChangeText={setPassword}
-                    textContentType="password"
-                    autoComplete="password"
-                    onSubmitEditing={handleLogin}
-                    testID="passwordInput"
-                  />
+                  <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+                    <TextInput
+                      style={{ flex: 1, fontSize: 16, color: "black" }}
+                      placeholderTextColor="#000"
+                      secureTextEntry={!showPassword}
+                      value={password}
+                      onChangeText={setPassword}
+                      textContentType="password"
+                      autoComplete="password"
+                      onSubmitEditing={handleLogin}
+                      testID="passwordInput"
+                    />
+                    <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                      <FontAwesome
+                        name={showPassword ? "eye" : "eye-slash"}
+                        size={20}
+                        color="#888"
+                      />
+                    </TouchableOpacity>
+                  </View>
                   <View
                     style={{
                       width: "90%",
