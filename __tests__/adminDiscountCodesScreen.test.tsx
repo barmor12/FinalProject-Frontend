@@ -33,11 +33,17 @@ global.fetch = jest.fn(() =>
 
 describe("AdminDiscountCodes Screen", () => {
   let rendered: ReturnType<typeof render>;
+  jest.mock("react-native-modal-datetime-picker", () => {
+    return () => null;
+  });
 
   beforeEach(() => {
     jest.clearAllMocks();
     // Default mock implementations
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue("mocked_token");
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+
     (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: () =>
@@ -47,7 +53,7 @@ describe("AdminDiscountCodes Screen", () => {
             code: "TESTCODE",
             discountPercentage: 20,
             isActive: true,
-            expiryDate: new Date().toISOString(),
+            expiryDate: futureDate.toISOString(), // 👈 זה מה שחשוב
           },
         ]),
     });
