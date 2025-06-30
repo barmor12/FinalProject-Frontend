@@ -13,6 +13,7 @@ import {
   Linking,
   Image
 } from "react-native";
+import { FontAwesome } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import styles from "./styles/SignUpStyles";
 import config from "../config";
@@ -35,6 +36,9 @@ export default function SignUpScreen() {
     special: false,
   });
   const [acceptedPolicy, setAcceptedPolicy] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const pickImage = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -118,8 +122,10 @@ export default function SignUpScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 }}>
-          <View style={{ alignSelf: "flex-start", marginBottom: 20, marginTop: 40 }}>
-            <BackButton />
+          <View style={{ alignSelf: "flex-start", padding: 20,marginLeft: -40, paddingTop: 50, zIndex: 10 }}>
+            <TouchableOpacity onPress={() => router.replace("/")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+              <BackButton />
+            </TouchableOpacity>
           </View>
           <View style={{ width: "100%", maxWidth: 360 }}>
             <Text style={styles.title}>Create an Account</Text>
@@ -147,16 +153,26 @@ export default function SignUpScreen() {
               testID="email-input"
             />
             <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={password}
-              onChangeText={(t) => {
-                setPassword(t);
-                checkPasswordStrength(t);
-              }}
-              testID="password-input"
-            />
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "black" }}
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(t) => {
+                  setPassword(t);
+                  checkPasswordStrength(t);
+                }}
+                testID="password-input"
+                placeholder="Password"
+              />
+              <TouchableOpacity onPress={() => setShowPassword((prev) => !prev)}>
+                <FontAwesome
+                  name={showPassword ? "eye" : "eye-slash"}
+                  size={20}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
             <View style={styles.passwordContainer}>
               <Text style={{ fontWeight: "bold", marginBottom: 4 }}>Password must include:</Text>
               <Text>{passwordRequirements.length ? "✔️" : "❌"} At least 8 characters</Text>
@@ -166,13 +182,23 @@ export default function SignUpScreen() {
               <Text>{passwordRequirements.special ? "✔️" : "❌"} One special character (@$!%*?&)</Text>
             </View>
             <Text style={styles.inputLabel}>Confirm Password</Text>
-            <TextInput
-              style={styles.input}
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              testID="confirmPassword-input"
-            />
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "black" }}
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                testID="confirmPassword-input"
+                placeholder="Confirm Password"
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
+                <FontAwesome
+                  name={showConfirmPassword ? "eye" : "eye-slash"}
+                  size={20}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
 
             <View style={{ flexDirection: "row", alignItems: "center", marginVertical: 16 }}>
               <TouchableOpacity

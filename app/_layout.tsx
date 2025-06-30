@@ -2,8 +2,9 @@ import {
   DarkTheme,
   DefaultTheme,
   ThemeProvider,
+
 } from "@react-navigation/native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
@@ -11,6 +12,8 @@ import "react-native-reanimated";
 import { useColorScheme } from "@/hooks/useColorScheme";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
+
 
 // Removed SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +26,8 @@ export type RootStackParamList = {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [initialRoute, setInitialRoute] = useState<string | undefined>(undefined);
+
+
 
 useEffect(() => {
   const checkLoginStatus = async () => {
@@ -72,6 +77,29 @@ useEffect(() => {
   checkLoginStatus();
 }, []);
 
+useEffect(() => {
+  const subscription = Notifications.addNotificationResponseReceivedListener(async (response) => {
+    const data = response.notification.request.content.data as {
+      type?: string;
+      orderId?: string;
+      navigateTo?: string;
+    };
+
+    const role = await AsyncStorage.getItem("role");
+
+    if (role === "admin" && data.type === "new_order" && data.orderId) {
+      router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: data.orderId } });
+    } else if (role === "user" && data.type === "order_status_change") {
+      router.push("/OrdersScreen");
+    } else {
+      // fallback - navigate to home screen
+      router.push("/");
+    }
+  });
+
+  return () => subscription.remove();
+}, []);
+
   if (!initialRoute) {
     // You can add a loading spinner here if needed
     return null; // or a loading indicator while checking login status
@@ -83,37 +111,40 @@ useEffect(() => {
         <Stack
           initialRouteName={initialRoute}
           screenOptions={{
-            headerShown: false, // Remove header
+            headerShown: false,
           }}
         >
           {/* Registration and verification screens */}
-          <Stack.Screen name="SignUpScreen" />
+          <Stack.Screen name="SignUpScreen" options={{ headerShown: false }} />
           <Stack.Screen
             name="EmailVerificationScreen"
-            options={{ title: "Verify Email" }}
+            options={{ title: "Verify Email", headerShown: false }}
           />
 
           {/* Use a component here */}
-          <Stack.Screen name="adminScreens/manageUsersScreen" />
-          <Stack.Screen name="ProductDetailsScreen" />
-          <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" />
-          <Stack.Screen name="adminScreens/AddProductScreenAdmin" />
-          <Stack.Screen name="AddressScreen" />
-          <Stack.Screen name="adminScreens/adminDiscountCodesScreen" />
-          <Stack.Screen name="CreditCardScreen" />
+          <Stack.Screen name="adminScreens/manageUsersScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="ProductDetailsScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/ProductDetailsScreenAdmin" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/AddProductScreenAdmin" options={{ headerShown: false }} />
+          <Stack.Screen name="AddressScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/adminDiscountCodesScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="CreditCardScreen" options={{ headerShown: false }} />
           <Stack.Screen name="index"
-            options={{ gestureEnabled: false }}
+            options={{ gestureEnabled: false, headerShown: false }}
           />
-          <Stack.Screen name="adminScreens/adminOrdersScreen" />
-          <Stack.Screen name="OrderDetailsScreen" />
+          <Stack.Screen name="adminScreens/adminOrdersScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="adminScreens/OrderDetailsScreen" options={{ headerShown: false }} />
+          <Stack.Screen name="CheckoutScreen" options={{ headerShown: false }} />
 
-          {/* Tabs are always loaded */}
-          <Stack.Screen name="(tabs)" options={{ gestureEnabled: false }} />
+          {/* Removed the (tabs) screen to prevent rendering the tab bar again */}
+
           <Stack.Screen
-            name="(admintabs)"
-            options={{ gestureEnabled: false }} // Disable swipe-back gesture for admin dashboard
+            name="(tabs)"
+            options={{ headerShown: false }} // Disable header for tabs screen
           />
         </Stack>
+
+        {/* Floating notification button and notification modal removed */}
 
         <StatusBar style="auto" />
       </ThemeProvider>

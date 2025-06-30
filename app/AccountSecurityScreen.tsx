@@ -11,17 +11,22 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
+  RefreshControl,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styles, { placeholderColor } from "./styles/AccountSecurityStyles";
+import { FontAwesome } from "@expo/vector-icons";
 import Header from "../components/Header";
 
 export default function AccountSecurityScreen() {
   const router = useRouter();
   // For password change
+  const [showOldPassword, setShowOldPassword] = useState(false);
+  const [showNewPasswordField, setShowNewPasswordField] = useState(false);
+  const [showConfirmPasswordField, setShowConfirmPasswordField] = useState(false);
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [passwordRequirements, setPasswordRequirements] = useState({
@@ -44,6 +49,15 @@ export default function AccountSecurityScreen() {
 
   // Delete User Confirmation Modal state and handlers
   const [isDeleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  // Refresh control state and handler
+  const [refreshing, setRefreshing] = useState(false);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetch2FAStatus(); // פעולה שכבר קיימת ומעדכנת את סטטוס האימות הדו־שלבי
+    setRefreshing(false);
+  };
 
   // Show confirmation modal for user deletion
   const showDeleteConfirmation = () => {
@@ -286,37 +300,57 @@ export default function AccountSecurityScreen() {
         <ScrollView
           contentContainerStyle={styles.scrollContainer}
           keyboardShouldPersistTaps="handled"
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
         >
           <View style={styles.container}>
             <Text style={styles.sectionTitle}>Change Password</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Old Password"
-              secureTextEntry
-              value={oldPassword}
-              onChangeText={setOldPassword}
-              placeholderTextColor={placeholderColor}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="New Password"
-              secureTextEntry
-              value={newPassword}
-              onChangeText={(text) => {
-                setNewPassword(text);
-                checkPasswordStrength(text);
-                const isSameAsCurrent = text === oldPassword;
-              }}
-              placeholderTextColor={placeholderColor}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm New Password"
-              secureTextEntry
-              value={confirmNewPassword}
-              onChangeText={setConfirmNewPassword}
-              placeholderTextColor={placeholderColor}
-            />
+            {/* Old Password Field */}
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "#000" }}
+                placeholder="Old Password"
+                placeholderTextColor={placeholderColor}
+                secureTextEntry={!showOldPassword}
+                value={oldPassword}
+                onChangeText={setOldPassword}
+              />
+              <TouchableOpacity onPress={() => setShowOldPassword((prev) => !prev)}>
+                <FontAwesome name={showOldPassword ? "eye" : "eye-slash"} size={20} color="#888" />
+              </TouchableOpacity>
+            </View>
+            {/* New Password Field */}
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "#000" }}
+                placeholder="New Password"
+                placeholderTextColor={placeholderColor}
+                secureTextEntry={!showNewPasswordField}
+                value={newPassword}
+                onChangeText={(text) => {
+                  setNewPassword(text);
+                  checkPasswordStrength(text);
+                }}
+              />
+              <TouchableOpacity onPress={() => setShowNewPasswordField((prev) => !prev)}>
+                <FontAwesome name={showNewPasswordField ? "eye" : "eye-slash"} size={20} color="#888" />
+              </TouchableOpacity>
+            </View>
+            {/* Confirm New Password Field */}
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "#000" }}
+                placeholder="Confirm New Password"
+                placeholderTextColor={placeholderColor}
+                secureTextEntry={!showConfirmPasswordField}
+                value={confirmNewPassword}
+                onChangeText={setConfirmNewPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPasswordField((prev) => !prev)}>
+                <FontAwesome name={showConfirmPasswordField ? "eye" : "eye-slash"} size={20} color="#888" />
+              </TouchableOpacity>
+            </View>
             <View style={{ marginTop: 10, marginBottom: 5 }}>
               <Text style={{ fontWeight: "bold", color: "#6b4226", marginBottom: 2 }}>
                 Password must include:

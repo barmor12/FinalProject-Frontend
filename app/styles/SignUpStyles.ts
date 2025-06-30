@@ -30,11 +30,12 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 28,
+
     fontWeight: "bold",
     color: "#6b4226", // צבע חום עדין
     marginBottom: 10,
     textAlign: "center",
-    marginTop: 15,
+    marginTop: -60,
     textShadowColor: "rgba(0, 0, 0, 0.20)",
     textShadowOffset: { width: 1, height: 3 },
     textShadowRadius: 4,

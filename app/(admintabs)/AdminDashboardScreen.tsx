@@ -17,6 +17,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { Calendar } from "react-native-calendars";
 import styles from "../styles/AdminScreensStyles/AdminDashboardScreenStyles";
+import NotificationButton from "../../components/NotificationButton";
 
 interface Order {
   _id: string;
@@ -285,6 +286,9 @@ export default function AdminDashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        <View style={{ position: 'absolute', top: 0, right: 0, zIndex: 10 }}>
+          <NotificationButton />
+        </View>
         <Text style={styles.title}>Admin Dashboard</Text>
 
         {/* Stats Section */}
