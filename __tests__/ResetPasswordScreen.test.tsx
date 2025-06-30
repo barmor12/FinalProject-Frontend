@@ -22,9 +22,8 @@ describe('ResetPasswordScreen', () => {
     });
 
     it('should not submit if fields are missing', async () => {
-        const { getAllByText } = render(<ResetPasswordScreen />);
-        const [title, button] = getAllByText('Reset Password');
-        fireEvent.press(button);
+        const { getByTestId } = render(<ResetPasswordScreen />);
+        fireEvent.press(getByTestId('reset-password-button'));
 
         await waitFor(() => {
             expect(fetch).not.toHaveBeenCalled();
@@ -33,18 +32,35 @@ describe('ResetPasswordScreen', () => {
     });
 
     it('should show error if passwords do not match', async () => {
-        const { getByPlaceholderText, getAllByText } = render(<ResetPasswordScreen />);
+        const { getByPlaceholderText, getByTestId } = render(<ResetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('Email'), 'a@b.com');
         fireEvent.changeText(getByPlaceholderText('Reset Code'), '1234');
         fireEvent.changeText(getByPlaceholderText('New Password'), 'Pass1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Pass2!');
 
-        const [_, button] = getAllByText('Reset Password');
-        fireEvent.press(button);
+        fireEvent.press(getByTestId('reset-password-button'));
 
         await waitFor(() => {
             expect(fetch).not.toHaveBeenCalled();
             expect(Alert.alert).toHaveBeenCalledWith('Error', 'Passwords do not match.');
+        });
+    });
+
+    it('should show error if password is weak', async () => {
+        const { getByPlaceholderText, getByTestId } = render(<ResetPasswordScreen />);
+        fireEvent.changeText(getByPlaceholderText('Email'), 'a@b.com');
+        fireEvent.changeText(getByPlaceholderText('Reset Code'), '1234');
+        fireEvent.changeText(getByPlaceholderText('New Password'), 'weak');
+        fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'weak');
+
+        fireEvent.press(getByTestId('reset-password-button'));
+
+        await waitFor(() => {
+            expect(fetch).not.toHaveBeenCalled();
+            expect(Alert.alert).toHaveBeenCalledWith(
+                'Weak Password',
+                'Password must be at least 8 characters long and include lowercase, uppercase, number, and special character.'
+            );
         });
     });
 
@@ -53,14 +69,13 @@ describe('ResetPasswordScreen', () => {
             Promise.resolve({ ok: true, json: () => Promise.resolve({}) })
         );
 
-        const { getByPlaceholderText, getAllByText } = render(<ResetPasswordScreen />);
+        const { getByPlaceholderText, getByTestId } = render(<ResetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('Email'), 'user@example.com');
         fireEvent.changeText(getByPlaceholderText('Reset Code'), 'code123');
         fireEvent.changeText(getByPlaceholderText('New Password'), 'Password1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Password1!');
 
-        const [_, button] = getAllByText('Reset Password');
-        fireEvent.press(button);
+        fireEvent.press(getByTestId('reset-password-button'));
 
         await waitFor(() => {
             expect(fetch).toHaveBeenCalledWith(
@@ -94,14 +109,13 @@ describe('ResetPasswordScreen', () => {
             Promise.resolve({ ok: false, json: () => Promise.resolve({ error: 'Failed!' }) })
         );
 
-        const { getByPlaceholderText, getAllByText } = render(<ResetPasswordScreen />);
+        const { getByPlaceholderText, getByTestId } = render(<ResetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('Email'), 'x@y.com');
         fireEvent.changeText(getByPlaceholderText('Reset Code'), '0000');
         fireEvent.changeText(getByPlaceholderText('New Password'), 'ValidPass1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'ValidPass1!');
 
-        const [_, button] = getAllByText('Reset Password');
-        fireEvent.press(button);
+        fireEvent.press(getByTestId('reset-password-button'));
 
         await waitFor(() => {
             expect(Alert.alert).toHaveBeenCalledWith('Error', 'Failed!');

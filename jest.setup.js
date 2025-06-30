@@ -33,9 +33,14 @@ jest.mock('react-native', () => {
     };
     return RN;
 });
-jest.mock('@expo/vector-icons', () => ({
-    Ionicons: () => null,
-}));
+jest.mock('@expo/vector-icons', () => {
+    const React = require('react');
+    const { Text } = require('react-native');
+    return {
+        Ionicons: (props) => <Text {...props}>Ionicons</Text>,
+        FontAwesome: (props) => <Text {...props}>FontAwesome</Text>,
+    };
+});
 
 jest.mock('expo-modules-core', () => ({
     Platform: {
@@ -49,4 +54,31 @@ jest.mock('expo-font', () => ({
 
 jest.mock('expo-blur', () => ({
     BlurView: ({ children }) => children,
-  }));
+}));
+
+// Add mocks for other Expo modules that may cause issues in Jest
+jest.mock('expo-notifications', () => ({
+    getPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+    requestPermissionsAsync: jest.fn().mockResolvedValue({ status: 'granted' }),
+    addNotificationReceivedListener: jest.fn(),
+    removeNotificationSubscription: jest.fn(),
+}));
+
+jest.mock('expo-constants', () => {
+    const Constants = jest.requireActual('expo-constants');
+    return {
+        ...Constants,
+        // Provide a mock for the 'expo' manifest property
+        manifest: {
+            ...Constants.manifest,
+            extra: {
+                ...Constants.manifest.extra,
+                eas: {
+                    projectId: 'mock-project-id'
+                }
+            }
+        },
+        // Mock the installationId if it's not available in the test environment
+        installationId: 'mock-installation-id',
+    };
+});

@@ -11,7 +11,9 @@ import config from '../config';
 jest.mock('react-native-date-picker', () => {
     const React = require('react');
     // simple stub component
-    return (props: any) => <React.Fragment />;
+    const MockDatePicker = (props: any) => <React.Fragment />;
+    MockDatePicker.displayName = 'MockDatePicker';
+    return MockDatePicker;
 });
 
 jest.mock('axios');

@@ -213,6 +213,7 @@ export default function ResetPasswordScreen() {
               style={[styles.button, { backgroundColor: "#c49b72", marginTop: 40 }]}
               onPress={handleResetPassword}
               disabled={loading}
+              testID="reset-password-button"
             >
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
