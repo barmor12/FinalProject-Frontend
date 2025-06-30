@@ -1,7 +1,7 @@
 // __tests__/OrderDetailsScreen.test.tsx
 import React from 'react';
 import { render, fireEvent, waitFor } from '@testing-library/react-native';
-import OrderDetailsScreen from '@/app/OrderDetailsScreen';
+import OrderDetailsScreen from '../app/adminScreens/OrderDetailsScreen';
 import { Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import config from '../config';
