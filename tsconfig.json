@@ -13,8 +13,32 @@
       "node"
     ],
     "paths": {
-      "@/*": [
-        "./*"
+      "@/app/*": [
+        "app/*"
+      ],
+      "@/components/*": [
+        "components/*"
+      ],
+      "@/styles/*": [
+        "app/styles/*"
+      ],
+      "@/config/*": [
+        "config/*"
+      ],
+      "@/store/*": [
+        "store/*"
+      ],
+      "@/assets/*": [
+        "assets/*"
+      ],
+      "@/hooks/*": [
+        "hooks/*"
+      ],
+      "@/constants/*": [
+        "constants/*"
+      ],
+      "@/types/*": [
+        "types/*"
       ]
     }
   },
