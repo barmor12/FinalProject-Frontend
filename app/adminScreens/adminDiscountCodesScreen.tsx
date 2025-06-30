@@ -20,6 +20,7 @@ import config from "../../config";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminDiscountCodesScreenStyles";
+import { useRouter } from "expo-router";
 
 interface DiscountCode {
   _id: string;
