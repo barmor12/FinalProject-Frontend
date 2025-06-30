@@ -19,7 +19,6 @@ import config from "../../config";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminDiscountCodesScreenStyles";
-import BackButton from "../../components/BackButton";
 import { useRouter } from "expo-router";
 
 interface DiscountCode {
