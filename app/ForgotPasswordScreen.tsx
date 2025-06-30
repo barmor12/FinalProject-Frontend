@@ -87,7 +87,7 @@ export default function ForgotPasswordScreen() {
               title="Forgot Password"
               style={{
                 backgroundColor: "transparent",
-                marginTop: -100     // pull header upward
+                marginTop: -170     // pull header upward
               }}
             />
             <Text style={[styles.title, { opacity: 0 }]}>Forgot Password?</Text>
