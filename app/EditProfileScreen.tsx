@@ -25,6 +25,7 @@ export default function EditProfileScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -59,6 +60,7 @@ export default function EditProfileScreen() {
       });
       setFirstName(userData.firstName || "Guest");
       setLastName(userData.lastName || "Null");
+      setEmail(userData.email || "");
     } catch (error) {
       console.error("❌ Error fetching user data:", error);
       Alert.alert("Error", "Failed to load user data.");
@@ -235,6 +237,15 @@ export default function EditProfileScreen() {
               <Text style={styles.changePhotoText}>Change Photo</Text>
             </View>
           </TouchableOpacity>
+
+          <Text style={styles.inputLabel}>Email</Text>
+          <TextInput
+            style={[styles.input, { backgroundColor: "#eee", color: "#888" }]}
+            value={email}
+            editable={false}
+            selectTextOnFocus={false}
+            placeholderTextColor="#888"
+          />
 
           <Text style={styles.inputLabel}>First Name</Text>
           <TextInput

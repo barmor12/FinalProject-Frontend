@@ -41,6 +41,7 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="AdminDashboardScreen"
         options={{
+          headerShown: false,
           title: "Dashboard",
           tabBarIcon: ({ color }) => (
             <Icon name="dashboard" size={24} color={color} />
@@ -50,6 +51,7 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="InventoryScreen"
         options={{
+          headerShown: false,
           title: "Inventory",
           tabBarIcon: ({ color }) => (
             <Icon name="inventory" size={24} color={color} />
@@ -59,6 +61,7 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="StatisticsScreen"
         options={{
+          headerShown: false,
           title: "Statistics",
           tabBarIcon: ({ color }) => (
             <Icon name="bar-chart" size={24} color={color} />
@@ -68,6 +71,7 @@ export default function AdminTabLayout() {
       <Tabs.Screen
         name="AdminPanelScreen"
         options={{
+          headerShown: false,
           title: "Admin Panel",
           tabBarIcon: ({ color }) => (
             <Icon name="admin-panel-settings" size={24} color={color} />

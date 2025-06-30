@@ -20,6 +20,8 @@ import config from "@/config";
 import styles from "../styles/DashboardScreenStyles";
 import { fetchUserData } from "../utils/fetchUserData";
 
+import NotificationButton from "../../components/NotificationButton";
+
 interface Product {
   _id: string;
   name: string;
@@ -422,6 +424,7 @@ export default function DashboardScreen() {
             </View>
             <View style={styles.centerHeader} />
             <View style={styles.rightHeader}>
+              <NotificationButton style={{ marginRight: 12 }} />
               <TouchableOpacity onPress={toggleSearch} style={styles.SearchBtn}>
                 <Ionicons
                   name={searchVisible ? "close" : "search"}

@@ -6,21 +6,20 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
-  StyleSheet,
-  ActivityIndicator,
   SafeAreaView,
   Keyboard,
   TouchableWithoutFeedback,
   ScrollView,
   RefreshControl,
+  Platform,
+  Modal,
+  KeyboardAvoidingView,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminDiscountCodesScreenStyles";
-import BackButton from "../../components/BackButton";
-import { useRouter } from "expo-router";
 
 interface DiscountCode {
   _id: string;
@@ -31,7 +30,6 @@ interface DiscountCode {
 }
 
 export default function AdminDiscountCodes() {
-  const router = useRouter();
 
   const [codes, setCodes] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(false);
@@ -39,6 +37,7 @@ export default function AdminDiscountCodes() {
   const [discount, setDiscount] = useState<string>("");
   const [expiryDate, setExpiryDate] = useState<Date | undefined>(undefined);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [tempDate, setTempDate] = useState<Date | null>(null);
 
   useEffect(() => {
     fetchCodes();
@@ -61,7 +60,7 @@ export default function AdminDiscountCodes() {
         return code;
       });
       setCodes(updatedCodes);
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to load discount codes");
     } finally {
       setLoading(false);
@@ -113,7 +112,7 @@ export default function AdminDiscountCodes() {
       if (!res.ok) throw new Error("Failed to delete discount code");
       Alert.alert("Success", "Discount code deleted");
       fetchCodes();
-    } catch (error) {
+    } catch {
       Alert.alert("Error", "Failed to delete discount code");
     }
   };
@@ -152,81 +151,128 @@ export default function AdminDiscountCodes() {
   };
 
   return (
-    <TouchableWithoutFeedback onPress={dismissKeyboard}>
-      <SafeAreaView style={[styles.container, { flex: 1, backgroundColor: "#f9f3ea" }]}>
-        <Header title="Manage Discount Codes" />
-        <ScrollView
-          contentContainerStyle={{ paddingBottom: 20 }}
-          refreshControl={
-            <RefreshControl refreshing={loading} onRefresh={fetchCodes} />
-          }
-          keyboardShouldPersistTaps="handled"
-        >
-          <View style={styles.headerContainer}>
-            <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
-          </View>
-          {/* <Text style={styles.title}>Manage Discount Codes</Text> */}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+    >
+      <TouchableWithoutFeedback onPress={dismissKeyboard}>
+        <SafeAreaView style={[styles.container, { flex: 1 }]}>
+          <Header title="Manage Discount Codes" />
+          <ScrollView
+            contentContainerStyle={{ paddingBottom: 20 }}
+            refreshControl={
+              <RefreshControl refreshing={loading} onRefresh={fetchCodes} />
+            }
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.headerContainer}>
+              <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
+            </View>
+            {/* <Text style={styles.title}>Manage Discount Codes</Text> */}
 
-          <View style={styles.inputRow}>
-            <Ionicons name="key-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
-            <TextInput
-              placeholder="Code"
-              placeholderTextColor={"#aaa"}
-              style={styles.input}
-              value={code}
-              onChangeText={setCode}
-            />
-          </View>
-          <View style={styles.inputRow}>
-            <Ionicons name="pricetag-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
-            <TextInput
-              placeholder="Discount %"
-              placeholderTextColor={"#aaa"}
-              keyboardType="numeric"
-              style={styles.input}
-              value={discount}
-              onChangeText={setDiscount}
-            />
-          </View>
+            <View style={styles.inputRow}>
+              <Ionicons name="key-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
+              <TextInput
+                placeholder="Code"
+                placeholderTextColor={"#aaa"}
+                style={styles.input}
+                value={code}
+                onChangeText={setCode}
+              />
+            </View>
+            <View style={styles.inputRow}>
+              <Ionicons name="pricetag-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
+              <TextInput
+                placeholder="Discount %"
+                placeholderTextColor={"#aaa"}
+                keyboardType="numeric"
+                style={styles.input}
+                value={discount}
+                onChangeText={setDiscount}
+              />
+            </View>
 
-          <View style={styles.datePickerContainer}>
-            <Text style={styles.datePickerText}>Please select an expiry date:</Text>
-            <TouchableOpacity
-              style={styles.dateButton}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={styles.dateButtonText}>
-                {expiryDate ? expiryDate.toLocaleDateString() : "Select Date"}
-              </Text>
+            <View style={styles.datePickerContainer}>
+              <Text style={styles.datePickerText}>Please select an expiry date:</Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => {
+                  setTempDate(expiryDate || new Date());
+                  setShowDatePicker(true);
+                }}
+              >
+                <Text style={styles.dateButtonText}>
+                  {expiryDate ? expiryDate.toLocaleDateString() : "Select Date"}
+                </Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                Platform.OS === "ios" ? (
+                  <Modal transparent={true} animationType="fade">
+                    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+                      <View style={{ backgroundColor: "white", borderRadius: 10, padding: 20, width: 320 }}>
+                        <DateTimePicker
+                          value={tempDate || new Date()}
+                          mode="date"
+                          display="spinner"
+                          onChange={(event, selectedDate) => {
+                            if (selectedDate) {
+                              setTempDate(selectedDate);
+                            }
+                          }}
+                          minimumDate={new Date()}
+                          locale="en-GB"
+                        />
+                        <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 20 }}>
+                          <TouchableOpacity onPress={() => setShowDatePicker(false)} style={{ padding: 10, backgroundColor: "#ccc", borderRadius: 5 }}>
+                            <Text style={{ fontWeight: "600" }}>Cancel</Text>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={() => {
+                            if (tempDate) {
+                              setExpiryDate(tempDate);
+                            }
+                            setShowDatePicker(false);
+                          }} style={{ padding: 10, backgroundColor: "#6b4226", borderRadius: 5 }}>
+                            <Text style={{ color: "white", fontWeight: "600" }}>OK</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    </View>
+                  </Modal>
+                ) : (
+                  <DateTimePicker
+                    value={tempDate || new Date()}
+                    mode="date"
+                    display="calendar"
+                    minimumDate={new Date()}
+                    onChange={(event, selectedDate) => {
+                      if (event.type === "set" && selectedDate) {
+                        setExpiryDate(selectedDate);
+                      }
+                      setShowDatePicker(false);
+                    }}
+                  />
+                )
+              )}
+            </View>
+
+            <TouchableOpacity style={styles.button} onPress={createCode}>
+              <Text style={styles.buttonText}>Create Code</Text>
             </TouchableOpacity>
-            <DateTimePickerModal
-              isVisible={showDatePicker}
-              mode="date"
-              date={expiryDate || new Date()}
-              onConfirm={(date) => {
-                setExpiryDate(date);
-                setShowDatePicker(false);
-              }}
-              onCancel={() => setShowDatePicker(false)}
-            />
-          </View>
 
-          <TouchableOpacity style={styles.button} onPress={createCode}>
-            <Text style={styles.buttonText}>Create Code</Text>
-          </TouchableOpacity>
+            <View style={styles.summaryContainer}>
+              <Text style={styles.summaryText}>Total Codes: {codes.length}</Text>
+              <Text style={styles.summaryText}>
+                Active: {codes.filter((c) => c.isActive).length} | Inactive: {codes.filter((c) => !c.isActive).length}
+              </Text>
+            </View>
 
-          <View style={styles.summaryContainer}>
-            <Text style={styles.summaryText}>Total Codes: {codes.length}</Text>
-            <Text style={styles.summaryText}>
-              Active: {codes.filter((c) => c.isActive).length} | Inactive: {codes.filter((c) => !c.isActive).length}
-            </Text>
-          </View>
-
-          {codes.map((item) => (
-            <View key={item._id}>{renderCode({ item })}</View>
-          ))}
-        </ScrollView>
-      </SafeAreaView>
-    </TouchableWithoutFeedback>
+            {codes.map((item) => (
+              <View key={item._id}>{renderCode({ item })}</View>
+            ))}
+          </ScrollView>
+        </SafeAreaView>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }

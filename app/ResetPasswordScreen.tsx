@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import styles from "./styles/LoginStyles";
+import { FontAwesome } from "@expo/vector-icons";
 import config from "../config";
 import BackButton from "../components/BackButton";
 
@@ -25,6 +26,10 @@ export default function ResetPasswordScreen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Password visibility toggles
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // Password strength requirements state
   const [passwordRequirements, setPasswordRequirements] = useState({
@@ -148,23 +153,41 @@ export default function ResetPasswordScreen() {
               onChangeText={setCode}
             />
 
-            <TextInput
-              style={styles.input}
-              placeholder="New Password"
-              placeholderTextColor="#000"
-              secureTextEntry
-              value={newPassword}
-              onChangeText={checkPasswordStrength}
-            />
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "black" }}
+                placeholder="New Password"
+                placeholderTextColor="#000"
+                secureTextEntry={!showNewPassword}
+                value={newPassword}
+                onChangeText={checkPasswordStrength}
+              />
+              <TouchableOpacity onPress={() => setShowNewPassword((prev) => !prev)}>
+                <FontAwesome
+                  name={showNewPassword ? "eye" : "eye-slash"}
+                  size={20}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
             {/* Password requirements display */}
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#000"
-              secureTextEntry
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-            />
+            <View style={[styles.input, { flexDirection: "row", alignItems: "center", paddingRight: 15 }]}>
+              <TextInput
+                style={{ flex: 1, fontSize: 16, color: "black" }}
+                placeholder="Confirm Password"
+                placeholderTextColor="#000"
+                secureTextEntry={!showConfirmPassword}
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+              />
+              <TouchableOpacity onPress={() => setShowConfirmPassword((prev) => !prev)}>
+                <FontAwesome
+                  name={showConfirmPassword ? "eye" : "eye-slash"}
+                  size={20}
+                  color="#888"
+                />
+              </TouchableOpacity>
+            </View>
             <View style={{ marginTop: 10, marginBottom: 5 }}>
               <Text style={{ fontWeight: "bold", color: "#6b4226", marginBottom: 2 }}>
                 Password must include:
