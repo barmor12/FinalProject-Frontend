@@ -191,6 +191,15 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
+    whatsappButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#e5f7ef',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 8,
+        alignSelf: 'flex-start',
+    },
 });
 
 

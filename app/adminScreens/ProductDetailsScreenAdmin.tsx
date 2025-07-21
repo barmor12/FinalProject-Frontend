@@ -2,13 +2,11 @@ import React, { useState, useEffect } from "react";
 import {
     SafeAreaView,
     Text,
-    StyleSheet,
     Image,
     ScrollView,
     TouchableOpacity,
     TextInput,
     Alert,
-    ActivityIndicator,
     View,
     TouchableWithoutFeedback,
     Keyboard,

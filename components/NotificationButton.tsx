@@ -25,7 +25,7 @@ export default function NotificationButton({ style }: Props) {
     const readIdsString = await AsyncStorage.getItem("readNotifications");
     const readIds = readIdsString ? JSON.parse(readIdsString) : [];
 
-    const unread = notifications.filter((n: { _id: string }) => !readIds.includes(n._id));
+    const unread = notifications.filter((n: { _id: string, type?: string }) => !readIds.includes(n._id) && n.type === 'new_order');
     setUnreadCount(unread.length);
     updateAppIconBadge(unread.length);
   };
@@ -50,13 +50,13 @@ export default function NotificationButton({ style }: Props) {
         onPress={() => setShowNotificationModal(true)}
         style={[
           {
-            backgroundColor: '#f4c430', 
+            backgroundColor: '#f4c430',
             width: 36,
             height: 36,
             borderRadius: 18,
             justifyContent: 'center',
             alignItems: 'center',
-            marginRight: 8,
+            marginRight: 1,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.15,

@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import { Modal, Text, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 import { getNotificationHistory } from '../app/services/notificationService';
 import { router } from 'expo-router';
 import * as Notifications from 'expo-notifications';
@@ -42,7 +42,9 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
         const data = await getNotificationHistory();
         const readIdsString = await AsyncStorage.getItem("readNotifications");
         const readIds = readIdsString ? JSON.parse(readIdsString) : [];
-        const normalized = data.map((n: NotificationItem) => ({
+        // שומר רק התראות מסוג new_order
+        const filtered = data.filter((n: NotificationItem) => n.type === 'new_order');
+        const normalized = filtered.map((n: NotificationItem) => ({
           ...n,
           isRead: readIds.includes(n._id),
         }));
@@ -64,7 +66,7 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
   return (
     <Modal visible={visible} animationType="slide" transparent={true}>
       <TouchableOpacity activeOpacity={1} onPress={onClose} style={styles.modalOverlay}>
-        <TouchableOpacity activeOpacity={1} onPress={() => {}} style={styles.modalContent}>
+        <TouchableOpacity activeOpacity={1} onPress={() => { }} style={styles.modalContent}>
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>✕</Text>
           </TouchableOpacity>
@@ -73,7 +75,7 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
             {markAllAsReadText}
           </TouchableOpacity>
           <FlatList
-            data={notifications}
+            data={notifications.filter(n => n.type === 'new_order')}
             keyExtractor={(item) => item._id}
             contentContainerStyle={{ paddingBottom: 10 }}
             renderItem={({ item }) => {
@@ -97,18 +99,37 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
                     setTimeout(async () => {
                       const role = await AsyncStorage.getItem("role");
 
-                      if (item.navigateTo) {
-                        const validPath = item.navigateTo as
-                          | '/adminScreens/OrderDetailsScreen'
-                          | '/adminScreens/adminOrdersScreen'
-                          | '/OrdersScreen';
-                        router.push({ pathname: validPath, params: item.orderId ? { orderId: item.orderId } : undefined });
-                      } else if (role === "admin" && item.type === "new_order" && item.orderId) {
-                        router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: item.orderId } });
-                      } else if (role === "user" && item.type === "order_status_change") {
-                        router.push("/OrdersScreen");
-                      } else {
-                        router.push("/");
+                      try {
+                        if (item.navigateTo) {
+                          const validPath = item.navigateTo as
+                            | '/adminScreens/OrderDetailsScreen'
+                            | '/adminScreens/adminOrdersScreen'
+                            | '/OrdersScreen';
+
+                          // If navigating to OrderDetailsScreen, check if orderId exists
+                          if (validPath === '/adminScreens/OrderDetailsScreen' && item.orderId) {
+                            // Try to navigate to order details, but have fallback
+                            router.push({ pathname: validPath, params: { orderId: item.orderId } });
+                          } else {
+                            router.push({ pathname: validPath, params: item.orderId ? { orderId: item.orderId } : undefined });
+                          }
+                        } else if (role === "admin" && item.type === "new_order" && item.orderId) {
+                          // For admin new order notifications, try order details first
+                          router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: item.orderId } });
+                        } else if (role === "user" && item.type === "order_status_change") {
+                          router.push("/OrdersScreen");
+                        } else {
+                          // Fallback to main screen
+                          router.push("/");
+                        }
+                      } catch (error) {
+                        console.error('Navigation error:', error);
+                        // Fallback navigation based on role
+                        if (role === "admin") {
+                          router.push("/adminScreens/adminOrdersScreen");
+                        } else {
+                          router.push("/OrdersScreen");
+                        }
                       }
                     }, 200);
                   }}
@@ -116,7 +137,13 @@ const NotificationHistoryModal: React.FC<Props> = ({ visible, onClose, onNotific
                   <Text style={styles.text}>{item.title}</Text>
                   <Text style={styles.body}>{item.body}</Text>
                   <Text style={styles.date}>
-                    {new Date(item.sentAt || item.createdAt).toLocaleString()}
+                    {(() => {
+                      const d = new Date(item.sentAt || item.createdAt);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = String(d.getFullYear()).slice(-2);
+                      return `${day}/${month}/${year}`;
+                    })()}
                   </Text>
                 </TouchableOpacity>
               );

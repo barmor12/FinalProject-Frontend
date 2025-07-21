@@ -6,12 +6,11 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  StyleSheet,
   Alert,
   Modal,
   Image,
   TextInput,
-  Dimensions,
+  Linking,
 } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -19,6 +18,7 @@ import config from "../../config";
 import styles from "../../app/styles/OrderDetailsScreenStyles"; // Importing styles
 import Header from "../../components/Header";
 import StatusUpdateModal from "../../components/StatusUpdateModal";
+import { Ionicons } from "@expo/vector-icons";
 
 interface Cake {
   _id: string;
@@ -78,15 +78,40 @@ export default function OrderDetailsScreen() {
           "Content-Type": "application/json",
         },
       });
+
+      if (response.status === 404) {
+        Alert.alert(
+          "Order Not Found",
+          "This order no longer exists. It may have been deleted.",
+          [
+            {
+              text: "Go Back",
+              onPress: () => navigation.goBack()
+            }
+          ]
+        );
+        return;
+      }
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
       const data: Order = await response.json();
       console.log("📦 Order Details:", data);
       setOrder(data);
     } catch (error) {
       console.error("❌ Error fetching order:", error);
-      Alert.alert("Error", "Failed to load order details.");
+      Alert.alert(
+        "Error",
+        "Failed to load order details. The order may have been deleted.",
+        [
+          {
+            text: "Go Back",
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
     } finally {
       setLoading(false);
     }
@@ -240,132 +265,135 @@ export default function OrderDetailsScreen() {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: "#f9f3ea" }]}>
       <Header title={`Order #${order._id.slice(-6)}`} />
-      <Text testID="customer-text" style={styles.subTitle}>
-        Customer:{" "}
-        {order.user
-          ? `${order.user.firstName} ${order.user.lastName}`
-          : "Deleted User"}
-      </Text>
-      <Text testID="status-text" style={styles.subTitle}>
-        Status:{" "}
-        <Text style={[styles.status, styles[order.status]]}>
-          {order.status}
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <Text testID="customer-text" style={styles.subTitle}>
+          Customer:{" "}
+          {order.user
+            ? `${order.user.firstName} ${order.user.lastName}`
+            : "Deleted User"}
         </Text>
-      </Text>
+        <Text testID="status-text" style={styles.subTitle}>
+          Status:{" "}
+          <Text style={[styles.status, styles[order.status]]}>
+            {order.status}
+          </Text>
+        </Text>
 
-      <View
-        style={{
-          backgroundColor: "#fff",
-          padding: 15,
-          borderRadius: 10,
-          marginBottom: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.1,
-          shadowRadius: 4,
-          elevation: 3,
-        }}
-      >
-
-        <Text
-          style={[styles.subTitle, { fontWeight: "bold", marginBottom: 5 }]}
+        <View
+          style={{
+            backgroundColor: "#fff",
+            padding: 15,
+            borderRadius: 10,
+            marginBottom: 20,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.1,
+            shadowRadius: 4,
+            elevation: 3,
+          }}
         >
-          📦 Shipping Method:
-        </Text>
-        <Text style={styles.subTitle}>
-          {order.shippingMethod
-            ? order.shippingMethod
-            : order.address
-              ? "Standard Delivery (2-3 days)"
-              : "Self Pickup"}
-        </Text>
 
-        <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
-          📅 {order.address ? "Delivery Date" : "Pickup Date"}:
-        </Text>
-        <Text style={styles.subTitle}>
-          {order.deliveryDate
-            ? new Date(order.deliveryDate).toLocaleDateString()
-            : order.shippingMethod === "Self Pickup"
-              ? "Pickup date not selected"
-              : "Delivery date not selected"}
-        </Text>
+          <Text
+            style={[styles.subTitle, { fontWeight: "bold", marginBottom: 5 }]}
+          >
+            📦 Shipping Method:
+          </Text>
+          <Text style={styles.subTitle}>
+            {order.shippingMethod
+              ? order.shippingMethod
+              : order.address
+                ? "Standard Delivery (2-3 days)"
+                : "Self Pickup"}
+          </Text>
 
-        <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
-          🏠 Delivery Address:
-        </Text>
-        <Text style={styles.subTitle}>
-          {order.address
-            ? `${order.address.fullName}, ${order.address.street}, ${order.address.city}`
-            : "Pickup at store"}
-        </Text>
+          <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
+            📅 {order.address ? "Delivery Date" : "Pickup Date"}:
+          </Text>
+          <Text style={styles.subTitle}>
+            {order.deliveryDate
+              ? new Date(order.deliveryDate).toLocaleDateString()
+              : order.shippingMethod === "Self Pickup"
+                ? "Pickup date not selected"
+                : "Delivery date not selected"}
+          </Text>
 
-        {order.address?.phone && (
+          <Text style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}>
+            🏠 Delivery Address:
+          </Text>
+          <Text style={styles.subTitle}>
+            {order.address
+              ? `${order.address.fullName}, ${order.address.street}, ${order.address.city}`
+              : "Pickup at store"}
+          </Text>
+
+          {order.address?.phone && (
+            <>
+              <Text
+                style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}
+              >
+                📞 Phone:
+              </Text>
+              <Text style={styles.subTitle}>{order.address.phone}</Text>
+            </>
+          )}
+        </View>
+
+        <View style={styles.productsSection}>
+          <Text style={styles.sectionTitle}>📦 Products in Order</Text>
+          <ScrollView contentContainerStyle={styles.scrollView}>
+            {order.items.map((item, index) => (
+              <View key={index} style={styles.itemContainer}>
+                {item.cake?.image?.url ? (
+                  <Image
+                    source={{ uri: item.cake.image.url }}
+                    style={styles.itemImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Text style={{ color: "#999" }}>No image available</Text>
+                )}
+                <View style={styles.itemDetails}>
+                  <Text style={styles.itemName}>
+                    {item.cake?.name || "Unknown Cake"}
+                  </Text>
+                  <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+
+        <Text testID="total-text" style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
+
+        {/* Only show update status and send message if user exists */}
+        {order.user && (
           <>
-            <Text
-              style={[styles.subTitle, { fontWeight: "bold", marginTop: 10 }]}
+            <TouchableOpacity
+              testID="update-status-button"
+              style={styles.updateStatusButton}
+              onPress={() => setModalVisible(true)}
             >
-              📞 Phone:
-            </Text>
-            <Text style={styles.subTitle}>{order.address.phone}</Text>
+              <Text style={styles.updateStatusText}>Update Status</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              testID="send-message-button"
+              style={styles.updateStatusButton}
+              onPress={() => setMessageModalVisible(true)}
+            >
+              <Text style={styles.updateStatusText}>Send Message</Text>
+            </TouchableOpacity>
           </>
         )}
-      </View>
 
-      <ScrollView contentContainerStyle={styles.scrollView}>
-        {order.items.map((item, index) => (
-          <View key={index} style={styles.itemContainer}>
-            {item.cake?.image?.url ? (
-              <Image
-                source={{ uri: item.cake.image.url }}
-                style={styles.itemImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <Text style={{ color: "#999" }}>No image available</Text>
-            )}
-            <View style={styles.itemDetails}>
-              <Text style={styles.itemName}>
-                {item.cake?.name || "Unknown Cake"}
-              </Text>
-              <Text style={styles.itemQuantity}>Quantity: {item.quantity}</Text>
-            </View>
-          </View>
-        ))}
+        <TouchableOpacity
+          style={styles.contactButton}
+          testID="view-contact-button"
+          onPress={() => setContactModalVisible(true)}
+        >
+          <Text style={styles.contactText}>View Contact Details</Text>
+        </TouchableOpacity>
       </ScrollView>
-
-      <Text testID="total-text" style={styles.totalPrice}>Total Price: ${order.totalPrice}</Text>
-
-      {/* Only show update status and send message if user exists */}
-      {order.user && (
-        <>
-          <TouchableOpacity
-            testID="update-status-button"
-
-            style={styles.updateStatusButton}
-            onPress={() => setModalVisible(true)}
-          >
-            <Text style={styles.updateStatusText}>Update Status</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            testID="send-message-button"
-            style={styles.updateStatusButton}
-            onPress={() => setMessageModalVisible(true)}
-          >
-            <Text style={styles.updateStatusText}>Send Message</Text>
-          </TouchableOpacity>
-        </>
-      )}
-
-      <TouchableOpacity
-        style={styles.contactButton}
-        testID="view-contact-button"
-
-        onPress={() => setContactModalVisible(true)}
-      >
-        <Text style={styles.contactText}>View Contact Details</Text>
-      </TouchableOpacity>
 
       <StatusUpdateModal
         visible={modalVisible}
@@ -405,6 +433,59 @@ export default function OrderDetailsScreen() {
             <Text style={styles.contactInfo}>
               Email: {order.user?.email || "N/A"}
             </Text>
+            {order.address?.phone && (
+              <View style={styles.contactButtonsContainer}>
+                <TouchableOpacity
+                  style={styles.callButton}
+                  onPress={() => {
+                    try {
+                      const phoneNumber = order.address.phone;
+                      if (phoneNumber) {
+                        Linking.openURL(`tel:${phoneNumber}`);
+                      } else {
+                        Alert.alert("שגיאה", "מספר הטלפון אינו זמין");
+                      }
+                    } catch (error) {
+                      console.error('Error opening phone:', error);
+                      Alert.alert("שגיאה", "לא ניתן לפתוח את הטלפון");
+                    }
+                  }}
+                >
+                  <Ionicons name="call" size={20} color="#007bff" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.whatsappButton}
+                  onPress={() => {
+                    try {
+                      let phone = order.address.phone.replace(/[^0-9]/g, '');
+
+                      // אם המספר מתחיל ב-0, נחליף אותו ב-972
+                      if (phone.startsWith('0')) {
+                        phone = '972' + phone.substring(1);
+                      }
+                      // אם המספר לא מתחיל ב-972, נוסיף אותו
+                      else if (!phone.startsWith('972')) {
+                        phone = '972' + phone;
+                      }
+
+                      if (phone.length >= 12) { // 972 + 9 digits
+                        const whatsappUrl = `https://wa.me/${phone}`;
+                        console.log('Opening WhatsApp with URL:', whatsappUrl);
+                        Linking.openURL(whatsappUrl);
+                      } else {
+                        Alert.alert("שגיאה", "מספר הטלפון אינו תקין");
+                      }
+                    } catch (error) {
+                      console.error('Error opening WhatsApp:', error);
+                      Alert.alert("שגיאה", "לא ניתן לפתוח את WhatsApp");
+                    }
+                  }}
+                >
+                  <Ionicons name="logo-whatsapp" size={20} color="#25D366" />
+                </TouchableOpacity>
+              </View>
+            )}
             <TouchableOpacity
               style={styles.modalButtonClose}
               testID="close-contact-button"

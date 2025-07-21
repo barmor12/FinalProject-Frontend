@@ -11,12 +11,14 @@ import {
   RefreshControl,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as ImageManipulator from "expo-image-manipulator";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../config";
 import { useRouter } from "expo-router";
 import { fetchUserData } from "./utils/fetchUserData";
 import styles from "./styles/EditProfileStyles"; // Importing styles
 import Header from "../components/Header";
+import ImagePickerModal from '../components/ImagePickerModal';
 
 const capitalizeFirstLetter = (str: string) =>
   str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
@@ -38,6 +40,8 @@ export default function EditProfileScreen() {
     lastName: "",
     profilePic: require("../assets/images/Welcome.jpg"),
   });
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const fetchUserDataAndSetState = async () => {
     try {
@@ -81,8 +85,7 @@ export default function EditProfileScreen() {
 
   const pickImage = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Permission Denied", "You need to allow access to photos.");
         return;
@@ -90,8 +93,7 @@ export default function EditProfileScreen() {
 
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
+        allowsEditing: false,
         quality: 1,
       });
 
@@ -100,11 +102,38 @@ export default function EditProfileScreen() {
         return;
       }
 
-      setUser({ ...user, profilePic: result.assets[0].uri });
-      await handleUpdateProfilePic(result.assets[0].uri);
+      setSelectedImage(result.assets[0].uri);
+      setShowPreview(true);
     } catch (error) {
       Alert.alert("Error", "Something went wrong.");
+      console.log("error upload image", error)
     }
+  };
+
+  const handleConfirmImage = async () => {
+    if (!selectedImage) return;
+    try {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        selectedImage,
+        [{ resize: { width: 600 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+      );
+      setUser({ ...user, profilePic: manipResult.uri });
+      await handleUpdateProfilePic(manipResult.uri);
+    } catch (err) {
+      Alert.alert("Error", "Image processing failed.");
+      console.log("error", err)
+      setShowPreview(false);
+      setSelectedImage(null);
+      return;
+    }
+    setShowPreview(false);
+    setSelectedImage(null);
+  };
+
+  const handleCancelImage = () => {
+    setShowPreview(false);
+    setSelectedImage(null);
   };
 
   const handleUpdateProfilePic = async (imageUri: string) => {
@@ -150,6 +179,7 @@ export default function EditProfileScreen() {
       Alert.alert("Success", "Profile picture updated successfully!");
     } catch (error) {
       Alert.alert("Error", "Something went wrong.");
+      console.log("error upload image", error)
     } finally {
       setIsUploading(false);
     }
@@ -237,6 +267,13 @@ export default function EditProfileScreen() {
               <Text style={styles.changePhotoText}>Change Photo</Text>
             </View>
           </TouchableOpacity>
+
+          <ImagePickerModal
+            visible={showPreview && !!selectedImage}
+            imageUri={selectedImage}
+            onConfirm={handleConfirmImage}
+            onCancel={handleCancelImage}
+          />
 
           <Text style={styles.inputLabel}>Email</Text>
           <TextInput

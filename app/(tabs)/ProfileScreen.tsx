@@ -20,6 +20,7 @@ import config from "../../config";
 import { fetchUserData } from "../utils/fetchUserData";
 import { Ionicons, MaterialIcons, FontAwesome } from "@expo/vector-icons";
 import styles from "../styles/ProfileScreenStyles";
+import ImagePickerModal from '../../components/ImagePickerModal';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [contactMessage, setContactMessage] = useState("");
   const [contactMethod, setContactMethod] = useState<"email" | "whatsapp" | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
 
   const handleSendContact = () => {
     const fullMessage = contactMessage;
@@ -103,8 +106,7 @@ export default function ProfileScreen() {
 
   const pickImage = async () => {
     try {
-      const permissionResult =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permissionResult.granted) {
         Alert.alert("Permission Denied", "You need to allow access to photos.");
         return;
@@ -112,31 +114,24 @@ export default function ProfileScreen() {
 
       let result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
+        allowsEditing: false,
         quality: 1,
       });
 
       if (result.canceled || !result.assets?.length) {
-        Alert.alert("No Image Selected", "You need to select an image.");
         return;
       }
 
-      // Compress and resize image before setting and uploading
-      const originalUri = result.assets[0].uri;
-      // First resize to width 600, then compress to 0.5 quality
-      const manipResult = await ImageManipulator.manipulateAsync(
-        originalUri,
-        [{ resize: { width: 600 } }],
-        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
-      );
-      setUser({ ...user, profilePic: manipResult.uri });
-      await uploadImage(manipResult.uri);
+      setSelectedImage(result.assets[0].uri); // שמירה לתצוגה מקדימה
+      setShowPreview(true); // הצגת מודאל
+
     } catch (error) {
-      console.log(error);
+      console.log("Image selection error:", error);
       Alert.alert("Error", "Something went wrong.");
     }
   };
+
+
 
   const uploadImage = async (imageUri: string) => {
     try {
@@ -177,6 +172,26 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error("Error uploading image:", error);
       Alert.alert("Error", "Failed to upload image. Please try again.");
+    }
+  };
+  const confirmAndUpload = async () => {
+    if (!selectedImage) return;
+
+    try {
+      const manipResult = await ImageManipulator.manipulateAsync(
+        selectedImage,
+        [{ resize: { width: 600 } }],
+        { compress: 0.5, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
+      setUser({ ...user, profilePic: manipResult.uri });
+      await uploadImage(manipResult.uri);
+      setShowPreview(false);
+      setSelectedImage(null);
+
+    } catch (err) {
+      console.log("Manipulation error:", err);
+      Alert.alert("Error", "Image processing failed.");
     }
   };
 
@@ -359,21 +374,33 @@ export default function ProfileScreen() {
             </View>
           )}
 
-        {/* Footer with links & version */}
-        <View style={{ marginTop: 30, alignItems: "center", paddingBottom: 30 }}>
-          <View style={{ flexDirection: "row", gap: 12, marginBottom: 10 }}>
-            <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/terms")}>
-              <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Terms of Use</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/privacy")}>
-              <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Privacy Policy</Text>
-            </TouchableOpacity>
+          {/* Footer with links & version */}
+          <View style={{ marginTop: 30, alignItems: "center", paddingBottom: 30 }}>
+            <View style={{ flexDirection: "row", gap: 12, marginBottom: 10 }}>
+              <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/terms")}>
+                <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Terms of Use</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => Linking.openURL("https://bakeyapp.com/privacy")}>
+                <Text style={{ color: "#6b4226", fontSize: 13, textDecorationLine: "underline" }}>Privacy Policy</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 12, color: "#6b4226", marginBottom: 2 }}>App Version 1.0.1</Text>
+            <Text style={{ fontSize: 12, color: "#6b4226", fontWeight: "600" }}>© 2025 Bakey. All rights reserved.</Text>
           </View>
-          <Text style={{ fontSize: 12, color: "#6b4226", marginBottom: 2 }}>App Version 1.0.1</Text>
-          <Text style={{ fontSize: 12, color: "#6b4226", fontWeight: "600" }}>© 2025 Bakey. All rights reserved.</Text>
         </View>
-      </View>
       </ScrollView>
+      {showPreview && selectedImage && (
+        <ImagePickerModal
+          visible={showPreview}
+          imageUri={selectedImage}
+          onConfirm={confirmAndUpload}
+          onCancel={() => {
+            setShowPreview(false);
+            setSelectedImage(null);
+          }}
+        />
+      )}
+
     </SafeAreaView>
   );
 }
