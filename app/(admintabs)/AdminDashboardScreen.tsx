@@ -1,17 +1,16 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { LineChart } from "react-native-chart-kit";
-import { Dimensions } from "react-native";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
   ScrollView,
   SafeAreaView,
   RefreshControl,
 } from "react-native";
-import { useNavigation, useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect } from "@react-navigation/native";
+import { router } from "expo-router";
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
@@ -32,7 +31,6 @@ interface Order {
 }
 
 export default function AdminDashboardScreen() {
-  const navigation = useNavigation<any>();
   const [stats, setStats] = useState<{
     orders: number;
     users: number;
@@ -252,21 +250,6 @@ export default function AdminDashboardScreen() {
     }
   };
 
-  // Get orders for selected date
-  const getOrdersForDate = (date: string) => {
-    return orders.filter((order: Order) => {
-      try {
-        if (!order.deliveryDate) return false;
-        const orderDate = new Date(order.deliveryDate);
-        if (isNaN(orderDate.getTime())) return false;
-        const orderDateString = orderDate.toISOString().split("T")[0];
-        return orderDateString === date;
-      } catch (error) {
-        console.warn("Error processing order date:", error);
-        return false;
-      }
-    });
-  };
 
   if (loading) {
     return (
@@ -397,9 +380,7 @@ export default function AdminDashboardScreen() {
                       { borderLeftColor: getStatusColor(order.status) },
                     ]}
                     onPress={() =>
-                      navigation.navigate("OrderDetailsScreen", {
-                        orderId: order._id,
-                      })
+                      router.push({ pathname: "/adminScreens/OrderDetailsScreen", params: { orderId: order._id } })
                     }
                   >
                     <Text style={styles.orderId}>

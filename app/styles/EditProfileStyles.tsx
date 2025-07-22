@@ -7,6 +7,10 @@ export default StyleSheet.create({
     paddingVertical: 40,
     paddingHorizontal: 20,
   },
+  scrollView: {
+    flex: 1,
+    backgroundColor: "#f9f3ea",
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

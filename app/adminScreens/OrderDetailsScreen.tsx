@@ -39,7 +39,7 @@ interface Address {
 interface Order {
   _id: string;
   status: "pending" | "confirmed" | "delivered" | "cancelled";
-  user?: { firstName: string; lastName: string; email: string };
+  user?: { firstName: string; lastName: string; email: string, phone: string };
   address: Address;
   items: { cake: Cake; quantity: number }[];
   totalPrice: number;
@@ -311,7 +311,13 @@ export default function OrderDetailsScreen() {
           </Text>
           <Text style={styles.subTitle}>
             {order.deliveryDate
-              ? new Date(order.deliveryDate).toLocaleDateString()
+              ? (() => {
+                const d = new Date(order.deliveryDate);
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = String(d.getMonth() + 1).padStart(2, '0');
+                const year = String(d.getFullYear()).slice(-2);
+                return `${day}/${month}/${year}`;
+              })()
               : order.shippingMethod === "Self Pickup"
                 ? "Pickup date not selected"
                 : "Delivery date not selected"}
@@ -418,7 +424,7 @@ export default function OrderDetailsScreen() {
               {order.address?.fullName || ([order.user?.firstName, order.user?.lastName].filter(Boolean).join(" ")) || "N/A"}
             </Text>
             <Text style={styles.contactInfo}>
-              Phone: {order.address?.phone || "N/A"}
+              Phone: {order.address?.phone || order.user?.phone || "N/A"}
             </Text>
             {order.shippingMethod !== "Self Pickup" && order.address?.street && (
               <Text style={styles.contactInfo}>

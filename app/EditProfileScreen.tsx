@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   ScrollView,
   RefreshControl,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
@@ -40,6 +42,7 @@ export default function EditProfileScreen() {
     lastName: "",
     profilePic: require("../assets/images/Welcome.jpg"),
   });
+  const [phone, setPhone] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(false);
 
@@ -65,6 +68,7 @@ export default function EditProfileScreen() {
       setFirstName(userData.firstName || "Guest");
       setLastName(userData.lastName || "Null");
       setEmail(userData.email || "");
+      setPhone(userData.phone || "");
     } catch (error) {
       console.error("❌ Error fetching user data:", error);
       Alert.alert("Error", "Failed to load user data.");
@@ -193,7 +197,7 @@ export default function EditProfileScreen() {
         return;
       }
 
-      if (!firstName.trim() || !lastName.trim()) {
+      if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
         Alert.alert("Error", "Please fill in all fields.");
         return;
       }
@@ -209,6 +213,7 @@ export default function EditProfileScreen() {
           body: JSON.stringify({
             firstName: capitalizeFirstLetter(firstName.trim()),
             lastName: capitalizeFirstLetter(lastName.trim()),
+            phone: phone.trim(),
           }),
         }
       );
@@ -220,7 +225,7 @@ export default function EditProfileScreen() {
         return;
       }
 
-      Alert.alert("Success", "Name updated successfully!", [
+      Alert.alert("Success", "Profile updated successfully!", [
         {
           text: "OK",
           onPress: () => {
@@ -235,77 +240,96 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.container}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    // keyboardVerticalOffset={Platform.OS === "ios" ? 10 : 0}
     >
-      <Header title="Edit Profile" />
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.container}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Header title="Edit Profile" />
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#d49a6a" />
-          <Text style={styles.loadingText}>Loading Profile...</Text>
-        </View>
-      ) : (
-        <>
-          <TouchableOpacity onPress={pickImage} disabled={isUploading} style={styles.imageContainer}>
-            <View style={{ alignItems: "center" }}>
-              {isUploading ? (
-                <ActivityIndicator size="large" color="#0000ff" />
-              ) : (
-                <Image
-                  testID="profile-image"
-                  source={
-                    typeof user.profilePic === "string"
-                      ? { uri: user.profilePic }
-                      : user.profilePic
-                  }
-                  style={styles.profileImage}
-                  resizeMode="cover"
-                />
-              )}
-              <Text style={styles.changePhotoText}>Change Photo</Text>
-            </View>
-          </TouchableOpacity>
+        {loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#d49a6a" />
+            <Text style={styles.loadingText}>Loading Profile...</Text>
+          </View>
+        ) : (
+          <>
+            <TouchableOpacity onPress={pickImage} disabled={isUploading} style={styles.imageContainer}>
+              <View style={{ alignItems: "center" }}>
+                {isUploading ? (
+                  <ActivityIndicator size="large" color="#0000ff" />
+                ) : (
+                  <Image
+                    testID="profile-image"
+                    source={
+                      typeof user.profilePic === "string"
+                        ? { uri: user.profilePic }
+                        : user.profilePic
+                    }
+                    style={styles.profileImage}
+                    resizeMode="cover"
+                  />
+                )}
+                <Text style={styles.changePhotoText}>Change Photo</Text>
+              </View>
+            </TouchableOpacity>
 
-          <ImagePickerModal
-            visible={showPreview && !!selectedImage}
-            imageUri={selectedImage}
-            onConfirm={handleConfirmImage}
-            onCancel={handleCancelImage}
-          />
+            <ImagePickerModal
+              visible={showPreview && !!selectedImage}
+              imageUri={selectedImage}
+              onConfirm={handleConfirmImage}
+              onCancel={handleCancelImage}
+            />
 
-          <Text style={styles.inputLabel}>Email</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: "#eee", color: "#888" }]}
-            value={email}
-            editable={false}
-            selectTextOnFocus={false}
-            placeholderTextColor="#888"
-          />
+            <Text style={styles.inputLabel}>Email</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: "#eee", color: "#888" }]}
+              value={email}
+              editable={false}
+              selectTextOnFocus={false}
+              placeholderTextColor="#888"
+            />
 
-          <Text style={styles.inputLabel}>First Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter first name"
-            placeholderTextColor={"#000"}
-            value={firstName || ""}
-            onChangeText={setFirstName}
-          />
-          <Text style={styles.inputLabel}>Last Name</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter last name"
-            placeholderTextColor={"#000"}
-            value={lastName || ""}
-            onChangeText={setLastName}
-          />
+            <Text style={styles.inputLabel}>First Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter first name"
+              placeholderTextColor={"#000"}
+              value={firstName || ""}
+              onChangeText={setFirstName}
+            />
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter last name"
+              placeholderTextColor={"#000"}
+              value={lastName || ""}
+              onChangeText={setLastName}
+            />
 
-          <TouchableOpacity onPress={handleUpdateName} style={styles.button}>
-            <Text style={styles.buttonText}>Update Profile</Text>
-          </TouchableOpacity>
-        </>
-      )}
-    </ScrollView>
+            <Text style={styles.inputLabel}>Phone</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter phone number"
+              placeholderTextColor={"#000"}
+              value={phone}
+              onChangeText={setPhone}
+              keyboardType="phone-pad"
+              maxLength={15}
+            />
+
+            <TouchableOpacity onPress={handleUpdateName} style={styles.button}>
+              <Text style={styles.buttonText}>Update Profile</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

@@ -127,7 +127,13 @@ export default function AdminDiscountCodes() {
         <Text style={styles.codeText}>
           Expires:{" "}
           {item.expiryDate
-            ? new Date(item.expiryDate).toLocaleDateString()
+            ? (() => {
+              const d = new Date(item.expiryDate);
+              const day = String(d.getDate()).padStart(2, '0');
+              const month = String(d.getMonth() + 1).padStart(2, '0');
+              const year = String(d.getFullYear()).slice(-2);
+              return `${day}/${month}/${year}`;
+            })()
             : "No expiry"}
         </Text>
         <Text
@@ -153,24 +159,23 @@ export default function AdminDiscountCodes() {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 80 : 0}
+      behavior={Platform.OS === "ios" ? "height" : undefined}
     >
-      <TouchableWithoutFeedback onPress={dismissKeyboard}>
-        <SafeAreaView style={[styles.container, { flex: 1 }]}>
-          <Header title="Manage Discount Codes" />
+      <SafeAreaView style={{ flex: 1, backgroundColor: '#f9f3ea' }}>
+        <TouchableWithoutFeedback onPress={dismissKeyboard}>
           <ScrollView
-            contentContainerStyle={{ paddingBottom: 20 }}
+            style={{ flex: 1, backgroundColor: '#f9f3ea' }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 20 }}
             refreshControl={
               <RefreshControl refreshing={loading} onRefresh={fetchCodes} />
             }
             keyboardShouldPersistTaps="handled"
           >
+            <Header title="Manage Discount Codes" />
             <View style={styles.headerContainer}>
               <Ionicons name="pricetags" size={28} color="#6b4226" style={{ marginRight: 8 }} />
             </View>
             {/* <Text style={styles.title}>Manage Discount Codes</Text> */}
-
             <View style={styles.inputRow}>
               <Ionicons name="key-outline" size={20} color="#6b4226" style={{ marginRight: 8 }} />
               <TextInput
@@ -192,7 +197,6 @@ export default function AdminDiscountCodes() {
                 onChangeText={setDiscount}
               />
             </View>
-
             <View style={styles.datePickerContainer}>
               <Text style={styles.datePickerText}>Please select an expiry date:</Text>
               <TouchableOpacity
@@ -203,7 +207,15 @@ export default function AdminDiscountCodes() {
                 }}
               >
                 <Text style={styles.dateButtonText}>
-                  {expiryDate ? expiryDate.toLocaleDateString() : "Select Date"}
+                  {expiryDate
+                    ? (() => {
+                      const d = expiryDate;
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = String(d.getFullYear()).slice(-2);
+                      return `${day}/${month}/${year}`;
+                    })()
+                    : "Select Date"}
                 </Text>
               </TouchableOpacity>
               {showDatePicker && (
@@ -255,24 +267,21 @@ export default function AdminDiscountCodes() {
                 )
               )}
             </View>
-
             <TouchableOpacity style={styles.button} onPress={createCode}>
               <Text style={styles.buttonText}>Create Code</Text>
             </TouchableOpacity>
-
             <View style={styles.summaryContainer}>
               <Text style={styles.summaryText}>Total Codes: {codes.length}</Text>
               <Text style={styles.summaryText}>
                 Active: {codes.filter((c) => c.isActive).length} | Inactive: {codes.filter((c) => !c.isActive).length}
               </Text>
             </View>
-
             {codes.map((item) => (
               <View key={item._id}>{renderCode({ item })}</View>
             ))}
           </ScrollView>
-        </SafeAreaView>
-      </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback>
+      </SafeAreaView>
     </KeyboardAvoidingView>
   );
 }

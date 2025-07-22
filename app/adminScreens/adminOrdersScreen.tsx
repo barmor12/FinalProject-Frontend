@@ -12,12 +12,11 @@ import {
   TextInput,
 } from "react-native";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
-import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import config from "../../config";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../_layout";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import styles from "../styles/AdminScreensStyles/adminOrdersScreenStyles";
 import Header from "../../components/Header";
@@ -225,10 +224,10 @@ export default function AdminOrdersScreen() {
       }
       const notificationToken = userId
         ? await (async () => {
-            // Simulate fetching a push token; replace with your actual logic if needed
-            // Here, we just return true if userId exists, to mimic the backend logic.
-            return true;
-          })()
+          // Simulate fetching a push token; replace with your actual logic if needed
+          // Here, we just return true if userId exists, to mimic the backend logic.
+          return true;
+        })()
         : null;
       // 📲 לוג אחרי "שליפת" הטוקן (מדמה את הבקאנד)
       console.log("📲 Token document found:", notificationToken);
@@ -451,12 +450,12 @@ export default function AdminOrdersScreen() {
                 {filterStatus === "all"
                   ? "Status: All"
                   : filterStatus === "pending"
-                  ? "Status: Pending"
-                  : filterStatus === "confirmed"
-                  ? "Status: Confirmed"
-                  : filterStatus === "delivered"
-                  ? "Status: Delivered"
-                  : "Status: Cancelled"}
+                    ? "Status: Pending"
+                    : filterStatus === "confirmed"
+                      ? "Status: Confirmed"
+                      : filterStatus === "delivered"
+                        ? "Status: Delivered"
+                        : "Status: Cancelled"}
               </Text>
               <Ionicons name={statusDropdownVisible ? "chevron-up" : "chevron-down"} size={18} color="#6b4226" style={{ marginLeft: 3 }} />
             </View>
@@ -628,7 +627,13 @@ export default function AdminOrdersScreen() {
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
                   <Ionicons name="calendar-outline" size={17} color="#bdbdbd" />
                   <Text style={{ fontSize: 15, color: "#68686f" }}>
-                    {new Date(order.createdAt).toLocaleDateString()}
+                    {(() => {
+                      const d = new Date(order.createdAt);
+                      const day = String(d.getDate()).padStart(2, '0');
+                      const month = String(d.getMonth() + 1).padStart(2, '0');
+                      const year = String(d.getFullYear()).slice(-2);
+                      return `${day}/${month}/${year}`;
+                    })()}
                   </Text>
                 </View>
                 {/* Status */}
@@ -642,23 +647,23 @@ export default function AdminOrdersScreen() {
                         order.status === "pending"
                           ? "#ff9800"
                           : order.status === "confirmed"
-                          ? "#1976d2"
-                          : order.status === "delivered"
-                          ? "#43a047"
-                          : order.status === "cancelled"
-                          ? "#e53935"
-                          : "#23232b",
+                            ? "#1976d2"
+                            : order.status === "delivered"
+                              ? "#43a047"
+                              : order.status === "cancelled"
+                                ? "#e53935"
+                                : "#23232b",
                     }}
                   >
                     {order.status === "pending"
                       ? "Pending"
                       : order.status === "confirmed"
-                      ? "Confirmed"
-                      : order.status === "delivered"
-                      ? "Delivered"
-                      : order.status === "cancelled"
-                      ? "Cancelled"
-                      : order.status}
+                        ? "Confirmed"
+                        : order.status === "delivered"
+                          ? "Delivered"
+                          : order.status === "cancelled"
+                            ? "Cancelled"
+                            : order.status}
                   </Text>
                 </View>
               </View>
@@ -847,10 +852,10 @@ export default function AdminOrdersScreen() {
 }
 
 
-  // Handle press on the entire order card
-  // function handleOrderPress(order: Order) {
-  //   navigation.navigate("OrderDetailsScreen", { orderId: order._id });
-  // }
+// Handle press on the entire order card
+// function handleOrderPress(order: Order) {
+//   navigation.navigate("OrderDetailsScreen", { orderId: order._id });
+// }
 // הזן טיפוס Order כאן:
 type Order = {
   _id: string;

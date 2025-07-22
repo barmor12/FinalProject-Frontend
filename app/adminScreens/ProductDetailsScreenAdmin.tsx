@@ -229,7 +229,7 @@ export default function ProductDetailsScreen() {
             behavior={Platform.OS === "ios" ? "padding" : undefined}
         >
             <SafeAreaView style={styles.container}>
-                <Header title="" />
+                <Header title="Product Details" />
                 <ScrollView
                     contentContainerStyle={styles.scrollContent}
                     keyboardShouldPersistTaps="handled"

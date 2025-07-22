@@ -33,6 +33,8 @@ export default function SetPasswordScreen() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  const [phone, setPhone] = useState("");
+
   const [passwordRequirements, setPasswordRequirements] = useState({
     length: false,
     lowercase: false,
@@ -67,8 +69,8 @@ export default function SetPasswordScreen() {
   };
 
   const handleSetPassword = async () => {
-    if (!password || !confirmPassword) {
-      Alert.alert("Error", "Please fill in all fields.");
+    if (!password || !confirmPassword || !phone.trim()) {
+      Alert.alert("Error", "Please fill in all fields, including phone number.");
       return;
     }
     if (password !== confirmPassword) {
@@ -100,7 +102,7 @@ export default function SetPasswordScreen() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ userId, password }),
+        body: JSON.stringify({ userId, password, phone: phone.trim() }),
       });
       const data = await response.json();
 
@@ -157,23 +159,32 @@ export default function SetPasswordScreen() {
 
           <Text style={styles.title}>Set Your Password</Text>
 
-            <TextInput
-              style={styles.input}
-              placeholder="New Password"
-              placeholderTextColor="#aaa"
-              secureTextEntry
-              onChangeText={(text) => {
-                setPassword(text);
-                checkPasswordStrength(text);
-              }}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              placeholderTextColor="#aaa"
-              secureTextEntry
-              onChangeText={setConfirmPassword}
-            />
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
+            onChangeText={(text) => {
+              setPassword(text);
+              checkPasswordStrength(text);
+            }}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Confirm Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
+            onChangeText={setConfirmPassword}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Phone Number"
+            placeholderTextColor="#aaa"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
+            maxLength={15}
+          />
 
           <View style={localStyles.requirements}>
             {requirementList.map((item) => (

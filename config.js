@@ -1,7 +1,7 @@
 const config = {
-  //BASE_URL: "http://10.0.0.15:3000", // Bar server
+  BASE_URL: "http://10.0.0.16:3000", // Bar server
   //BASE_URL: "http://192.168.0.111:3000", // Bar server
-  BASE_URL: "https://bakeyapp.com", // Bar server
+  // BASE_URL: "https://bakeyapp.com", // Bar server
 
 
 
