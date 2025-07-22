@@ -24,6 +24,7 @@ export default function SignUpScreen() {
   const router = useRouter();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -53,7 +54,7 @@ export default function SignUpScreen() {
   };
 
   const handleSignUp = async () => {
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !phone || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all fields");
       return;
     }
@@ -70,6 +71,7 @@ export default function SignUpScreen() {
     formData.append("firstName", firstName);
     formData.append("lastName", lastName);
     formData.append("email", email.toLowerCase().trim());
+    formData.append("phone", phone);
     formData.append("password", password);
     if (profileImage) {
       const fileName = profileImage.split("/").pop() || "profile.jpg";
@@ -122,7 +124,7 @@ export default function SignUpScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView contentContainerStyle={{ alignItems: "center", paddingHorizontal: 20, paddingBottom: 40, paddingTop: 20 }}>
-          <View style={{ alignSelf: "flex-start", padding: 20,marginLeft: -40, paddingTop: 50, zIndex: 10 }}>
+          <View style={{ alignSelf: "flex-start", padding: 20, marginLeft: -40, paddingTop: 50, zIndex: 10 }}>
             <TouchableOpacity onPress={() => router.replace("/")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <BackButton />
             </TouchableOpacity>
@@ -144,6 +146,9 @@ export default function SignUpScreen() {
             <TextInput style={styles.input} value={firstName} onChangeText={setFirstName} testID="firstName-input" />
             <Text style={styles.inputLabel}>Last Name</Text>
             <TextInput style={styles.input} value={lastName} onChangeText={setLastName} testID="lastName-input" />
+            <Text style={styles.inputLabel}>Phone Number</Text>
+            <TextInput style={styles.input} value={phone} onChangeText={setPhone} testID="phone-input" />
+
             <Text style={styles.inputLabel}>Email</Text>
             <TextInput
               style={styles.input}

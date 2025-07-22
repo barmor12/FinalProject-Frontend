@@ -415,21 +415,23 @@ export default function OrderDetailsScreen() {
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Customer Contact Details</Text>
             <Text style={styles.contactInfo}>
-              {order.address?.fullName || "N/A"}
+              {order.address?.fullName || ([order.user?.firstName, order.user?.lastName].filter(Boolean).join(" ")) || "N/A"}
             </Text>
             <Text style={styles.contactInfo}>
               Phone: {order.address?.phone || "N/A"}
             </Text>
-            <Text style={styles.contactInfo}>
-              Address: {[
-                order.address?.street,
-                order.address?.city,
-                order.address?.zipCode,
-                order.address?.country,
-              ]
-                .filter(Boolean)
-                .join(", ")}
-            </Text>
+            {order.shippingMethod !== "Self Pickup" && order.address?.street && (
+              <Text style={styles.contactInfo}>
+                Address: {[
+                  order.address?.street,
+                  order.address?.city,
+                  order.address?.zipCode,
+                  order.address?.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </Text>
+            )}
             <Text style={styles.contactInfo}>
               Email: {order.user?.email || "N/A"}
             </Text>
