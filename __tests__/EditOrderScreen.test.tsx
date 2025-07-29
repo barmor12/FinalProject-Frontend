@@ -8,6 +8,10 @@ import config from "@/config";
 
 // bump Jest timeout in case CI is slow
 jest.setTimeout(10000);
+beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => { });
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+});
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
     getItem: jest.fn(),

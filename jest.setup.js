@@ -64,21 +64,8 @@ jest.mock('expo-notifications', () => ({
     removeNotificationSubscription: jest.fn(),
 }));
 
-jest.mock('expo-constants', () => {
-    const Constants = jest.requireActual('expo-constants');
-    return {
-        ...Constants,
-        // Provide a mock for the 'expo' manifest property
-        manifest: {
-            ...Constants.manifest,
-            extra: {
-                ...Constants.manifest.extra,
-                eas: {
-                    projectId: 'mock-project-id'
-                }
-            }
-        },
-        // Mock the installationId if it's not available in the test environment
-        installationId: 'mock-installation-id',
-    };
-});
+// Replace the expo-constants mock with a safe plain object
+jest.mock('expo-constants', () => ({
+    manifest: { extra: { eas: { projectId: 'mock-project-id' } } },
+    installationId: 'mock-installation-id',
+}));

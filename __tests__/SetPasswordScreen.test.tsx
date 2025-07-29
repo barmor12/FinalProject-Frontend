@@ -34,7 +34,7 @@ describe('SetPasswordScreen', () => {
         fireEvent.press(getByText('Set Password'));
         await waitFor(() => {
             expect(fetch).not.toHaveBeenCalled();
-            expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields.');
+            expect(Alert.alert).toHaveBeenCalledWith('Error', 'Please fill in all fields, including phone number.');
         });
     });
 
@@ -42,6 +42,7 @@ describe('SetPasswordScreen', () => {
         const { getByPlaceholderText, getByText } = render(<SetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('New Password'), 'Password1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Password2!');
+        fireEvent.changeText(getByPlaceholderText('Phone Number'), '0501234567');
         fireEvent.press(getByText('Set Password'));
         await waitFor(() => {
             expect(fetch).not.toHaveBeenCalled();
@@ -51,9 +52,9 @@ describe('SetPasswordScreen', () => {
 
     it('should show error if password does not meet requirements', async () => {
         const { getByPlaceholderText, getByText } = render(<SetPasswordScreen />);
-        // סיסמה ארוכה אבל אין מספר או סימול
         fireEvent.changeText(getByPlaceholderText('New Password'), 'Password');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Password');
+        fireEvent.changeText(getByPlaceholderText('Phone Number'), '0501234567');
         fireEvent.press(getByText('Set Password'));
         await waitFor(() => {
             expect(fetch).not.toHaveBeenCalled();
@@ -65,7 +66,6 @@ describe('SetPasswordScreen', () => {
     });
 
     it('should set password and navigate on success (user)', async () => {
-        // מגדירים מה יחזיר AsyncStorage.getItem
         (AsyncStorage.getItem as jest.Mock).mockImplementation((key: string) => {
             if (key === 'userId') return Promise.resolve('123');
             if (key === 'accessToken') return Promise.resolve('token');
@@ -76,6 +76,7 @@ describe('SetPasswordScreen', () => {
         const { getByPlaceholderText, getByText } = render(<SetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('New Password'), 'Password1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'Password1!');
+        fireEvent.changeText(getByPlaceholderText('Phone Number'), '0501234567');
         fireEvent.press(getByText('Set Password'));
 
         await waitFor(() => {
@@ -104,6 +105,7 @@ describe('SetPasswordScreen', () => {
         const { getByPlaceholderText, getByText } = render(<SetPasswordScreen />);
         fireEvent.changeText(getByPlaceholderText('New Password'), 'AdminPass1!');
         fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'AdminPass1!');
+        fireEvent.changeText(getByPlaceholderText('Phone Number'), '0501234567'); // 🔧 נדרש
         fireEvent.press(getByText('Set Password'));
 
         await waitFor(() => {

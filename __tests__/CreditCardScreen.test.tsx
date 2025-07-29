@@ -1,12 +1,16 @@
-jest.setTimeout(10000); // הגדלת זמן טיימאאוט ל-10 שניות
-
-// __tests__/CreditCardScreen.test.tsx
-import React from "react";
+import React, { act } from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import CreditCardScreen from "@/app/CreditCardScreen";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Alert } from "react-native";
 import config from "@/config";
+
+jest.setTimeout(10000); // הגדלת זמן טיימאאוט ל-10 שניות
+
+beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => { });
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+});
 
 jest.mock("@react-native-async-storage/async-storage", () => ({
     getItem: jest.fn(),
@@ -55,15 +59,32 @@ describe("CreditCardScreen", () => {
     it("loads and displays credit cards", async () => {
         const { getByText } = render(<CreditCardScreen />);
 
-        // מחכים למופע של הכרטיס הראשון
+        // חכה שהפרטים יופיעו על המסך
+        await waitFor(() => {
+            expect(getByText("**** **** **** 5678")).toBeTruthy();
+            expect(getByText("John Doe")).toBeTruthy();
+            expect(getByText("12/25")).toBeTruthy();
+        });
+
+        // ודא שהקריאה ל-fetch בוצעה עם Authorization נכון
         await waitFor(() =>
-            Boolean(
-                getByText("**** **** **** 5678") &&
-                getByText("John Doe") &&
-                getByText("12/25")
+            expect(global.fetch).toHaveBeenCalledWith(
+                `${config.BASE_URL}/auth/credit-cards`,
+                expect.objectContaining({
+                    method: "GET",
+                    headers: expect.objectContaining({
+                        Authorization: "Bearer token123",
+                    }),
+                })
             )
         );
-        // וגם לוודא שבוצעה קריאת GET נכונה
+    });
+
+
+    // וגם לוודא שבוצעה קריאת GET נכונה
+    it("makes a correct GET request to fetch credit cards", async () => {
+        render(<CreditCardScreen />);
+
         await waitFor(() =>
             (global.fetch as jest.Mock).mock.calls.some(
                 ([url, options]: [string, RequestInit]) =>
@@ -73,6 +94,7 @@ describe("CreditCardScreen", () => {
             )
         );
     });
+
 
     it("shows validation errors on invalid input in Add New Card modal", async () => {
         const { getByText, getByTestId } = render(

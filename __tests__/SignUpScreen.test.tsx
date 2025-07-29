@@ -26,6 +26,7 @@ describe('SignUpScreen', () => {
         const { getByTestId, getByText } = render(<SignUpScreen />);
         fireEvent.changeText(getByTestId('firstName-input'), 'John');
         fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+        fireEvent.changeText(getByTestId('phone-input'), '0501234567');
         fireEvent.changeText(getByTestId('email-input'), 'john@example.com');
         fireEvent.changeText(getByTestId('password-input'), 'Password1!');
         fireEvent.changeText(getByTestId('confirmPassword-input'), 'Password1!');
@@ -40,6 +41,7 @@ describe('SignUpScreen', () => {
         const { getByTestId, getByText } = render(<SignUpScreen />);
         fireEvent.changeText(getByTestId('firstName-input'), 'John');
         fireEvent.changeText(getByTestId('lastName-input'), 'Doe');
+        fireEvent.changeText(getByTestId('phone-input'), '0501234567');
         fireEvent.changeText(getByTestId('email-input'), 'john@example.com');
         fireEvent.changeText(getByTestId('password-input'), 'Password1!');
         fireEvent.changeText(getByTestId('confirmPassword-input'), 'Password2!');

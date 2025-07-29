@@ -6,6 +6,10 @@ import { Alert } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import config from '../config';
+beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => { });
+    jest.spyOn(console, 'warn').mockImplementation(() => { });
+});
 
 // Stub out the native date-picker so it doesn't try to create a real NativeEventEmitter
 jest.mock('react-native-date-picker', () => {
